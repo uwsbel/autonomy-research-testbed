@@ -1,5 +1,9 @@
+# Import some utils
+from miniav.utils.logger import LOGGER
+
 # External library imports
 from pathlib import Path
+
 
 def file_exists(filename: str, throw_error: bool = False) -> bool:
     """
@@ -20,6 +24,7 @@ def file_exists(filename: str, throw_error: bool = False) -> bool:
         raise FileNotFoundError(f"{filename} is not a file.")
     return is_file
 
+
 def get_filetype(filename: str, **kwargs) -> str:
     """
     Get the filetype using the magic library.
@@ -31,8 +36,13 @@ def get_filetype(filename: str, **kwargs) -> str:
     Returns:
         str: The file type. See libmagic documentation for supported types.
     """
-    import magic
+    try:
+        import magic
+    except ImportError as e:
+        LOGGER.fatal(e)
+        exit()
     return magic.from_file(filename, **kwargs)
+
 
 def get_file_extension(filename: str) -> str:
     """
@@ -45,6 +55,7 @@ def get_file_extension(filename: str) -> str:
         str: The file extension
     """
     return Path(filename).suffix
+
 
 def read_text(filename: str) -> str:
     """

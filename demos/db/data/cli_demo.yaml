@@ -1,0 +1,17 @@
+input:
+  file: cli_demo.db3
+
+output:
+  file: cli_demo.db3
+
+rosbag1:
+  file: data/ros1.bag
+  topics:
+    - /mocap_node/mini_av/pose
+
+rosbag2:
+  file: data/
+  messages:
+    vehicle_input:
+      file: data/VehicleInput.msg
+      topic: custom_msgs/msg/VehicleInput
