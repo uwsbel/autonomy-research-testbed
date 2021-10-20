@@ -9,8 +9,16 @@ here = pathlib.Path(__file__).parent.resolve()
 # Get the long description from the README file
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
+
+def parse_requirements():
+    with open('requirements.txt') as f:
+        required = f.read().splitlines()
+
+    return required
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
+
 
 setup(
     name='miniav',  # Required
@@ -21,7 +29,7 @@ setup(
     author='UW Simulation Based Engineering Lab',  # Optional
     packages=find_packages(),  # Required
     python_requires='>=3.6, <4',
-    install_requires=[''],  # Optional
+    install_requires=parse_requirements(),  # Optional
     entry_points={  # Optional
         'console_scripts': [
             'miniav=miniav.miniav_base:main',
