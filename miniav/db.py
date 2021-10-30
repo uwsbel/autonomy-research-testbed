@@ -4,221 +4,248 @@ CLI command that handles interacting with the MiniAV database.
 
 # rosbags imports
 from rosbags.rosbag1 import Reader as ROS1Reader
-from rosbags.rosbag2 import Reader as ROS2Reader
+from rosbags.rosbag2 import Reader as ROS2Reader, Writer as ROS2Writer
+from rosbags.rosbag2.reader import decompress
+from rosbags.rosbag2.connection import Connection as ROS2Connection
 from rosbags.typesys import get_types_from_msg, register_types
 from rosbags.serde import deserialize_cdr, ros1_to_cdr
 from rosbags.serde.messages import get_msgdef
 
-# Imports from utils
+# Imports from miniav
+from miniav.ros.messages import MessageType
 from miniav.utils.files import file_exists, get_filetype, get_file_extension, read_text
 from miniav.utils.logger import LOGGER
 from miniav.utils.yaml_parser import YAMLParser
-from miniav.utils.sqlite_parser import SQLiteHelper
 
 # General imports
-from typing import NamedTuple
-import os
-import pathlib
+from typing import NamedTuple, List, Tuple, Iterable, Any
 import sqlite3
 import pickle
 import pandas as pd
 
 
 class MiniAVDatabase:
-    class CombineConfig(NamedTuple):
-        ros1_bag: str
-        ros2_bag: str
-
-        output: str
-
-        ros1_topics: list = []
-        ros2_topics: list = []
-
-        ros1_messages: dict = {}
-        ros2_messages: dict = {}
-
     def __init__(self):
         pass
 
-    def combine(self, config: CombineConfig):
+    def combine(self,
+                ros1_bag: str,
+                ros2_bag: str,
+                output_bag: str,
+                ros1_topics: List[str] = [],
+                ros2_topics: List[str] = [],
+                ros1_types: List[MessageType] = [],
+                ros2_types: List[MessageType] = []):
         """
-        Combine command to combine a ros1 bag and a ros2 bag into an sqlite database
+        Combine command.
+
+        Will combine a ros1 and ros2 bag. The output is a ros2 bag with both messages
+        in the data with the respective timestamps. Additionally, to allow for easy parsing
+        outside of ROS, a new table is created that describes the custom message types within the
+        bag. When parsing, this information is used to register types for the rosbags python
+        package.
 
         Args:
-            config (MiniAVDatabase.CombineConfig): Configuration used in the command
+            ros1_bag        (str): The ros1 bag file to use in the combine step. ROS 1 uses files ending in .bag. Required.
+            ros2_bag        (str): The ros2 bag file to use in the combine step. ROS 2 uses folders with a .db3 and metadata.yaml file. This should be a path to a folder. Required.
+            output_bag      (str): The output ros2 bag file that contains the combined data. ROS 2 uses folders with a .db3 and metadata.yaml file. This should be a path to a folder. Required.
+            ros1_topics     (List[str], optional): The topics to copy over from the ros1 bag. If empty, will copy all topics. Default is [] (empty).
+            ros2_topics     (List[str], optional): The topics to copy over from the ros2 bag. If empty, will copy all topics. Default is [] (empty).
+            ros1_types      (List[miniav.ros.messages.MessageType], optional): The custom message types to register when reading. Default is [] (will not register any custom message types).
+            ros2_types      (List[miniav.ros.messages.MessageType], optional): The custom message types to register when reading. Default is [] (will not register any custom message types).
         """
-        LOGGER.debug("Running combine...")
+        LOGGER.info("Running combine command...")
 
-        # Various imports
-        from rosbags.rosbag1 import Reader as ROS1Reader
-        from rosbags.rosbag2 import Reader as ROS2Reader
+        # Read through both bag files at the same time
+        with ROS1Reader(ros1_bag) as ros1_reader, ROS2Reader(ros2_bag) as ros2_reader:
+            # Contruct a connection list that is used to filter topics in the bag files
+            ros1_conns = [x for x in ros1_reader.connections.values() if x.topic in ros1_topics]  # noqa
+            ros2_conns = [x for x in ros2_reader.connections.values() if x.topic in ros2_topics]  # noqa
 
-        # Read the bag files
-        with ROS1Reader(config.ros1_bag) as ros1_reader, ROS2Reader(config.ros2_bag) as ros2_reader:
-            ros1_connections = [
-                x for x in ros1_reader.connections.values() if x.topic in config.ros1_topics]
-            ros2_connections = [
-                x for x in ros2_reader.connections.values() if x.topic in config.ros2_topics]
+            # Create a generator for the ros1 and ros2 messages, respectively
+            ros1_messages = ros1_reader.messages(connections=ros1_conns)
+            ros2_messages = ros2_reader.messages(connections=ros2_conns)
 
-            ros1_messages = ros1_reader.messages(connections=ros1_connections)
-            ros2_messages = ros2_reader.messages(connections=ros2_connections)
+            # Create a writer that will be used to write data to the rosbag file
+            with MiniAVDatabaseWriter(output_bag) as writer:
+                # If there any custom types, we will need to register them to read the bags
+                # Also, to read them back easily later, we'll store the message types in the
+                # bag itself
+                types = ros1_types + ros2_types
+                if types:
+                    # Register the types
+                    add_types = {}
+                    for message in types:
+                        msg_def = read_text(message.file)
+                        add_types.update(get_types_from_msg(msg_def, message.topic))
+                    register_types(add_types)
 
-            # Register any message types, if desired
-            add_types = {}
-            for name, message in {**config.ros1_messages, **config.ros2_messages}.items():
-                msg_def = read_text(message['file'])
-                add_types.update(get_types_from_msg(msg_def, message['topic']))
-            register_types(add_types)
+                    # Create the table to store the message types for later
+                    writer.add_message_types_table(add_types)
 
-            # Loop through the messages and write them to a SQLite database
-            with MiniAVDatabaseWriter(config.output) as db_writer:
-                # Create the database
-                db_writer.create_message_table()
+                # Remember the connections now
+                # ros1 and ros2 connections are different and then the writer has it's own
+                # Create a map from id/cid to the connection
+                writer_conns = {}
+                for conn in {**ros1_reader.connections, **ros2_reader.connections}.values():
+                    writer_conn = writer.add_connection(conn.topic, conn.msgtype)
+                    if isinstance(conn, ROS2Connection):
+                        writer_conns[conn.id] = writer_conn
+                    else:
+                       writer_conns[conn.cid] = writer_conn
 
-                # ROS1 bag
-                for i, (connection, timestamp, rawdata) in enumerate(ros1_messages):
-                    msg = deserialize_cdr(ros1_to_cdr(
-                        rawdata, connection.msgtype), connection.msgtype)
-                    pdata = pickle.dumps(vars(msg), pickle. HIGHEST_PROTOCOL)
-
-                    db_writer.insert_message(
-                        timestamp, connection.topic, sqlite3.Binary(pdata))
+                # Now finally read the ros bags and store them in the new file
+                # The insert order doesn't matter, the rosbags library will read the bag in ascending time order
+                for i, (conn, timestamp, rawdata) in enumerate(ros1_messages):
+                    try:
+                        msgtype = writer_conns[conn.cid].msgtype
+                        get_msgdef(msgtype)
+                    except KeyError as e:
+                        raise KeyError(f"{msgtype} isn't registered.")
+                    writer.write(writer_conns[conn.cid], timestamp, ros1_to_cdr(rawdata, conn.msgtype))
                 LOGGER.info(f"Inserted {i} messages from the ROS1 bag")
-
-                # ROS2 bag
-                for i, (connection, timestamp, rawdata) in enumerate(ros2_messages):
-                    msg = deserialize_cdr(rawdata, connection.msgtype)
-                    pdata = pickle.dumps(vars(msg), pickle. HIGHEST_PROTOCOL)
-
-                    db_writer.insert_message(
-                        timestamp, connection.topic, sqlite3.Binary(pdata))
+                for i, (conn, timestamp, rawdata) in enumerate(ros2_messages):
+                    try:
+                        msgtype = writer_conns[conn.id].msgtype
+                        get_msgdef(msgtype)
+                    except KeyError as e:
+                        raise KeyError(f"{msgtype} isn't registered.")
+                    writer.write(writer_conns[conn.id], timestamp, rawdata)
                 LOGGER.info(f"Inserted {i} messages from the ROS2 bag")
 
 
-class MiniAVDatabaseWriter(SQLiteHelper):
+class MiniAVDatabaseWriter(ROS2Writer):
     """
-    Helper class to write to a custom sqlite data structure.
+    Helper class to write to a ROS 2 bag.
 
-    The structure will be as follows:
-    timestamp | topic | message
-    ---------------------------
-
-    Where timestamp is an integer value output from each bag, topic is a string
-    that is used the topic for which message is published/subscribed to on and message
-    is binary data that is taken from the received message. The received message is
-    converted to a dictionary and then pickled and placed in the sqlite
+    Is a simple wrapper around the rosbags.ros2.writer.Writer class. Adds additional ability
+    to add a custom table for message types
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def create_message_table(self, drop_old: bool = True):
+    def add_message_types_table(self, types : 'rosbags.typesys.core.Typesdict'):
         """
-        Create the message table. Will drop the old table in the database file, if desired.
+        Creates a table to store metadata for the message types in the rosbag.
+
+        One of the limitations for ros2 bags is that message types aren't defined within the file itself,
+        so parsing it without knowledge of those types is not possible. We'll save the message types in the
+        rosbag so we can use them when parsing it later. It will be stored simply as a pickle and will be
+        unpickled when we read the bag file. 
 
         Args:
-            drop_old (bool): Drop the old existing database inside the file. Defaults to True.
+            types (rosbags.typesys.core.Typesdict):   the dict of types that rosbags.register_types expects
         """
-        LOGGER.debug(f"Creating message table in {self._filename}...")
-
         # Delete the messages table if it exists
-        self.execute("DROP TABLE IF EXISTS messages;")
+        self.cursor.execute("DROP TABLE IF EXISTS message_types;")
 
-        # Create a new messages table
+        # Create a new table for the metadata
         sql = """
-        CREATE TABLE IF NOT EXISTS messages (
-            timestamp INTEGER,
-            topic text,
-            message binary,
-            PRIMARY KEY (timestamp, topic)
+        CREATE TABLE IF NOT EXISTS message_types (
+            types binary
         );
         """
-        self.execute(sql)
+        self.cursor.execute(sql)
 
-    def insert_message(self, timestamp, topic, message):
-        """
-        Insert a message into the database.
-
-        Args:
-            timestamp (int): The timestamp of the passed message.
-            topic (str): The topic the message was recorded from.
-            message (bytes): A pickle represntation of the received message.
-        """
-        LOGGER.debug(
-            f"Inserting message in database: ({timestamp}, {topic}, ...)")
-
-        sql = """
-            INSERT INTO messages (timestamp, topic, message) VALUES(?,?,?)
-        """
-        self.execute(sql, (timestamp, topic, message))
+        # Pickle the types dict and store it in the newly made table
+        pdata = pickle.dumps(types, pickle.HIGHEST_PROTOCOL)
+        sql = f"INSERT INTO message_types (types) VALUES(?)"
+        self.cursor.execute(sql,(sqlite3.Binary(pdata),))
 
 
-class MiniAVDatabaseReader(SQLiteHelper):
+class MiniAVDatabaseReader(ROS2Reader):
     """
-    Helper function to read the custom sqlite data structure.
+    Helper class to read from a ROS 2 bag that was written by the miniav package
 
-    The structure will be as follows:
-    timestamp | topic | message
-    ---------------------------
-
-    This class should be used when parsing the sqlite. It is a generator,
-    so it will loop through the data in ascending order based on when it
-    was received.
+    It simply wrapps the rosbags.ros2.reader.Reader class. Adds additional functionality
+    to read from a custom meta data table to register message types without needing to know
+    the path to where they're stored.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def convert_to_pandas_df(self):
+        self._register_message_types()
+
+    def _register_message_types(self):
+        """
+        Private method called by the constructor that registers messages.
+
+        Using the MiniAVDatabaseWriter class, custom messages may be needed to parse the data types from
+        either ROS1 or ROS2. As a result, using that class, we've stored some information regarding those
+        message types in a separate sqlite table from the one holding all the ROS info. This method will
+        parse that metadata table and register the additional types it finds.
+
+        This method will work for rosbags not written by the miniav.db.MiniAVDatabaseWriter class, it
+        just won't do anything if it can't find the message table. This is the same functionality if the
+        writer didn't actually need to register any topics when it was writing.
+        """
+
+        for filepath in self.paths:
+            with decompress(filepath, self.compression_mode == 'file') as path:
+                conn = sqlite3.connect(f"file:{path}#immutable=1", uri=True)
+                cursor = conn.cursor()
+
+                # First, check if the message_types table exists
+                sql = """
+                SELECT count(name) FROM sqlite_master WHERE type='table' AND name='message_types';
+                """
+                c = cursor.execute(sql)
+
+			    # Table will exist if the number of tables titled 'message_types' is 1	
+                if c.fetchone()[0] == 1:
+                    # Next, query for the actual types and then register their types
+                    sql = """
+                    SELECT * FROM message_types;
+                    """
+                    c = cursor.execute(sql)
+
+                    # Register the types
+                    for data in c:
+                        register_types(pickle.loads(data[0]))
+
+    def convert_to_pandas_df(self) -> pd.DataFrame:
         """
         Convert the sqlite database to a pandas dataframe.
 
         Orders the database when reading by ascending order in terms of time.
 
         Returns:
-            pandas.Dataframe: The ordered dataframe taken from the database.
+            pandas.DataFrame: The ordered dataframe taken from the database.
         """
-        sql = """
-            SELECT * FROM messages ORDER BY timestamp ASC, topic ASC
-        """
-        df = pd.read_sql_query(sql, self._conn)
-
+        # Read the messages from the generator into a pandas dataframe
+        df = pd.DataFrame(self.messages(), columns=['connections', 'timestamps', 'messages'])
+        df = df[['timestamps', 'connections', 'messages']] # reorder the columns 
+        
         # Deserialize the messages
         # TODO: Would ideally do this as we go. Possible?
-        df['message'] = df.apply(lambda r: pickle.loads(r['message']), axis=1)
+        df['messages'] = df.apply(lambda r: deserialize_cdr(r['messages'], r['connections'].msgtype), axis=1)
 
         return df
 
-    def __iter__(self):
+        
+    def __iter__(self) -> Iterable[Tuple[int, ROS2Connection, Any]]:
         """
-        Generator implementation.
+        Iterate method that returns a generator tuple.
 
-        Will query the database in time ascending format. Each row yielded
-        will be ordered based on time.
-
-        Use like the following:
-        ```python
-            reader = MiniAVDatabaseReader(filename)
-            for row in reader:
-                print(row)
-        ```
+        Yields:
+            int:    The timestamp for the message
+            rosbags.ros2.connection.Connection: The connection object for this message
+            Any:   The read, deserialized message
         """
-        LOGGER.debug(f"Reading from {self._filename} in ascending time...")
+        LOGGER.debug(f"Reading from {str(self.path)} in ascending time...")
 
-        sql = """
-            SELECT * FROM messages ORDER BY timestamp ASC, topic ASC
-        """
-        c = self.execute(sql)
-
-        for timestamp, topic, message in c:
-            yield timestamp, topic, pickle.loads(message)
+        for i, (connection, timestamp, rawdata) in enumerate(self.messages()):
+            yield timestamp, connection, deserialize_cdr(rawdata, connection.msgtype)
 
 
 def run_combine(args):
     LOGGER.debug("Running 'db combine' entrypoint...")
 
     # Parse the YAML config file first
-    assert file_exists(args.config, throw_error=True)
+    if not file_exists(args.config, throw_error=False) and (not args.ros1bag and not args.ros2bag and not args.output):
+        raise ValueError(f"combine command requires either a config file or all three of the following: a ros1bag, ros2bag and output path name")
     yaml_parser = YAMLParser(args.config)
 
     # Get the ros1 and ros2 bag files
@@ -226,26 +253,22 @@ def run_combine(args):
     ros2bag = yaml_parser.get('rosbag2', 'file', default=args.ros2bag)
 
     # Get the available topics
-    ros1_topics = yaml_parser.get('rosbag1', 'topics', default=[])
-    ros2_topics = yaml_parser.get('rosbag2', 'topics', default=[])
+    ros1_topics = yaml_parser.get('rosbag1', 'topics', default=args.ros1_topics)
+    ros2_topics = yaml_parser.get('rosbag2', 'topics', default=args.ros2_topics)
 
     # Get the available messages
-    ros1_messages = yaml_parser.get('rosbag1', 'messages', default={})
-    ros2_messages = yaml_parser.get('rosbag2', 'messages', default={})
+    ros1_messages = [MessageType(file=d["file"], topic=d["topic"]) for d in yaml_parser.get('rosbag1', 'messages', default=args.ros1_messages).values()]
+    ros2_messages = [MessageType(file=d["file"], topic=d["topic"]) for d in yaml_parser.get('rosbag2', 'messages', default=args.ros2_messages).values()]
 
     # Get the output filename
     output = yaml_parser.get('output', 'file', default=args.output)
 
     # Do some checks to make sure the files exists/filetypes are correct
     assert file_exists(ros1bag, throw_error=True)
-    assert get_filetype(
-        ros1bag, mime=True) == 'application/octet-stream' and get_file_extension(ros1bag) == '.bag'
-    assert get_file_extension(output) == '.db3'
 
     # Run the combine command
     db = MiniAVDatabase()
-    db.combine(MiniAVDatabase.CombineConfig(ros1bag, ros2bag, output,
-               ros1_topics, ros2_topics, ros1_messages, ros2_messages))
+    db.combine(ros1bag, ros2bag, output, ros1_topics=ros1_topics, ros2_topics=ros2_topics, ros1_types=ros1_messages, ros2_types=ros2_messages)
 
 
 def run_read(args):
@@ -271,16 +294,15 @@ def init(subparser):
 
     # Combine subcommand
     # Used to combine ros bag files
-    combine = subparsers.add_parser(
-        "combine", description="Combine a ROS1 and ROS2 bag by matching timestamps.")
-    combine.add_argument(
-        "config", help="YAML file that defines the conversion process")
-    combine.add_argument(
-        "-o", "--output", help="The output filename for the sqlite3 database")
-    combine.add_argument(
-        "-rb1", "--ros1bag", help="ROS1 bag file. Will be overridden if present in the yaml.")
-    combine.add_argument(
-        "-rb2", "--ros2bag", help="ROS2 bag file. Will be overridden if present in the yaml.")
+    combine = subparsers.add_parser("combine", description="Combine a ROS1 and ROS2 bag by matching timestamps.")
+    combine.add_argument("-r1", "--ros1bag", help="ROS1 bag file. Will be overridden if present in the yaml.", default="")
+    combine.add_argument("-r2", "--ros2bag", help="ROS2 bag file. Will be overridden if present in the yaml.", default="")
+    combine.add_argument("-o", "--output", help="The output filename for the sqlite3 database", default="")
+    combine.add_argument("-c", "--config", help="YAML file that defines the conversion process", default="")
+    combine.add_argument("--ros1_topics", help="The ros1 topics", default=[])
+    combine.add_argument("--ros2_topics", help="The ros2 topics", default=[])
+    combine.add_argument("--ros1_messages", help="The ros1 messages", default={})
+    combine.add_argument("--ros2_messages", help="The ros2 messages", default={})
     combine.set_defaults(cmd=run_combine)
 
     # Read subcommand

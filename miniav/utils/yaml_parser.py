@@ -14,11 +14,13 @@ import yaml
 class YAMLParser:
     def __init__(self, filename):
         # Do some checks first
-        assert file_exists(filename)
+        self._filename = filename
+        if not file_exists(filename):
+            self._data = {}
+            return
 
         # Load in the file
         LOGGER.info(f"Reading {filename} as yaml...")
-        self._filename = filename
         with open(filename, "r") as f:
             self._data = yaml.safe_load(f)
         LOGGER.debug(f"Read {filename} as yaml.")
