@@ -1,8 +1,6 @@
-input:
-  file: cli_demo.db3
-
+# For the combine command
 output:
-  file: cli_demo.db3
+  file: cli_demo
 
 rosbag1:
   file: data/ros1.bag
@@ -15,3 +13,8 @@ rosbag2:
     vehicle_input:
       file: data/VehicleInput.msg
       topic: custom_msgs/msg/VehicleInput
+
+# For the read command
+input:
+  file: cli_demo
+
