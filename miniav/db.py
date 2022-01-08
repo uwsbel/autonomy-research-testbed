@@ -13,7 +13,7 @@ from rosbags.serde.messages import get_msgdef
 
 # Imports from miniav
 from miniav.ros.messages import MessageType
-from miniav.utils.files import file_exists, get_filetype, get_file_extension, read_text
+from miniav.utils.files import file_exists, get_filetype, get_file_extension, read_text, get_resolved_path
 from miniav.utils.logger import LOGGER
 from miniav.utils.yaml_parser import YAMLParser
 
@@ -22,6 +22,7 @@ from typing import NamedTuple, List, Tuple, Iterable, Any
 import sqlite3
 import pickle
 import pandas as pd
+import docker
 
 
 class MiniAVDatabase:
@@ -239,6 +240,47 @@ class MiniAVDatabaseReader(ROS2Reader):
         for i, (connection, timestamp, rawdata) in enumerate(self.messages()):
             yield timestamp, connection, deserialize_cdr(rawdata, connection.msgtype)
 
+class SMBDatabase:
+    def __init__(self, image="kfaughnan/smbclient", dry_run=False):
+        self._image = image
+        self._dry_run = dry_run
+
+        # Get client
+        self._client = docker.from_env()
+
+        # Start by pulling the image, if necessary
+        try:
+            self._client.images.get(self._image)
+        except docker.errors.APIError as e:
+            LOGGER.warn(f"{self._image} was not found locally. Pulling from DockerHub. This may take a few minutes...")
+            self._client.images.pull(self._image)
+            LOGGER.warn(f"Finished pulling {self._image} from DockerHub. Running command...")
+
+    def push(self, data, username=None, password=None, host=None, share=None, domain=None, dest=None):
+        from getpass import getpass
+        host = host if host is not None else input('Host: ')
+        username = username if username is not None else input('Username: ')
+        password = password if password is not None else f"%{getpass('Password: ')}"
+        domain = '' if domain is None else f"@{domain}"
+        assert dest is not None
+
+        # Initialize the volume to copy local data to the container
+        absfile = get_resolved_path(data, return_as_str=False)
+        file_exists(absfile, throw_error=True, can_be_directory=True)
+        filename=absfile.name
+        containerfile=f"/root/data/{filename}"
+        volume = f"{absfile}:{containerfile}"
+
+        # Create command
+        cmd = f"'//{host}/{share}' -U '{username}{domain}%{password}' -m SMB3"
+        mkdir = ';' if not absfile.is_dir() else f'mkdir {filename};'
+        cmd += f" -c 'prompt OFF; recurse ON; cd {dest} ; {mkdir} lcd /root/data/; mput {filename}'"
+
+        # Run the command
+        print(volume)
+        print(cmd)
+        if not self._dry_run:
+            print(self._client.containers.run(self._image, cmd, volumes=[volume], auto_remove=True, stdout=True, stderr=True).decode("utf-8"))
 
 def run_combine(args):
     LOGGER.debug("Running 'db combine' entrypoint...")
@@ -287,6 +329,21 @@ def run_read(args):
         for i, (timestamp, topic, msg) in enumerate(reader):
             print(timestamp, topic)
 
+def run_push(args):
+    LOGGER.debug("Running 'db push' entrypoint...")
+
+    data=args.data
+    username=args.username
+    password=args.password
+    host=args.host
+    domain=args.domain
+    share=args.share
+    dest=args.dest
+
+    # Establish a connection with the smb database
+    smb_db = SMBDatabase(dry_run=args.dry_run)
+    smb_db.push(data, username=username, password=password, host=host, share=share, domain=domain, dest=dest)
+
 
 def init(subparser):
     # Create some entrypoints for additional commands
@@ -307,9 +364,19 @@ def init(subparser):
 
     # Read subcommand
     # Used to read ros bag files
-    read = subparsers.add_parser(
-        "read", description="Read the custom miniav sqlite database files.")
-    read.add_argument(
-        "config", help="YAML file that defines the read process")
+    read = subparsers.add_parser("read", description="Read the custom miniav sqlite database files.")
+    read.add_argument("config", help="YAML file that defines the read process")
     read.add_argument("-i", "--input", help="The database file to read")
     read.set_defaults(cmd=run_read)
+
+    # Push subcommand
+    # Push db3 files to a remote drive
+    push = subparsers.add_parser("push", description="Push the sqlite files to a mount or remote drive.")
+    push.add_argument("-u", "--username", help="Your username for the drive. If not set, will acquire later.", default=None)
+    push.add_argument("-p", "--password", help="Password for the drive. If not set, will securely acquire it later.", default=None)
+    push.add_argument("-H", "--host", help="Name of the host drive. Defaults to research.drive.wisc.edu.", default="research.drive.wisc.edu")
+    push.add_argument("-d", "--domain", help="Domain to use when accessing the server. Used in UPN format, i.e. <username>@<domain> rather than <domain>\\<username>. Defaults to 'ad.wisc.edu' (works for researchdrive).", default="ad.wisc.edu")
+    push.add_argument("-s", "--share", help="The shared drive to use. Defaults to 'negrut'.", default="negrut")
+    push.add_argument("--dest", help="Destination file locatioin in mount or remote drive.", default="MiniAVDatabase/test")
+    push.add_argument("data", help="The data to push tot he mount or remote drive")
+    push.set_defaults(cmd=run_push)
