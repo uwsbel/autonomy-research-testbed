@@ -21,6 +21,7 @@ def main():
         description="MiniAV Project Command Line Interface")
     parser.add_argument('-v', '--verbose', dest='verbosity',
                         action='count', help='Level of verbosity', default=0)
+    parser.add_argument('--dry-run', action="store_true", help="Run as a dry run")
     parser.set_defaults(cmd=lambda x: x)
 
     # Initialize the subparsers
