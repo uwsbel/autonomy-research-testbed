@@ -114,6 +114,9 @@ class MiniAVDatabase:
                     writer.write(writer_conns[conn.id], timestamp, rawdata)
                 LOGGER.info(f"Inserted {i} messages from the ROS2 bag")
 
+    def push(self):
+        pass
+
 
 class MiniAVDatabaseWriter(ROS2Writer):
     """
@@ -240,49 +243,14 @@ class MiniAVDatabaseReader(ROS2Reader):
         for i, (connection, timestamp, rawdata) in enumerate(self.messages()):
             yield timestamp, connection, deserialize_cdr(rawdata, connection.msgtype)
 
-class SMBDatabase:
-    def __init__(self, image="kfaughnan/smbclient", dry_run=False):
-        self._image = image
-        self._dry_run = dry_run
+def _run_combine(args):
+    """Command to combine a ROS 1 bag file and a ROS 2 bag into a single ROS 2 bag.
 
-        # Get client
-        self._client = docker.from_env()
-
-        # Start by pulling the image, if necessary
-        try:
-            self._client.images.get(self._image)
-        except docker.errors.APIError as e:
-            LOGGER.warn(f"{self._image} was not found locally. Pulling from DockerHub. This may take a few minutes...")
-            self._client.images.pull(self._image)
-            LOGGER.warn(f"Finished pulling {self._image} from DockerHub. Running command...")
-
-    def push(self, data, username=None, password=None, host=None, share=None, domain=None, dest=None):
-        from getpass import getpass
-        host = host if host is not None else input('Host: ')
-        username = username if username is not None else input('Username: ')
-        password = password if password is not None else f"%{getpass('Password: ')}"
-        domain = '' if domain is None else f"@{domain}"
-        assert dest is not None
-
-        # Initialize the volume to copy local data to the container
-        absfile = get_resolved_path(data, return_as_str=False)
-        file_exists(absfile, throw_error=True, can_be_directory=True)
-        filename=absfile.name
-        containerfile=f"/root/data/{filename}"
-        volume = f"{absfile}:{containerfile}"
-
-        # Create command
-        cmd = f"'//{host}/{share}' -U '{username}{domain}%{password}' -m SMB3"
-        mkdir = ';' if not absfile.is_dir() else f'mkdir {filename};'
-        cmd += f" -c 'prompt OFF; recurse ON; cd {dest} ; {mkdir} lcd /root/data/; mput {filename}'"
-
-        # Run the command
-        print(volume)
-        print(cmd)
-        if not self._dry_run:
-            print(self._client.containers.run(self._image, cmd, volumes=[volume], auto_remove=True, stdout=True, stderr=True).decode("utf-8"))
-
-def run_combine(args):
+    The original motivation for this command is that the [mocap optitrack](http://wiki.ros.org/mocap_optitrack)
+    package was only supported in ROS 1, but the control stack we were using was in ROS 2. It is desired that
+    the bagfiles are combined, timestamp corrected, so that replaying the data includes the ground truth of the
+    robot.
+    """
     LOGGER.debug("Running 'db combine' entrypoint...")
 
     # Parse the YAML config file first
@@ -313,7 +281,23 @@ def run_combine(args):
     db.combine(ros1bag, ros2bag, output, ros1_topics=ros1_topics, ros2_topics=ros2_topics, ros1_types=ros1_messages, ros2_types=ros2_messages)
 
 
-def run_read(args):
+def _run_read(args):
+    """Command to read a MiniAV database file.
+
+    The MiniAV database files are unique in that they allow you to read a ROS 2 bag with custom message types.
+    With ROS 2 Galatic, [this is not possible](https://github.com/ros2/rosbag2/issues/782), hence the need to
+    do this ourselves. To implement this, the `rosbags` package ([documentation](https://ternaris.gitlab.io/rosbags/))
+    is utilize to convert between ROS 1 and ROS 2 bags without using either as an actual dependency. By default,
+    ROS 2 bags are stored in an sqlite database and to inform the reader of the bag of the custom message types,
+    a new sqlite table is added with the custom definition (stored as a pickle that `rosbags` can use to register
+    the message types).
+
+    The advantage of adding our own table and keeping to the sqlite structure is that you can still replay the ros2
+    bag as if it was recorded normally and unaffected (assuming you have sourced a workspace with the custom msg
+    types).
+
+    This command is simply a debug tool for reading a MiniAV database file.
+    """
     LOGGER.debug("Running 'db read' entrypoint...")
 
     # Parse the YAML config file first
@@ -329,25 +313,24 @@ def run_read(args):
         for i, (timestamp, topic, msg) in enumerate(reader):
             print(timestamp, topic)
 
-def run_smbpush(args):
-    LOGGER.debug("Running 'db smbpush' entrypoint...")
-    LOGGER.warn("'db smbpush' is deprecated!! Use `db push` instead!")
-    return
 
-    data=args.data
-    username=args.username
-    password=args.password
-    host=args.host
-    domain=args.domain
-    share=args.share
-    dest=args.dest
+def _init(subparser):
+    """Initializer method for the `db` entrypoint
 
-    # Establish a connection with the smb database
-    smb_db = SMBDatabase(dry_run=args.dry_run)
-    smb_db.push(data, username=username, password=password, host=host, share=share, domain=domain, dest=dest)
+    This entrypoint provides easy manipulation of the MiniAV database. The database is simply organized
+    in a directory located either on a remote system or locally. The directory holds ROS 1 bags. At the time of
+    creation, it was desired to have a way to parse the database in a rich GUI environment and be able to visually
+    inspect topics, bags, and other relevant data. To easily do this, the [bag-database](https://github.com/swri-robotics/bag-database)
+    application is used. When written, [ROS 2 bags](https://github.com/ros2/rosbag2/issues/782) lack the ability
+    to contain information regarding custom message types (the next release of ROS in May, 2022, should implement this feature).
 
+    This cli tool will therefore then provide a way to easily convert ROS 2 bags to ROS 1 to store in the MiniAV
+    database. Commands will simplify the "pushing" and "pulling" to and from the database. Furthermore, additional
+    tools have been written such as combining ROS 1 and ROS 2 bags into a single ROS 2 bag.
 
-def init(subparser):
+    In the future, the workflow can be adjusted to use ROS 2 bags once `bag-database` implements it, assuming the
+    next release of ROS 2 and ros2 bags supports it.
+    """
     # Create some entrypoints for additional commands
     subparsers = subparser.add_subparsers(required=False)
 
@@ -362,23 +345,14 @@ def init(subparser):
     combine.add_argument("--ros2_topics", help="The ros2 topics", default=[])
     combine.add_argument("--ros1_messages", help="The ros1 messages", default={})
     combine.add_argument("--ros2_messages", help="The ros2 messages", default={})
-    combine.set_defaults(cmd=run_combine)
+    combine.set_defaults(cmd=_run_combine)
 
     # Read subcommand
     # Used to read ros bag files
     read = subparsers.add_parser("read", description="Read the custom miniav sqlite database files.")
     read.add_argument("config", help="YAML file that defines the read process")
     read.add_argument("-i", "--input", help="The database file to read")
-    read.set_defaults(cmd=run_read)
+    read.set_defaults(cmd=_run_read)
 
     # Push subcommand
-    # Push db3 files to a remote drive
-    smbpush = subparsers.add_parser("smbpush", description="Push the sqlite files to a mount or remote drive using smbclient.")
-    smbpush.add_argument("-u", "--username", help="Your username for the drive. If not set, will acquire later.", default=None)
-    smbpush.add_argument("-p", "--password", help="Password for the drive. If not set, will securely acquire it later.", default=None)
-    smbpush.add_argument("-H", "--host", help="Name of the host drive. Defaults to research.drive.wisc.edu.", default="research.drive.wisc.edu")
-    smbpush.add_argument("-d", "--domain", help="Domain to use when accessing the server. Used in UPN format, i.e. <username>@<domain> rather than <domain>\\<username>. Defaults to 'ad.wisc.edu' (works for researchdrive).", default="ad.wisc.edu")
-    smbpush.add_argument("-s", "--share", help="The shared drive to use. Defaults to 'negrut'.", default="negrut")
-    smbpush.add_argument("--dest", help="Destination file locatioin in mount or remote drive.", default="MiniAVDatabase/test")
-    smbpush.add_argument("data", help="The data to push tot he mount or remote drive")
-    smbpush.set_defaults(cmd=run_smbpush)
+    # Convert local ros2 bag to a rosbag (ROS 1) and then push it to the MiniAV Database
