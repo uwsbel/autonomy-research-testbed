@@ -329,8 +329,10 @@ def run_read(args):
         for i, (timestamp, topic, msg) in enumerate(reader):
             print(timestamp, topic)
 
-def run_push(args):
-    LOGGER.debug("Running 'db push' entrypoint...")
+def run_smbpush(args):
+    LOGGER.debug("Running 'db smbpush' entrypoint...")
+    LOGGER.warn("'db smbpush' is deprecated!! Use `db push` instead!")
+    return
 
     data=args.data
     username=args.username
@@ -371,12 +373,12 @@ def init(subparser):
 
     # Push subcommand
     # Push db3 files to a remote drive
-    push = subparsers.add_parser("push", description="Push the sqlite files to a mount or remote drive.")
-    push.add_argument("-u", "--username", help="Your username for the drive. If not set, will acquire later.", default=None)
-    push.add_argument("-p", "--password", help="Password for the drive. If not set, will securely acquire it later.", default=None)
-    push.add_argument("-H", "--host", help="Name of the host drive. Defaults to research.drive.wisc.edu.", default="research.drive.wisc.edu")
-    push.add_argument("-d", "--domain", help="Domain to use when accessing the server. Used in UPN format, i.e. <username>@<domain> rather than <domain>\\<username>. Defaults to 'ad.wisc.edu' (works for researchdrive).", default="ad.wisc.edu")
-    push.add_argument("-s", "--share", help="The shared drive to use. Defaults to 'negrut'.", default="negrut")
-    push.add_argument("--dest", help="Destination file locatioin in mount or remote drive.", default="MiniAVDatabase/test")
-    push.add_argument("data", help="The data to push tot he mount or remote drive")
-    push.set_defaults(cmd=run_push)
+    smbpush = subparsers.add_parser("smbpush", description="Push the sqlite files to a mount or remote drive using smbclient.")
+    smbpush.add_argument("-u", "--username", help="Your username for the drive. If not set, will acquire later.", default=None)
+    smbpush.add_argument("-p", "--password", help="Password for the drive. If not set, will securely acquire it later.", default=None)
+    smbpush.add_argument("-H", "--host", help="Name of the host drive. Defaults to research.drive.wisc.edu.", default="research.drive.wisc.edu")
+    smbpush.add_argument("-d", "--domain", help="Domain to use when accessing the server. Used in UPN format, i.e. <username>@<domain> rather than <domain>\\<username>. Defaults to 'ad.wisc.edu' (works for researchdrive).", default="ad.wisc.edu")
+    smbpush.add_argument("-s", "--share", help="The shared drive to use. Defaults to 'negrut'.", default="negrut")
+    smbpush.add_argument("--dest", help="Destination file locatioin in mount or remote drive.", default="MiniAVDatabase/test")
+    smbpush.add_argument("data", help="The data to push tot he mount or remote drive")
+    smbpush.set_defaults(cmd=run_smbpush)
