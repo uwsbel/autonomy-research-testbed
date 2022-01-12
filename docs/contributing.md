@@ -15,35 +15,35 @@ There are two forms of contributions: source code or documentation. Editing the 
 Clone the repo as normal:
 
 ```bash
-git clone https://github.com/WisconsinAutonomous/wa_cli.git && cd wa_cli
+git clone https://github.com/uwsbel/miniav.git && cd miniav
 ```
 
 ### Installing a Symbolic Linked Version for Testing
 
 A symbolic link or symlink is a file that references another. The advantages of symlinks is that a folder or file can _essentially_ be placed in two separate locations. In reference to this repository, we want to create a symlinked install because when we edit the code within the cloned repo, we want that change also to be reflected in the installed files.
 
-From within your `wa_cli` directory, we can have `setuptools` do this for us with the following command (run from within the `wa_cli` root directory):
+From within your `miniav` directory, we can have `setuptools` do this for us with the following command (run from within the `miniav` root directory):
 
 ```bash
 python setup.py develop
 ```
 
-You should now be able to edit the source and have those changes be reflected in whatever file imports `wa_cli`!
+You should now be able to edit the source and have those changes be reflected in whatever file imports `miniav`!
 
 ### Deploy your Changes
 
-[GitHub actions](https://github.com/features/actions) are used to automatically build the site and [GitHub pages](https://pages.github.com/) are used to host the static site. To update deployed content, you have to push to the `develop` branch and create a pull request on the `master` branch. Once the pull request is merged the site will rebuild with your changes. Please ensure there are no errors in your code/documentation before doing so, as you may get an email from github if something bad happens.
+[GitHub actions](https://github.com/features/actions) are used to automatically build the site and [GitHub pages](https://pages.github.com/) are used to host the static site. To update deployed content, you have to push to the `master` branch. Once the changes are pushed, the site will rebuild. Please ensure there are no errors in your code/documentation before doing so, as you may get an email from github if something bad happens.
 
-Further, to update the package available on [PyPI](https://pypi.org/project/wa-cli/), you must create a [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging). When a tag is created and pushed to GitHub, it will start an Action which will automatically pushed the new release to PyPI. See [versioning](#versioning) for information on how versioning works with `wa_cli`. The Github Action only runs when the tag is pushed to master through a merge request. To create a tag, you may do the following:
+Further, to update the package available on [PyPI](https://pypi.org/project/miniav/), you must create a [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging). When a tag is created and pushed to GitHub, it will start an Action which will automatically push the new release to PyPI. See [versioning](#versioning) for information on how versioning works with `miniav`. The Github Action only runs when the tag is pushed to master through a merge request. To create a tag, you may do the following:
 
 ```bash
 git tag v3.0.1
-git push origin <branch> --tags
+git push origin master --tags
 ```
 
 #### Versioning
 
-Versioning is done automatically through `tags` by [setuptools\_scm](https://github.com/pypa/setuptools_scm). When a tag is pushed to the `master` branch, a new package is pushed to PyPI with the attached tag. Therefore, you must ensure the tag you push is *after* the previous tags seen on GitHub.
+Versioning is done automatically through `tags` by [setuptools\_scm](https://github.com/pypa/setuptools_scm). When a tag is pushed to the `master` branch, a new package is pushed to PyPI with the attached tag. Therefore, you must ensure the tag you push is *after* the previous tags seen on GitHub (otherwise nothing will push to PyPI).
 
 ## Guidelines
 
@@ -53,21 +53,22 @@ A lot of work has gone into making this package functional and scalable. Please 
 
 The simulator is structured as follows:
 ```
-wa_cli
+miniav
 ├── LICENSE
+├── demos/			# Contains demos for the miniav package
 ├── docs/				# Contains documentation
-├── wa_cli/			# Source code
+├── miniav/			# Source code
 └── setup.py		# Package description and installation instructions for pip
 ```
 
 ### Editing the Source Code
 
-If you plan on editing the source code, please visit the `wa_cli/` folder. The `wa_cli/` folder is structured as follows:
+If you plan on editing the source code, please visit the `miniav/` folder. The `miniav/` folder is structured as follows:
 ```
 wa_cli/
 ├── utils/			# Utility files for use by the rest of the package
 │   └── ...
-├── scripts/		# Scripts used for the 'wa script' subcommand
+├── ros/				# ROS related utilities, methods, or classes
 │   └── ...        	
 └── ...					# Core wa_cli code
 ```
@@ -103,7 +104,7 @@ Markdown files are converted to reStructuredText by `myst_parser` which is used 
 
 There are multiple ways to build sphinx documentation. The easiest is using the `Makefile` or `make.bat` file provided directly in this repository. You will need to install all the necessary dependencies and build the html pages. To do that, run the following commands:
 ```bash
-cd wa_cli/docs
+cd miniav/docs
 pip install -r requirements.txt
 make html
 ```
