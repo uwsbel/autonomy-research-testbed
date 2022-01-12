@@ -65,12 +65,12 @@ miniav
 
 If you plan on editing the source code, please visit the `miniav/` folder. The `miniav/` folder is structured as follows:
 ```
-wa_cli/
+miniav/
 ├── utils/			# Utility files for use by the rest of the package
 │   └── ...
 ├── ros/				# ROS related utilities, methods, or classes
 │   └── ...        	
-└── ...					# Core wa_cli code
+└── ...					# Core miniav code
 ```
 
 As stated earlier, unless given approval by the managers of the repository, there should be no need to edit the source code. The Object Oriented nature of the package means you can just inherit the base classes and add your own logic _outside_ the repo (no need to edit the source). However, bugs or nice features may be added. See [this section](#installing-a-symbolic-linked-version-for-testing) to install the repo for development purposes.
@@ -89,7 +89,7 @@ docs/
 ├── _static/						# Static files that persist through the build process
 │   ├── css/custom.css  # Custom css changes that are different from the default furo theme
 │   └── ...        			# Images, favicons, etc.
-├── usage.md						# Usage reference guide for the wa_cli
+├── usage.md						# Usage reference guide for the miniav 
 ├── installation.md			# Installation build instructions
 ├── contributing.md			# Contributing tab with instructions on how to contribute to the repo
 ├── conf.py							# Settings related to extensions, themes, etc.
