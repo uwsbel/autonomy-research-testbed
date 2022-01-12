@@ -122,7 +122,7 @@ html_theme_options = {
     "announcement": """
         <a style=\"text-decoration: none; color: white;\" 
            href=\"https://sbel.wisc.edu\">
-           <img src=\"https://github.com/uwsbel/miniav/blob/master/docs/_static/SBEL-dark?raw=true\" 
+           <img src=\"https://github.com/uwsbel/miniav/blob/master/docs/_static/cropped-SBEL-192x192.png?raw=true\" 
                 style=\"vertical-align: middle; display: inline; padding-right: 7.5px; height: 20px;\"/>
            Checkout our website!
         </a>
