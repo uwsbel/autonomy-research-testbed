@@ -1,0 +1,12 @@
+h1, h2, h3, h4, h5, h6 {
+	color: #bf1f24;
+	font-weight: 400;
+}
+
+p {
+	font-size: 90%;
+}
+
+a.reference.internal {
+	text-decoration-color: transparent;
+}
