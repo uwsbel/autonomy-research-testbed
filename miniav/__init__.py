@@ -1,6 +1,6 @@
 import signal
 from ._import import _import, _get_dirs, _get_files
-# from ._version import version as __version__
+from ._version import version as __version__
 
 __author__ = "Simulation Based Engineering Laboratory (negrut@.wisc.edu)"
 """Simulation Based Engineering Laboratory (negrut@wisc.edu)"""

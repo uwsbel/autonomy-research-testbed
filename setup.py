@@ -37,7 +37,7 @@ setup(
     install_requires=parse_requirements(),  # Optional
     entry_points={  # Optional
         'console_scripts': [
-            'miniav=miniav._miniav_base:main',
+            'miniav=miniav._miniav_base:_main',
         ],
     },
     classifiers=[

@@ -20,5 +20,8 @@ __pycache__/
 *.yml
 *.yaml
 
+# Ignore the version file since it changes often
+_version.py
+
 # Except
 !.github/workflows/*
