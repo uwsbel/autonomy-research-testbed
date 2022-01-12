@@ -81,6 +81,10 @@ Commenting your code is not only _required_ when contributing to this repository
 
 Please follow [Google's guidelines for Python Styling](https://google.github.io/styleguide/pyguide.html). These comments are also used to automatically generate the documentation. For Visual Studio Code users, the [Python Docstring Generator](https://github.com/NilsJPWerner/autoDocstring) package may be helpful.
 
+```{note}
+Any docstrings parsed by `autosimple`, such as the functions in [usage.md](./usage.md), are parsed as markdown. Docstrings parsed by autoapi, such as in [miniav.db](./autoapi/miniav/db/index), are parsed as reStructuredText.
+```
+
 ### Editing the Documentation
 
 If you plan on editing the documentation pages (i.e. adding a tutorial or fixing an existing page), please visit the `docs/` folder. The `docs/` folder is structured as follows:

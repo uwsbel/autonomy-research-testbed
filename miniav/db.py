@@ -25,6 +25,34 @@ import pandas as pd
 
 
 class MiniAVDatabase:
+    """
+    This class allows you to programatically interact with the MiniAV database.
+
+    Typically, the MiniAV CLI will be enough for pushing and pulling to and from the database.
+    However, it may be desired to write scripts which pull data from the database. This class can be
+    used in these instances.
+
+    Example usage:
+
+    .. highlight:: python
+    .. code-block:: python
+
+        from miniav.db import MiniAVDatabase
+        from miniav.ros.messages import MessageType
+
+        ros1bag = 'ros1.bag'
+        ros2bag = 'ros2bag/'
+        output = 'new_ros2bag'
+
+        # Custom datatypes specific to the ros2 bag that need to be registered
+        # The custom message definitions are located in custom_msgs/msg/*
+        ros2_types = [MessageType(file='data/VehicleInput.msg', topic='custom_msgs/msg/VehicleInput')]
+
+        # Run the combine command
+        db = MiniAVDatabase()
+        db.combine(ros1bag, ros2bag, output, ros2_types=ros2_types)
+        
+    """
     def __init__(self):
         pass
 
@@ -122,7 +150,7 @@ class MiniAVDatabaseWriter(ROS2Writer):
     Helper class to write to a ROS 2 bag.
 
     Is a simple wrapper around the rosbags.ros2.writer.Writer class. Adds additional ability
-    to add a custom table for message types
+    to add a custom table for message types.
     """
 
     def __init__(self, *args, **kwargs):
@@ -161,9 +189,28 @@ class MiniAVDatabaseReader(ROS2Reader):
     """
     Helper class to read from a ROS 2 bag that was written by the miniav package
 
-    It simply wrapps the rosbags.ros2.reader.Reader class. Adds additional functionality
+    It simply wraps the ``rosbags.ros2.reader.Reader`` class. Adds additional functionality
     to read from a custom meta data table to register message types without needing to know
     the path to where they're stored.
+
+    An example use case can be seen below:
+
+    .. highlight:: python
+    .. code-block:: python
+
+        from miniav.db import MiniAVDatabaseReader
+
+        bagfile = 'bag' # ros2 bag folder
+
+        # You can use a generator
+        with MiniAVDatabaseReader(bagfile) as reader:
+            for timestamp, connection, msg in reader:
+                print(timestamp, msg)
+
+        # Or you can use pandas
+        with MiniAVDatabaseReader(bagfile) as reader:
+            df = reader.convert_to_pandas_df()
+            print(df)
     """
 
     def __init__(self, *args, **kwargs):
@@ -214,6 +261,20 @@ class MiniAVDatabaseReader(ROS2Reader):
 
         Orders the database when reading by ascending order in terms of time.
 
+        Example usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            from miniav.db import MiniAVDatabaseReader
+
+            bagfile = 'bag' # ros2 bag folder
+
+            # Or you can use pandas
+            with MiniAVDatabaseReader(bagfile) as reader:
+                df = reader.convert_to_pandas_df()
+                print(df)
+
         Returns:
             pandas.DataFrame: The ordered dataframe taken from the database.
         """
@@ -232,6 +293,20 @@ class MiniAVDatabaseReader(ROS2Reader):
         """
         Iterate method that returns a generator tuple.
 
+        Example usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            from miniav.db import MiniAVDatabaseReader
+
+            bagfile = 'bag' # ros2 bag folder
+
+            # You can use a generator
+            with MiniAVDatabaseReader(bagfile) as reader:
+                for timestamp, connection, msg in reader:
+                    print(timestamp, msg)
+
         Yields:
             int:    The timestamp for the message
             rosbags.ros2.connection.Connection: The connection object for this message
@@ -249,6 +324,31 @@ def _run_combine(args):
     package was only supported in ROS 1, but the control stack we were using was in ROS 2. It is desired that
     the bagfiles are combined, timestamp corrected, so that replaying the data includes the ground truth of the
     robot.
+
+    Example usage:
+
+    ```bash
+    miniav -vv db combine -c configuration.yml
+    ```
+
+    `configuration.yml`:
+
+    ```yaml
+    output:
+      file: output
+
+    rosbag1:
+      file: ros1.bag
+      topics:
+        - /mocap_node/mini_av/pose
+
+    rosbag2:
+      file: ros2bag/
+      messages:
+        vehicle_input:
+          file: data/VehicleInput.msg
+          topic: custom_msgs/msg/VehicleInput
+    ```
     """
     LOGGER.debug("Running 'db combine' entrypoint...")
 
@@ -296,6 +396,24 @@ def _run_read(args):
     types).
 
     This command is simply a debug tool for reading a MiniAV database file.
+
+    Example usage:
+
+    ```bash
+    miniav -vv db read input
+
+    # OR
+
+    miniav -vv db read configuration.yaml
+    ```
+
+    `configuration.yml`:
+
+    ```yaml
+    input:
+      file: input
+    ```
+
     """
     LOGGER.debug("Running 'db read' entrypoint...")
 
