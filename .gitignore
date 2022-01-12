@@ -20,3 +20,5 @@ __pycache__/
 *.yml
 *.yaml
 
+# Except
+!.github/workflows/*
