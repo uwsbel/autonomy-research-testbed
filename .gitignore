@@ -1,6 +1,7 @@
 # general things to ignore
 build/
 dist/
+.DS_Store
 *.egg-info/
 *.egg
 *.py[cod]
