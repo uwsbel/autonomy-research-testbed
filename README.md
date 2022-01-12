@@ -17,8 +17,8 @@ To setup the miniav cli, it is fairly simple.
 First, clone the miniav repo locally:
 
 ```bash
-git clone git@github.com:uwsbel/miniav-cli.git
-cd miniav-cli
+git clone git@github.com:uwsbel/miniav.git
+cd miniav
 ```
 
 ### Install the miniav package

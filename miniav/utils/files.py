@@ -61,23 +61,23 @@ def get_file_extension(filename: str) -> str:
     """
     return Path(filename).suffix
 
-def get_resolved_path(path, wa_cli_relative: bool = False, return_as_str: bool = True) -> Union[str, Path]:
+def get_resolved_path(path, miniav_relative: bool = False, return_as_str: bool = True) -> Union[str, Path]:
     """
-    Get the fully resolved path to a specific file. If ``wa_cli_relative`` is set to true,
-    the desired filename is relative to the ``wa_cli`` root subdirectory.
+    Get the fully resolved path to a specific file. If ``miniav_relative`` is set to true,
+    the desired filename is relative to the ``miniav`` root subdirectory.
 
     Args:
         path (str): The path to get a fully resolved path from
-        wa_cli_relative (bool): Whether the filepath is relative to the wa_cli subfolder. Defaults to False.
+        miniav_relative (bool): Whether the filepath is relative to the miniav subfolder. Defaults to False.
         return_as_str (bool): Returns the path as a string. Otherwise will return as a pathlib.Path object. Defaults to True
 
     Returns:
         Union[str, Path]: The fully resolved path as a string or Path object
     """
     path = Path(path)
-    if wa_cli_relative:
-        from wa_cli import __file__ as wa_cli_file
-        path = Path(wa_cli_file).parent / path
+    if miniav_relative:
+        from miniav import __file__ as miniav_file
+        path = Path(miniav_file).parent / path
 
     resolved_path = path.resolve()
     if return_as_str:
