@@ -32,7 +32,7 @@ def _init():
 
 def _main():
     # Create the parser
-    parser = init()
+    parser = _init()
 
     # Parse the arguments and update logging
     args = parser.parse_args()
