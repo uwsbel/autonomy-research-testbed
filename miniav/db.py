@@ -22,7 +22,6 @@ from typing import NamedTuple, List, Tuple, Iterable, Any
 import sqlite3
 import pickle
 import pandas as pd
-import docker
 
 
 class MiniAVDatabase:
