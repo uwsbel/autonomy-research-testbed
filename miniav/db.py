@@ -77,7 +77,7 @@ class MiniAVDataFile:
     """
         This class represents a bag file that is stored or to be stored in the MiniAV Database.
 
-        The file stored in the MiniAV Database is a [rosbag](http://wiki.ros.org/rosbag), or a 
+        The file stored in the MiniAV Database is a `rosbag <http://wiki.ros.org/rosbag>`_, or a 
         data storage method introduced in ROS 1. Although ROS 1 bags are stored in the database
         itself, either ROS 1 or ROS 2 bags can be used to push to the remote database. Conversions
         between the different data types when pushing to and pulling from the database.
@@ -85,7 +85,7 @@ class MiniAVDataFile:
         This class was created to abstract away the ROS 1/2 bag types from the database itself. In the future,
         when ROS 2 is more fully adopted, this class could simply use ROS 2 bags.
         It is desired to utilize ROS 2 bags not, but it is currently not possible to describe 
-        custom message types in a ROS 2 bag, [see this issue](https://github.com/ros2/rosbag2/issues/782).
+        custom message types in a ROS 2 bag, `see this issue <https://github.com/ros2/rosbag2/issues/782>`_.
 
         When in the MiniAV database, a data file is idenfiable by it's name. The name has the following characteristics:
         - Begins with ``MINIAV-``
