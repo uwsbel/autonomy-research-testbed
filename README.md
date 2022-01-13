@@ -2,6 +2,8 @@
 
 The MiniAV project is meant to be a testbed for automated driving algorithm development and is to be used as a mechanism for validating the simulation platform [Chrono](https://projectchrono.org). The MiniAV platform is under activate development by the [Simulation Based Engineering Laboratory](https://sbel.wisc.edu) at the [University of Wisconsin-Madison](https://wisc.edu). 
 
+## Background
+
 The MiniAV platform provides the following resources for expediting development of autonomous algorithms:
 1. A parts list and instructions on how to build the physical platform
 2. A high-fidelity simulatiion environment built using [Chrono](https://projectchrono.org) that accurately models the vehicles dynamics and sensors
@@ -12,17 +14,24 @@ The MiniAV platform provides the following resources for expediting development 
 
 To setup the miniav cli, it is fairly simple. 
 
-### Clone the repo
+### Using pip
 
-First, clone the miniav repo locally:
+The miniav package is also available on [PyPI](https://pypi.org/project/miniav). To install it, run the following command:
+
+```bash
+pip install miniav
+```
+
+### From Sources
+
+Or, you can install the miniav package from sources. To do that, clone the miniav repo locally:
 
 ```bash
 git clone git@github.com:uwsbel/miniav.git
 cd miniav
 ```
 
-### Install the miniav package
-
+Then, use `setuptools` to install the miniav package:
 
 ```bash
 python setup.py install
