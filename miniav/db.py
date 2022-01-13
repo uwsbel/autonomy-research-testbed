@@ -56,6 +56,91 @@ class MiniAVDatabase:
     def __init__(self):
         pass
 
+    def push(self, bag: 'MiniAVDataFile'):
+        """
+        Push a database file to the MiniAV database.
+
+        The database is strictly made up of ros1 bags, so :meth:`~MiniAVDataFile.to_ros1` will always
+        be called. The file will then be copied (i.e. the original file still remains) to the database.
+        """
+        pass
+
+    def pull(self, name: str) -> 'MiniAVDataFile':
+        """
+        Pulls (downloads) a database file from the MiniAV database
+
+        Provided a name of the file to download, the file will be copied locally.
+        """
+        pass
+
+class MiniAVDataFile:
+    """
+        This class represents a bag file that is stored or to be stored in the MiniAV Database.
+
+        The file stored in the MiniAV Database is a [rosbag](http://wiki.ros.org/rosbag), or a 
+        data storage method introduced in ROS 1. Although ROS 1 bags are stored in the database
+        itself, either ROS 1 or ROS 2 bags can be used to push to the remote database. Conversions
+        between the different data types when pushing to and pulling from the database.
+
+        This class was created to abstract away the ROS 1/2 bag types from the database itself. In the future,
+        when ROS 2 is more fully adopted, this class could simply use ROS 2 bags.
+        It is desired to utilize ROS 2 bags not, but it is currently not possible to describe 
+        custom message types in a ROS 2 bag, [see this issue](https://github.com/ros2/rosbag2/issues/782).
+
+        When in the MiniAV database, a data file is idenfiable by it's name. The name has the following characteristics:
+        - Begins with ``MINIAV-``
+        - Ends with the date the file was created in the format of ``MM-DD-YYYY-HH-mm-ss``
+
+        For example, if a file was created on January 13th, 2022, at 9:00:00am, the database file will have the 
+        following name: ``MINIAV-01-13-2022-15-00-00``.
+
+        .. raw:: html
+
+            <div><div class="admonition note">
+            <p class="admonition-title">Note</p>
+            <p>The <code class="docutils literal notranslate"><span class="pre">HH-mm-ss</span></code> (i.e. hour-minute-second) is defined in terms of the Universal Coordinate Time (UTC).</p>
+            </div></div>
+
+        When pulling a file from the database, it *will* have a name. If you're working with a file locally and have
+        not interacted with the database at all, it will *not* have a name.
+    """
+
+    def __init__(self):
+        # Name is none by default
+        self._name = None
+
+    @property
+    def name(self):
+        """Name property.
+
+        If the file is local and/or the file has not interacted with the database yet, the name will be None.
+
+        Raises:
+            AttributeError: raised if the name is unknown
+        """
+        if self._name is None:
+            raise AttributeError("The name has not been set!!")
+
+        return self._name
+
+    def to_ros1(self):
+        """
+        Converts this database file to a ros1 bag.
+
+        If the bag that this object represents is already a ros1 bag, nothing is done. If it 
+        represents a ros2 bag, a conversion will be done to ros1.
+        """
+        pass
+
+    def to_ros2(self):
+        """
+        Converts this database file to a ros2 bag
+
+        If the bag that this object represents is already a ros2 bag, nothing is done. If it
+        represents a ros1 bag, a conversion will be done to ros2.
+        """
+        pass
+
     def combine(self,
                 ros1_bag: str,
                 ros2_bag: str,
@@ -95,7 +180,7 @@ class MiniAVDatabase:
             ros2_messages = ros2_reader.messages(connections=ros2_conns)
 
             # Create a writer that will be used to write data to the rosbag file
-            with MiniAVDatabaseWriter(output_bag) as writer:
+            with MiniAVDataFileWriter(output_bag) as writer:
                 # If there any custom types, we will need to register them to read the bags
                 # Also, to read them back easily later, we'll store the message types in the
                 # bag itself
@@ -141,11 +226,8 @@ class MiniAVDatabase:
                     writer.write(writer_conns[conn.id], timestamp, rawdata)
                 LOGGER.info(f"Inserted {i} messages from the ROS2 bag")
 
-    def push(self):
-        pass
 
-
-class MiniAVDatabaseWriter(ROS2Writer):
+class MiniAVDataFileWriter(ROS2Writer):
     """
     Helper class to write to a ROS 2 bag.
 
@@ -185,7 +267,7 @@ class MiniAVDatabaseWriter(ROS2Writer):
         self.cursor.execute(sql,(sqlite3.Binary(pdata),))
 
 
-class MiniAVDatabaseReader(ROS2Reader):
+class MiniAVDataFileReader(ROS2Reader):
     """
     Helper class to read from a ROS 2 bag that was written by the miniav package
 
@@ -198,17 +280,17 @@ class MiniAVDatabaseReader(ROS2Reader):
     .. highlight:: python
     .. code-block:: python
 
-        from miniav.db import MiniAVDatabaseReader
+        from miniav.db import MiniAVDataFileReader
 
         bagfile = 'bag' # ros2 bag folder
 
         # You can use a generator
-        with MiniAVDatabaseReader(bagfile) as reader:
+        with MiniAVDataFileReader(bagfile) as reader:
             for timestamp, connection, msg in reader:
                 print(timestamp, msg)
 
         # Or you can use pandas
-        with MiniAVDatabaseReader(bagfile) as reader:
+        with MiniAVDataFileReader(bagfile) as reader:
             df = reader.convert_to_pandas_df()
             print(df)
     """
@@ -222,12 +304,12 @@ class MiniAVDatabaseReader(ROS2Reader):
         """
         Private method called by the constructor that registers messages.
 
-        Using the MiniAVDatabaseWriter class, custom messages may be needed to parse the data types from
+        Using the :class:`~MiniAVDataFileWriter` class, custom messages may be needed to parse the data types from
         either ROS1 or ROS2. As a result, using that class, we've stored some information regarding those
         message types in a separate sqlite table from the one holding all the ROS info. This method will
         parse that metadata table and register the additional types it finds.
 
-        This method will work for rosbags not written by the miniav.db.MiniAVDatabaseWriter class, it
+        This method will work for rosbags not written by the :class:`~MiniAVDataFileWriter` class, it
         just won't do anything if it can't find the message table. This is the same functionality if the
         writer didn't actually need to register any topics when it was writing.
         """
@@ -266,12 +348,12 @@ class MiniAVDatabaseReader(ROS2Reader):
         .. highlight:: python
         .. code-block:: python
 
-            from miniav.db import MiniAVDatabaseReader
+            from miniav.db import MiniAVDataFileReader
 
             bagfile = 'bag' # ros2 bag folder
 
             # Or you can use pandas
-            with MiniAVDatabaseReader(bagfile) as reader:
+            with MiniAVDataFileReader(bagfile) as reader:
                 df = reader.convert_to_pandas_df()
                 print(df)
 
@@ -298,12 +380,12 @@ class MiniAVDatabaseReader(ROS2Reader):
         .. highlight:: python
         .. code-block:: python
 
-            from miniav.db import MiniAVDatabaseReader
+            from miniav.db import MiniAVDataFileReader
 
             bagfile = 'bag' # ros2 bag folder
 
             # You can use a generator
-            with MiniAVDatabaseReader(bagfile) as reader:
+            with MiniAVDataFileReader(bagfile) as reader:
                 for timestamp, connection, msg in reader:
                     print(timestamp, msg)
 
@@ -426,7 +508,7 @@ def _run_read(args):
 
     # Read and print out the data
     # TODO: Make this more useful. Metadata (num messages, time, etc.)?
-    with MiniAVDatabaseReader(input) as reader:
+    with MiniAVDataFileReader(input) as reader:
         for i, (timestamp, topic, msg) in enumerate(reader):
             print(timestamp, topic)
 
