@@ -1,4 +1,4 @@
-# Usage
+# CLI Usage
 
 ```{raw} html
 ---
