@@ -6,7 +6,7 @@ Yaml files are human readable configuration files: https://yaml.org/
 
 # Import some utilities
 from miniav.utils.logger import LOGGER
-from miniav.utils.files import file_exists, get_filetype
+from miniav.utils.files import file_exists, get_file_type
 
 # External library imports
 import yaml

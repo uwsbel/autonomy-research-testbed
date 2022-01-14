@@ -3,26 +3,59 @@ CLI command that handles interacting with the MiniAV database.
 """
 
 # rosbags imports
-from rosbags.rosbag1 import Reader as ROS1Reader
-from rosbags.rosbag2 import Reader as ROS2Reader, Writer as ROS2Writer
+from rosbags.rosbag1 import Reader as ROS1Reader, Writer as ROS1Writer, ReaderError as ROS1ReaderError, WriterError as ROS1WriterError
+from rosbags.rosbag2 import Reader as ROS2Reader, Writer as ROS2Writer, ReaderError as ROS2ReaderError, WriterError as ROS2WriterError
 from rosbags.rosbag2.reader import decompress
 from rosbags.rosbag2.connection import Connection as ROS2Connection
 from rosbags.typesys import get_types_from_msg, register_types
 from rosbags.serde import deserialize_cdr, ros1_to_cdr
 from rosbags.serde.messages import get_msgdef
+from rosbags.convert import convert, ConverterError
 
 # Imports from miniav
 from miniav.ros.messages import MessageType
-from miniav.utils.files import file_exists, get_filetype, get_file_extension, read_text, get_resolved_path
+from miniav.utils.files import file_exists, get_file_type, get_file_extension, read_text, get_resolved_path, as_path, copy_file
 from miniav.utils.logger import LOGGER
 from miniav.utils.yaml_parser import YAMLParser
 
 # General imports
-from typing import NamedTuple, List, Tuple, Iterable, Any
+from typing import NamedTuple, List, Tuple, Iterable, Any, Union
 import sqlite3
 import pickle
 import pandas as pd
 
+# -------------
+# Message Types
+# -------------
+
+def register_type(msg_file: Union['Path', str], name: str = None):
+    """Registers a custom message type so that it can be read by ``rosbags``
+
+    In order for custom messages to be read from ROS 2 bags, they must be registered with the ``rosbags``
+    type system. This is do to an internal issue with ros2 bags that is going to fixed in an upcoming
+    release (`see this issue <https://github.com/ros2/rosbag2/issues/782>`_).
+
+    To register a message type, you must provide the file that the message is stored in (either with an 
+    extension ``.msg`` or an extension ``.idl``), and the name of the the message (i.e. std_msgs/msg/Header).
+
+    Args:
+        msg_file (Union[Path, str]): The path the message definition is in. Must have an extension ``.msg`` or ``.idl``
+        name (str, optional): The name of the custom message. Only optional if an ``idl`` file is passed.
+    """
+    ext = get_file_extension(msg_file)
+    assert ext == '.msg' or ext == '.idl'
+
+    text = as_path(msg_file).read_text()
+
+    if ext == '.msg':
+        assert name is not None
+        register_types(get_types_from_msg(text, name))
+    else:
+        register_types(get_types_from_idl(text))
+
+# --------
+# Database
+# --------
 
 class MiniAVDatabase:
     """
@@ -32,117 +65,227 @@ class MiniAVDatabase:
     However, it may be desired to write scripts which pull data from the database. This class can be
     used in these instances.
 
-    Example usage:
+    The MiniAV database is contructed in a way that the `bag-database <https://swri-robotics.github.io/bag-database/>`_
+    application can be used. Most of the restrictive descisions made for this package (i.e. using ROS 1 and ROS 2 bags)
+    comes from requirements based on this package. The ``bag-database`` reads ros1 bag files from a regular directory
+    and displays them, along with some additional features, in a web application. It is very helpful for development.
 
-    .. highlight:: python
-    .. code-block:: python
+    The database, therefore, is really just a directory. The directory is filled with ros1 bag files and can either
+    be managed locally or remotely with a url.
 
-        from miniav.db import MiniAVDatabase
-        from miniav.ros.messages import MessageType
+    .. warning::
 
-        ros1bag = 'ros1.bag'
-        ros2bag = 'ros2bag/'
-        output = 'new_ros2bag'
-
-        # Custom datatypes specific to the ros2 bag that need to be registered
-        # The custom message definitions are located in custom_msgs/msg/*
-        ros2_types = [MessageType(file='data/VehicleInput.msg', topic='custom_msgs/msg/VehicleInput')]
-
-        # Run the combine command
-        db = MiniAVDatabase()
-        db.combine(ros1bag, ros2bag, output, ros2_types=ros2_types)
+        Currently only local databases are supported with the :meth:`~push` and :meth:`~pull` commands.
         
-    """
-    def __init__(self):
-        pass
+        .. raw:: html
 
-    def push(self, bag: 'MiniAVDataFile'):
+           </div></div> 
+    """
+    def __init__(self, local_path: Union['Path', str]):
+        self._local_path = as_path(local_path)
+
+        assert self._local_path.exists()
+
+    def push(self, bag: Union['MiniAVDataFile', str], keep: bool = True):
         """
         Push a database file to the MiniAV database.
 
         The database is strictly made up of ros1 bags, so :meth:`~MiniAVDataFile.to_ros1` will always
         be called. The file will then be copied (i.e. the original file still remains) to the database.
-        """
-        pass
 
-    def pull(self, name: str) -> 'MiniAVDataFile':
+        Args:
+            bag (Union[MiniAVDataFile, str]): The bag file to push.
+            keep (bool, optional): If False, will delete the file after pushing it.
+        """
+        if isinstance(bag, str):
+            bag = MiniAVDataFile(bag)
+
+        copy_file(bag.path, self._local_path / as_path(bag.db_name))
+
+        if not keep:
+            shutil.rmtree(bag.path)
+
+    def pull(self, name: str, dest: str = None) -> 'MiniAVDataFile':
         """
         Pulls (downloads) a database file from the MiniAV database
 
         Provided a name of the file to download, the file will be copied locally.
+        
+        Args:
+            name (str): The name of the file to pull. Includes the extension.
+            dest (str, optional): The destination of the file to be saved locally. If unset, will save with the same name is in the database.
         """
-        pass
+        name = as_path(name)
+        if dest is None:
+            dest = name.name
+        copy_file(self._local_path / name, dest)
+
+        return MiniAVDataFile(dest)
+
+    def ls(self, path: str = ""):
+        """
+        List the contents of the directory at the database root + ``path``.
+
+        See `the man pages <https://man7.org/linux/man-pages/man1/ls.1.html>`_ for more information on ``ls``.
+
+        Args:
+            path(str, optional): Additional paths to navigate when running ``ls``.
+        """
+        import os
+        return os.listdir(self._local_path / as_path(path))
+
+# ---------
+# Data File
+# ---------
 
 class MiniAVDataFile:
     """
-        This class represents a bag file that is stored or to be stored in the MiniAV Database.
+    This class represents a bag file that is stored locally.
 
-        The file stored in the MiniAV Database is a `rosbag <http://wiki.ros.org/rosbag>`_, or a 
-        data storage method introduced in ROS 1. Although ROS 1 bags are stored in the database
-        itself, either ROS 1 or ROS 2 bags can be used to push to the remote database. Conversions
-        between the different data types when pushing to and pulling from the database.
+    The file stored in the MiniAV Database is a `rosbag <http://wiki.ros.org/rosbag>`_, or a 
+    data storage method introduced in ROS 1. Although ROS 1 bags are stored in the database
+    itself, either ROS 1 or ROS 2 bags can be used to push to the remote database. Conversions
+    between the different data types when pushing to and pulling from the database.
 
-        This class was created to abstract away the ROS 1/2 bag types from the database itself. In the future,
-        when ROS 2 is more fully adopted, this class could simply use ROS 2 bags.
-        It is desired to utilize ROS 2 bags not, but it is currently not possible to describe 
-        custom message types in a ROS 2 bag, `see this issue <https://github.com/ros2/rosbag2/issues/782>`_.
+    This class was created to abstract away the ROS 1/2 bag types from the database itself. In the future,
+    when ROS 2 is more fully adopted, this class could simply use ROS 2 bags.
+    It is desired to utilize ROS 2 bags now, but it is currently not possible to describe 
+    custom message types in a ROS 2 bag, `see this issue <https://github.com/ros2/rosbag2/issues/782>`_.
 
-        When in the MiniAV database, a data file is idenfiable by it's name. The name has the following characteristics:
-        - Begins with ``MINIAV-``
-        - Ends with the date the file was created in the format of ``MM-DD-YYYY-HH-mm-ss``
+    When in the MiniAV database, a data file is idenfiable by it's name. The name has the following characteristics:
+    - Begins with ``MINIAV-``
+    - Ends with the date the file was created in the format of ``mm-dd-YYYY-HH-MM-SS``
 
-        For example, if a file was created on January 13th, 2022, at 9:00:00am, the database file will have the 
-        following name: ``MINIAV-01-13-2022-15-00-00``.
+    For example, if a file was created on January 13th, 2022, at 9:00:00am, the database file will have the 
+    following name: ``MINIAV-01-13-2022-15-00-00``.
 
+    .. note::
+
+        The ``HH-MM-SS`` (i.e. hour-minute-second) is defined in terms of the Universal Coordinate Time (UTC).
+        
         .. raw:: html
 
-            <div><div class="admonition note">
-            <p class="admonition-title">Note</p>
-            <p>The <code class="docutils literal notranslate"><span class="pre">HH-mm-ss</span></code> (i.e. hour-minute-second) is defined in terms of the Universal Coordinate Time (UTC).</p>
-            </div></div>
+           </div></div> 
 
-        When pulling a file from the database, it *will* have a name. If you're working with a file locally and have
-        not interacted with the database at all, it will *not* have a name.
+    ROS 1 bags are files with extension ``.bag``, i.e. ``MINIAV-01-13-2022-15-00-00.bag``. ROS 2 bags are 
+    directories, i.e. ``MINIAV-01-13-2022-15-00-00/``.
+
+    When pulling a file from the database, it *will* have a name. If you're working with a file locally and have
+    not interacted with the database at all, it will generate a new name using the aforementioned structure.
     """
 
-    def __init__(self):
-        # Name is none by default
-        self._name = None
+    def __init__(self, path: str):
+        # Ensure the path actually exists
+        self._path = path
+        file_exists(self._path, throw_error=True, can_be_directory=True)
+
+        # Generate the name for the file based on the start time of the bag (assumed to be time of creation)
+        self._name = self._generate_name()
+
+        self._type = _get_bag_version(path)
+
+        self._reader = None
+
+    def _generate_name(self):
+        """Generates the name of the miniav data file
+
+        *Should* be deterministic. Will grab the start time from the bag file (either ros1 or ros2)
+        and use that as the creation data/time.
+
+        As a reminder, the format of the name is ``MINIAV-mm-dd-YYYY-HH-MM-SS``.
+        """
+        import datetime 
+
+        with MiniAVDataFileReader(self._path) as reader:
+            # reader.start_time returns a time in UTC and includes nanoseconds
+            # We don't need nanoseconds
+            start_time = reader.start_time // 1e9
+
+        # Generate the date/time portion of the name
+        time_str = datetime.datetime.fromtimestamp(start_time).strftime("%m-%d-%Y-%H-%M-%S")
+
+        # Prepend the time with MINIAV-
+        name = "MINIAV-" + time_str
+        LOGGER.info(f"Generated name is {name}")
+
+        return name
+
+    @property
+    def path(self):
+        """Path property.
+        """
+        return self._path
 
     @property
     def name(self):
         """Name property.
 
-        If the file is local and/or the file has not interacted with the database yet, the name will be None.
+        As a reminder, the format of the name is ``MINIAV-mm-dd-YYYY-HH-MM-SS``. It *should* be unique.
+        """
+        return self._name
+
+    @property
+    def db_name(self):
+        """Database name property.
+
+        The file name of the bag stored in the database. This differs from :attr:`name` in that it may include
+        an extension (i.e. ``.bag``)
+        """
+        return self._name + '.bag' if self._type == 1 else ''
+
+    @property
+    def reader(self):
+        """Get the reader object for this data file
+        
+        Returns:
+           MiniAVDataFileReader: The file reader
 
         Raises:
-            AttributeError: raised if the name is unknown
+            RuntimeError: The reader hasn't been initialized yet. See :meth:`~__enter__`.
         """
-        if self._name is None:
-            raise AttributeError("The name has not been set!!")
+        if self._reader is None:
+            raise RuntimeError("The reader has not been opened yet.")
 
-        return self._name
+        return self._reader
 
     def to_ros1(self):
         """
         Converts this database file to a ros1 bag.
 
-        If the bag that this object represents is already a ros1 bag, nothing is done. If it 
-        represents a ros2 bag, a conversion will be done to ros1.
+        If the bag that this object represents is already a ros1 bag, nothing is done (a warning will be made). 
+        If it represents a ros2 bag, a conversion will be done to ros1.
         """
-        pass
+        if _get_bag_version(self._path) == 1:
+            LOGGER.warn(f"'{self._path}' is already a ros1 bag. Doing nothing.")
+        else:
+            path = as_path(self._path)
+            name = as_path(self._name + ".bag")
+            if name.exists():
+                LOGGER.error(f"'{name}' already exists. Doing nothing.")
+                return
+            convert(path, name)
+            LOGGER.info(f"Successfully saved '{path}' as a ros1 bag to '{name}'")
 
     def to_ros2(self):
         """
         Converts this database file to a ros2 bag
 
-        If the bag that this object represents is already a ros2 bag, nothing is done. If it
-        represents a ros1 bag, a conversion will be done to ros2.
+        If the bag that this object represents is already a ros2 bag, nothing is done (a warning will be made). 
+        If it represents a ros1 bag, a conversion will be done to ros2.
         """
-        pass
+        if _get_bag_version(self._path) == 2:
+            LOGGER.warn(f"'{self._path}' is already a ros2 bag. Doing nothing.")
+        else:
+            path = as_path(self._path)
+            name = as_path(self._name)
+            if name.exists():
+                LOGGER.error(f"'{name}' already exists. Doing nothing.")
+                return
+            convert(path, name)
+            LOGGER.info(f"Successfully saved '{path}' as a ros2 bag to '{name}'")
 
-    def combine(self,
-                ros1_bag: str,
+    @staticmethod
+    def combine(ros1_bag: str,
                 ros2_bag: str,
                 output_bag: str,
                 ros1_topics: List[str] = [],
@@ -166,11 +309,14 @@ class MiniAVDataFile:
             ros2_topics     (List[str], optional): The topics to copy over from the ros2 bag. If empty, will copy all topics. Default is [] (empty).
             ros1_types      (List[miniav.ros.messages.MessageType], optional): The custom message types to register when reading. Default is [] (will not register any custom message types).
             ros2_types      (List[miniav.ros.messages.MessageType], optional): The custom message types to register when reading. Default is [] (will not register any custom message types).
+
+        Raises:
+            KeyError: Raised if an unidentified message type is attempted to be parsed
         """
         LOGGER.info("Running combine command...")
 
         # Read through both bag files at the same time
-        with ROS1Reader(ros1_bag) as ros1_reader, ROS2Reader(ros2_bag) as ros2_reader:
+        with MiniAVDataFileReader(ros1_bag) as ros1_reader, MiniAVDataFileReader(ros2_bag) as ros2_reader:
             # Contruct a connection list that is used to filter topics in the bag files
             ros1_conns = [x for x in ros1_reader.connections.values() if x.topic in ros1_topics]  # noqa
             ros2_conns = [x for x in ros2_reader.connections.values() if x.topic in ros2_topics]  # noqa
@@ -190,7 +336,7 @@ class MiniAVDataFile:
                     add_types = {}
                     for message in types:
                         msg_def = read_text(message.file)
-                        add_types.update(get_types_from_msg(msg_def, message.topic))
+                        add_types.update(get_types_from_msg(msg_def, message.name))
                     register_types(add_types)
 
                     # Create the table to store the message types for later
@@ -226,12 +372,103 @@ class MiniAVDataFile:
                     writer.write(writer_conns[conn.id], timestamp, rawdata)
                 LOGGER.info(f"Inserted {i} messages from the ROS2 bag")
 
+    def open(self):
+        """Open up the data file for reading.
 
-class MiniAVDataFileWriter(ROS2Writer):
+        This is *not* a recommended method for reading the MiniAV data file. Instead,
+        you should use the contextmanager with :meth:`~__enter__`.
+
+        It is not recommended because you must explicitly open *and* close the file. If unclosed,
+        the file may become corrupt or other processes may be unable to open it.
+
+        Usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            bagfile = "SOME_ROSBAG_FILE.bag"
+
+            # Open the bag file
+            file = MiniAVDataFile(bagfile)
+            file.open()
+
+            for timestamp, connection, msg in file.reader:
+                print(timestamp, msg)
+
+            # Don't forget to close it!!
+            file.close()
+
+        Raises:
+            AssertionError: If the reader is already open
+        """
+        assert self._reader is None
+
+        self._reader = MiniAVDataFileReader(self._path)
+        self._reader.open()
+
+    def close(self):
+        """Close the opened data file.
+
+        This is required to be called if :meth:`~open` is called explicitly. It is instead recommended to use
+        the contextmanager with the :meth:`~__enter__` method.
+
+        Raises:
+            AssertionError: If the reader has not been opened yet
+        """
+        assert self._reader is not None
+
+        self._reader.close()
+        self._reader = None
+
+
+    def __enter__(self):
+        """Read the file when entering contextmanager.
+
+        This is the preferred method of reading a MiniAV database file.
+
+        Examples:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            bagfile = "SOME_ROSBAG_FILE.bag"
+
+            with MiniAVDataFile(bagfile) as file:
+                for timestamp, connection, msg in file.reader:
+                    print(timestamp, msg)
+
+        Alternatively, see :meth:`~open` and :meth:`~close`.
+        """
+        self.open()
+
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        """Close the file when entering contextmanager."""
+        self.close()
+
+        return False
+
+# ----------------
+# Data File Writer
+# ----------------
+
+class _MiniAVROS1DataFileWriter(ROS1Writer):
+    """
+    Helper class to write to a ROS 1 bag.
+
+    Is a simple wrapper around the :class:`rosbags.ros1.writer.Writer` class. Doesn't actually
+    add any additional functionality.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class _MiniAVROS2DataFileWriter(ROS2Writer):
     """
     Helper class to write to a ROS 2 bag.
 
-    Is a simple wrapper around the rosbags.ros2.writer.Writer class. Adds additional ability
+    Is a simple wrapper around the :class:`rosbags.ros2.writer.Writer` class. Adds additional ability
     to add a custom table for message types.
     """
 
@@ -266,12 +503,232 @@ class MiniAVDataFileWriter(ROS2Writer):
         sql = f"INSERT INTO message_types (types) VALUES(?)"
         self.cursor.execute(sql,(sqlite3.Binary(pdata),))
 
+class MiniAVDataFileWriter:
+    """Simple wrapper class that allows the writing of ROS 1 *or* ROS 2 bags
 
-class MiniAVDataFileReader(ROS2Reader):
+    The writer classes do *not* append or overwrite existing bags. They will only write new bags.
+
+    Args:
+        path (Union[Path, str]): The path to write a file to.
+        type (int): The ROS version type of the bag you want to write. Can be 1 or 2. If 0, the type will attempted to be inferred.
+    """
+
+    def __init__(self, path: 'Union[Path, str]', type: int = 0):
+        self._writer = None
+        self._path = path
+
+        self._type = _get_bag_version(path)
+
+    def open(self) -> 'Union[_MiniAVROS1DataFileWriter, _MiniAVROS2DataFileWriter]':
+        """
+        Method which will return either a :class:`~_MiniAVROS1DataFileWriter` or a 
+        :class:`~_MiniAVROS2DataFileWriter`.
+
+        Returns:
+            Union[_MiniAVROS1DataFileWriter, _MiniAVROS2DataFileWriter]: The correct writer for the bag type.
+
+        Raises:
+            RuntimeError: If the bag already exists. The writer will only write new bags.
+        """
+        if self._type == 1:
+            try:
+                writer = _MiniAVROS1DataFileWriter(self._path)
+                writer.open()
+                LOGGER.info(f"Opened '{self._path}' as a ROS 1 bag.")
+                return writer
+            except ROS1WriterError as e:
+                LOGGER.error(e)
+        elif self._type == 2:
+            try:
+                writer = _MiniAVROS2DataFileWriter(self._path)
+                writer.open()
+                LOGGER.info(f"Opened '{self._path}' as a ROS 2 bag.")
+                return writer
+            except ROS2WriterError as e:
+                LOGGER.error(e)
+
+        raise RuntimeError(f"'{self._path}' already exists. MiniAVDataFileWriter can only write new ros bags.")
+
+    def close(self):
+        """
+        Method to close the writer.
+
+        Raise:
+            RuntimeError: If the writer was never opened.
+        """
+        if self._writer is None:
+            raise RuntimeError(f"Writer was never opened.")
+
+        self._writer.close()
+        self._writer = None
+
+    def __enter__(self):
+        """Open ROS bag when entering contextmanager."""
+        self._writer = self.open()
+        return self._writer
+
+    def __exit__(self, *args, **kwargs):
+        """Close ROS bag when entering contextmanager."""
+        self.close()
+        return False 
+
+# ----------------
+# Data File Reader
+# ----------------
+
+class MiniAVDataFileReader:
+    """Simple wrapper class that allows the reading of ROS 1 *or* ROS 2 bags
+
+    Args:
+        path (Union[Path, str]): The path to write a file to.
+    """
+
+    def __init__(self, path: 'Union[Path, str]'):
+        self._writer = None
+        self._path = path
+
+        self._type = _get_bag_version(path)
+
+        self._reader = None
+
+        # rosbags requires different ways of deserializing the bag files depending on the version
+        # If it's a ros2 bag, just deserialize it
+        # If it's a ros1 bag, we'll need to first serialize it to ros2 format (cdr), then deserialize it
+        self._deserialize_func = deserialize_cdr if self._type == 2 else lambda raw, type: deserialize_cdr(ros1_to_cdr(raw, type), type)
+
+    def convert_to_pandas_df(self) -> pd.DataFrame:
+        """
+        Convert the sqlite database to a pandas dataframe.
+
+        Orders the database when reading by ascending order in terms of time.
+
+        Example usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            from miniav.db import MiniAVDataFileReader
+
+            bagfile = 'bag' # ros2 bag folder
+
+            # Or you can use pandas
+            with MiniAVDataFileReader(bagfile) as reader:
+                df = reader.convert_to_pandas_df()
+                print(df)
+
+        Returns:
+            pandas.DataFrame: The ordered dataframe taken from the database.
+        """
+        # Read the messages from the generator into a pandas dataframe
+        df = pd.DataFrame(self._reader.messages(), columns=['connections', 'timestamps', 'messages'])
+        df = df[['timestamps', 'connections', 'messages']] # reorder the columns 
+        
+        # Deserialize the messages
+        # TODO: Would ideally do this as we go. Possible?
+        df['messages'] = df.apply(lambda r: self._deserialize_func(r['messages'], r['connections'].msgtype), axis=1)
+
+        return df
+
+    def __iter__(self) -> Iterable[Tuple[int, Union['ROS1Connection', ROS2Connection], Any]]:
+        """
+        Iterate method that returns a generator tuple.
+
+        Example usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            from miniav.db import MiniAVDataFileReader
+
+            bagfile = 'bag' # ros2 bag folder
+
+            # You can use a generator
+            with MiniAVDataFileReader(bagfile) as reader:
+                for timestamp, connection, msg in reader:
+                    print(timestamp, msg)
+
+        Yields:
+            Tuple[int, Union[ROS1Connection, ROS2Connection], Any]: The timestamp for the message, the connection object for this message, and the deserialized message
+        """
+        LOGGER.debug(f"Reading from {str(self._path)} in ascending time...")
+
+        for i, (connection, timestamp, rawdata) in enumerate(self._reader.messages()):
+            yield timestamp, connection, self._deserialize_func(rawdata, connection.msgtype)
+        return False 
+
+    def __getattr__(self, attr):
+        return getattr(self._reader, attr)
+
+    def open(self) -> 'Union[_MiniAVROS1DataFileReader, _MiniAVROS2DataFileReader]':
+        """
+        Method which will return either a :class:`~_MiniAVROS1DataFileReader` or a 
+        :class:`~_MiniAVROS2DataFileReader`.
+
+        Returns:
+            Union[_MiniAVROS1DataFileReader, _MiniAVROS2DataFileReader]: The correct reader for the bag type.
+
+        Raises:
+            RuntimeError: If the bag already exists. The writer will only write new bags.
+        """
+        if self._type == 1:
+            try:
+                reader = _MiniAVROS1DataFileReader(self._path)
+                reader.open()
+                LOGGER.info(f"Opened '{self._path}' as a ROS 1 bag.")
+                self._reader = reader
+            except ROS1ReaderError as e:
+                LOGGER.error(e)
+        elif self._type == 2:
+            try:
+                reader = _MiniAVROS2DataFileReader(self._path)
+                reader.open()
+                LOGGER.info(f"Opened '{self._path}' as a ROS 2 bag.")
+                self._reader = reader
+            except ROS2ReaderError as e:
+                LOGGER.error(e)
+
+        if self._reader is None:
+            raise RuntimeError(f"'{self._path}' doesn't exist or some other issue occurred.")
+
+    def close(self):
+        """
+        Method to close the reader.
+
+        Raise:
+            RuntimeError: If the reader was never opened.
+        """
+        if self._reader is None:
+            raise RuntimeError(f"Reader was never opened.")
+
+        self._reader.close()
+        self._reader = None
+
+    def __enter__(self):
+        """Open ROS bag when entering contextmanager."""
+        self.open()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        """Close ROS bag when entering contextmanager."""
+        self.close()
+        
+
+class _MiniAVROS1DataFileReader(ROS1Reader, MiniAVDataFileReader):
+    """
+    Helper class to read from a ROS 1 bag.
+
+    Is a simple wrapper around the :class:`rosbags.ros1.reader.Reader` class. Doesn't actually
+    add any additional functionality.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class _MiniAVROS2DataFileReader(ROS2Reader, MiniAVDataFileReader):
     """
     Helper class to read from a ROS 2 bag that was written by the miniav package
 
-    It simply wraps the ``rosbags.ros2.reader.Reader`` class. Adds additional functionality
+    It simply wraps the :class:`rosbags.ros2.reader.Reader` class. Adds additional functionality
     to read from a custom meta data table to register message types without needing to know
     the path to where they're stored.
 
@@ -337,67 +794,34 @@ class MiniAVDataFileReader(ROS2Reader):
                     for data in c:
                         register_types(pickle.loads(data[0]))
 
-    def convert_to_pandas_df(self) -> pd.DataFrame:
-        """
-        Convert the sqlite database to a pandas dataframe.
 
-        Orders the database when reading by ascending order in terms of time.
+# ---------------------------
+# Database Specific Utilities
+# ---------------------------
 
-        Example usage:
+def _get_bag_version(path: str) -> int:
+    """Privattet helper method that guesses the bag version (1 or 2) given the path.
 
-        .. highlight:: python
-        .. code-block:: python
+    ROS 1 bags are single files with extensions ``.bag``. ROS 2 bags are folders. We will simply check
+    if the path is a file and assume that it is a ROS 1 bag, if so.
 
-            from miniav.db import MiniAVDataFileReader
+    Returns:
+        int: 1 if the path is a rosbag (ROS 1), 2 if it is a ROS 2 bag
+    """
+    path = as_path(path)
 
-            bagfile = 'bag' # ros2 bag folder
-
-            # Or you can use pandas
-            with MiniAVDataFileReader(bagfile) as reader:
-                df = reader.convert_to_pandas_df()
-                print(df)
-
-        Returns:
-            pandas.DataFrame: The ordered dataframe taken from the database.
-        """
-        # Read the messages from the generator into a pandas dataframe
-        df = pd.DataFrame(self.messages(), columns=['connections', 'timestamps', 'messages'])
-        df = df[['timestamps', 'connections', 'messages']] # reorder the columns 
+    if path.is_file():
+        type = 1
+    elif path.exists():
+        type = 2
+    else:
+        type = 1 if '.bag' in str(path) else 2
         
-        # Deserialize the messages
-        # TODO: Would ideally do this as we go. Possible?
-        df['messages'] = df.apply(lambda r: deserialize_cdr(r['messages'], r['connections'].msgtype), axis=1)
+    return type
 
-        return df
-
-        
-    def __iter__(self) -> Iterable[Tuple[int, ROS2Connection, Any]]:
-        """
-        Iterate method that returns a generator tuple.
-
-        Example usage:
-
-        .. highlight:: python
-        .. code-block:: python
-
-            from miniav.db import MiniAVDataFileReader
-
-            bagfile = 'bag' # ros2 bag folder
-
-            # You can use a generator
-            with MiniAVDataFileReader(bagfile) as reader:
-                for timestamp, connection, msg in reader:
-                    print(timestamp, msg)
-
-        Yields:
-            int:    The timestamp for the message
-            rosbags.ros2.connection.Connection: The connection object for this message
-            Any:   The read, deserialized message
-        """
-        LOGGER.debug(f"Reading from {str(self.path)} in ascending time...")
-
-        for i, (connection, timestamp, rawdata) in enumerate(self.messages()):
-            yield timestamp, connection, deserialize_cdr(rawdata, connection.msgtype)
+# -----------
+# CLI Methods
+# -----------
 
 def _run_combine(args):
     """Command to combine a ROS 1 bag file and a ROS 2 bag into a single ROS 2 bag.
@@ -429,7 +853,7 @@ def _run_combine(args):
       messages:
         vehicle_input:
           file: data/VehicleInput.msg
-          topic: custom_msgs/msg/VehicleInput
+          name: custom_msgs/msg/VehicleInput
     ```
     """
     LOGGER.debug("Running 'db combine' entrypoint...")
@@ -448,8 +872,8 @@ def _run_combine(args):
     ros2_topics = yaml_parser.get('rosbag2', 'topics', default=args.ros2_topics)
 
     # Get the available messages
-    ros1_messages = [MessageType(file=d["file"], topic=d["topic"]) for d in yaml_parser.get('rosbag1', 'messages', default=args.ros1_messages).values()]
-    ros2_messages = [MessageType(file=d["file"], topic=d["topic"]) for d in yaml_parser.get('rosbag2', 'messages', default=args.ros2_messages).values()]
+    ros1_messages = [MessageType(file=d["file"], name=d["name"]) for d in yaml_parser.get('rosbag1', 'messages', default=args.ros1_messages).values()]
+    ros2_messages = [MessageType(file=d["file"], name=d["name"]) for d in yaml_parser.get('rosbag2', 'messages', default=args.ros2_messages).values()]
 
     # Get the output filename
     output = yaml_parser.get('output', 'file', default=args.output)
@@ -458,8 +882,7 @@ def _run_combine(args):
     assert file_exists(ros1bag, throw_error=True)
 
     # Run the combine command
-    db = MiniAVDatabase()
-    db.combine(ros1bag, ros2bag, output, ros1_topics=ros1_topics, ros2_topics=ros2_topics, ros1_types=ros1_messages, ros2_types=ros2_messages)
+    MiniAVDataFile.combine(ros1bag, ros2bag, output, ros1_topics=ros1_topics, ros2_topics=ros2_topics, ros1_types=ros1_messages, ros2_types=ros2_messages)
 
 
 def _run_read(args):
@@ -494,6 +917,10 @@ def _run_read(args):
     ```yaml
     input:
       file: input
+      messages:
+        vehicle_input:
+          file: data/VehicleInput.msg
+          name: custom_msgs/msg/VehicleInput
     ```
 
     """
@@ -505,6 +932,10 @@ def _run_read(args):
 
     # Get the input filename
     input = yaml_parser.get('input', 'file', default=args.input)
+
+    # Register the types that we need
+    ros2_messages = [MessageType(file=d["file"], name=d["name"]) for d in yaml_parser.get('input', 'messages', default=[]).values()]
+    register_type("data/VehicleInput.msg", "custom_msgs/msg/VehicleInput")
 
     # Read and print out the data
     # TODO: Make this more useful. Metadata (num messages, time, etc.)?

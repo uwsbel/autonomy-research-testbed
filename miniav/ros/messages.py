@@ -1,3 +1,7 @@
+"""
+Provides a utility class :class:`~MessageType` to aid in registering message types
+"""
+
 # General imports
 from typing import NamedTuple
 
@@ -9,9 +13,9 @@ class MessageType(NamedTuple):
 
     Attributes:
         file (str):     the path to the .msg file that defines the data types
-        topic (str):    the topic for which this message exists in the bag
+        name (str):     the nameof the message type (i.e. std_msgs/msg/Header)
     """ 
     file: str
-    topic: str
+    name: str
 
 

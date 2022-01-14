@@ -1,10 +1,36 @@
+"""
+Provides helper methods for interacting with the filesystem.
+"""
+
 # Import some utils
 from miniav.utils.logger import LOGGER
 
 # External library imports
 from pathlib import Path
 from typing import Union
+import shutil
 
+def as_path(path: str) -> Path:
+    """
+    Simple helper method to get a path as a :class:`pathlib.Path` object
+
+    Args:
+        path: the path to convert
+
+    Returns:
+        Path: The :class:`pathlib.Path` object
+    """
+    return Path(path)
+
+def copy_file(path: Union[Path, str], dest: Union[Path, str]):
+    """
+    Copy a file/directory (``path``) to some destination (``dest``).
+
+    Args:
+        path (Union[Path, str]): The file/directory source to copy.
+        dest (Union[Path, str]): The file/directory destination to copy to.
+    """
+    shutil.copy(path, dest)
 
 def file_exists(filename: str, throw_error: bool = False, can_be_directory: bool = False) -> bool:
     """
@@ -30,9 +56,9 @@ def file_exists(filename: str, throw_error: bool = False, can_be_directory: bool
     return is_file
 
 
-def get_filetype(filename: str, **kwargs) -> str:
+def get_file_type(filename: str, **kwargs) -> str:
     """
-    Get the filetype using the magic library.
+    Get the file type using the magic library.
 
     Args:
         filename (str): The filename to check

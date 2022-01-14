@@ -57,13 +57,15 @@ autoapi_options = [
     "imported-members",
     # "inherited-members"  # Doesn't work with viewcode extension
 ]
-autoapi_ignore = ["*_import*", "*_miniav_base*"]
+autoapi_ignore = ["*_import*"]
 autoapi_keep_files = False
 autoapi_generate_api_docs = True
 autoapi_add_toctree_entry = True
 # autoapi_keep_files = True
 # autoapi_template_dir = "_templates"
 # autoapi_member_order = "groupwise"
+
+# suppress_warnings = ["autoapi"]
 
 add_module_names = False
 

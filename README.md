@@ -6,7 +6,7 @@ The MiniAV project is meant to be a testbed for automated driving algorithm deve
 
 The MiniAV platform provides the following resources for expediting development of autonomous algorithms:
 1. A parts list and instructions on how to build the physical platform
-2. A high-fidelity simulatiion environment built using [Chrono](https://projectchrono.org) that accurately models the vehicles dynamics and sensors
+2. A high-fidelity simulation environment built using [Chrono](https://projectchrono.org) that accurately models the vehicles dynamics and sensors
 3. A development workflow for writing ROS 2 code and premade algorithms to control the vehicle through a closed cone course
 4. A database system to expedite data recording and parsing and an accompaning command line interface
 
