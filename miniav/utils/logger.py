@@ -1,3 +1,20 @@
+"""
+Provides a custom logger object.
+
+Should be used like the following:
+
+.. highlight:: python
+.. code-block:: python
+    
+    from miniav.utils.logger import LOGGER
+
+    LOGGER.fatal("Fatal")
+    LOGGER.error("Error")
+    LOGGER.warn("Warning")
+    LOGGER.info("Information")
+    LOGGER.debug("Debug")
+"""
+
 import logging
 from colorlog import ColoredFormatter
 
@@ -10,7 +27,7 @@ CONSOLE_HANDLER = logging.StreamHandler()
 CONSOLE_HANDLER.setFormatter(ColoredFormatter(DEFAULT_LOGGING_FORMAT))
 
 # Set default logging levels
-DEFAULT_LOGGING_LEVEL = logging.INFO
+DEFAULT_LOGGING_LEVEL = logging.WARNING
 CONSOLE_HANDLER.setLevel(DEFAULT_LOGGING_LEVEL)
 LOGGER.setLevel(DEFAULT_LOGGING_LEVEL)
 
@@ -31,9 +48,9 @@ def set_verbosity(verbosity: int):
         verbosity (int): A value between 0 and 2 that represents the number of levels below WARNING that should be used when logging.
     """
 
-    if verbosity < 0 or verbosity > 1:
+    if verbosity < 0 or verbosity > 2:
         raise ValueError(
-            f"Verbosity should be greater than 0 and less than 2. Got {verbosity}.")
+            f"Verbosity should be greater than 0 and less than 3. Got {verbosity}.")
 
     level = DEFAULT_LOGGING_LEVEL - verbosity * 10
     LOGGER.setLevel(level)
