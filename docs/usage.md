@@ -53,7 +53,7 @@ nodescription:
 ---
 module: miniav._miniav_base
 func: _init
-prog: wa
+prog: miniav
 path: db combine 
 nosubcommands:
 nodescription:
@@ -69,7 +69,7 @@ nodescription:
 ---
 module: miniav._miniav_base
 func: _init
-prog: wa
+prog: miniav
 path: db read 
 nosubcommands:
 nodescription:
