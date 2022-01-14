@@ -629,36 +629,6 @@ class MiniAVDataFileReader:
 
         return df
 
-    def __iter__(self) -> Iterable[Tuple[int, Union['ROS1Connection', ROS2Connection], Any]]:
-        """
-        Iterate method that returns a generator tuple.
-
-        Example usage:
-
-        .. highlight:: python
-        .. code-block:: python
-
-            from miniav.db import MiniAVDataFileReader
-
-            bagfile = 'bag' # ros2 bag folder
-
-            # You can use a generator
-            with MiniAVDataFileReader(bagfile) as reader:
-                for timestamp, connection, msg in reader:
-                    print(timestamp, msg)
-
-        Yields:
-            Tuple[int, Union[ROS1Connection, ROS2Connection], Any]: The timestamp for the message, the connection object for this message, and the deserialized message
-        """
-        LOGGER.debug(f"Reading from {str(self._path)} in ascending time...")
-
-        for i, (connection, timestamp, rawdata) in enumerate(self._reader.messages()):
-            yield timestamp, connection, self._deserialize_func(rawdata, connection.msgtype)
-        return False 
-
-    def __getattr__(self, attr):
-        return getattr(self._reader, attr)
-
     def open(self) -> 'Union[_MiniAVROS1DataFileReader, _MiniAVROS2DataFileReader]':
         """
         Method which will return either a :class:`~_MiniAVROS1DataFileReader` or a 
@@ -711,6 +681,36 @@ class MiniAVDataFileReader:
     def __exit__(self, *args, **kwargs):
         """Close ROS bag when entering contextmanager."""
         self.close()
+
+    def __iter__(self) -> Iterable[Tuple[int, Union['ROS1Connection', ROS2Connection], Any]]:
+        """
+        Iterate method that returns a generator tuple.
+
+        Example usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            from miniav.db import MiniAVDataFileReader
+
+            bagfile = 'bag' # ros2 bag folder
+
+            # You can use a generator
+            with MiniAVDataFileReader(bagfile) as reader:
+                for timestamp, connection, msg in reader:
+                    print(timestamp, msg)
+
+        Yields:
+            Tuple[int, Union[ROS1Connection, ROS2Connection], Any]: The timestamp for the message, the connection object for this message, and the deserialized message
+        """
+        LOGGER.debug(f"Reading from {str(self._path)} in ascending time...")
+
+        for i, (connection, timestamp, rawdata) in enumerate(self._reader.messages()):
+            yield timestamp, connection, self._deserialize_func(rawdata, connection.msgtype)
+        return False 
+
+    def __getattr__(self, attr):
+        return getattr(self._reader, attr)
         
 
 class _MiniAVROS1DataFileReader(ROS1Reader, MiniAVDataFileReader):
