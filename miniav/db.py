@@ -23,6 +23,7 @@ from typing import NamedTuple, List, Tuple, Iterable, Any, Union
 import sqlite3
 import pickle
 import pandas as pd
+import shutil, os
 
 # -------------
 # Message Types
@@ -105,7 +106,7 @@ class MiniAVDatabase:
         if not keep:
             shutil.rmtree(bag.path)
 
-    def pull(self, name: str, dest: str = None) -> 'MiniAVDataFile':
+    def pull(self, name: str, dest: str = None, as_rosbag: bool = False) -> 'MiniAVDataFile':
         """
         Pulls (downloads) a database file from the MiniAV database
 
@@ -114,13 +115,18 @@ class MiniAVDatabase:
         Args:
             name (str): The name of the file to pull. Includes the extension.
             dest (str, optional): The destination of the file to be saved locally. If unset, will save with the same name is in the database.
+            as_rosbag (bool, optional): If True, the pulled file will be saved as a ros1 bag.
         """
         name = as_path(name)
         if dest is None:
             dest = name.name
         copy_file(self._local_path / name, dest)
 
-        return MiniAVDataFile(dest)
+        data_file = MiniAVDataFile(dest)
+        if not as_rosbag:
+            data_file.to_ros2()
+            os.remove(dest)
+        return data_file
 
     def ls(self, path: str = ""):
         """
@@ -823,6 +829,44 @@ def _get_bag_version(path: str) -> int:
 # CLI Methods
 # -----------
 
+def _run_push(args):
+    """
+    Entrypoint for the `db push` command.
+
+    The push command will copy local data files to the MiniAV database. The MiniAV database
+    holds ros1 bags and is maintained as to allow [bag-database](https://swri-robotics.github.io/bag-database/)
+    to read it.
+
+    The `db push` command requires the local directory (see warning below) that the file will be pushed to.
+    This is always the last positional argument. By default, it will push all ros1 or ros2 bags prefixed with 
+    `MINIAV-`. Otherwise, you may override this functionality by providing data files prior to the local directory
+    path. See below for examples.
+
+    ```bash
+    # Push all data files in the current directory to /var/ros/data/
+    miniav db push /var/ros/data/
+
+    # Push just ros1.bag to the database
+    miniav db push ros1.bag /var/ros/data/
+
+    # Push just ros1.bag to the database
+    miniav db push ros1.bag ros2bag/ /var/ros/data/
+
+    # Push all bags in bags/ to the database
+    miniav db push bags/* /var/ros/data/
+    ```
+
+    ```{warning}
+    Currently only local databases are supported with :meth:`~push`.
+    ```
+
+    Raises:
+        RuntimeError: If no data files are explicitly provided and no bag files prefixed `MINIAV-` are found.
+        FileNotFoundError: If any of the data files explicitly provided are not found.
+    """
+    print(args)
+
+
 def _run_combine(args):
     """Command to combine a ROS 1 bag file and a ROS 2 bag into a single ROS 2 bag.
 
@@ -943,7 +987,6 @@ def _run_read(args):
         for i, (timestamp, topic, msg) in enumerate(reader):
             print(timestamp, topic)
 
-
 def _init(subparser):
     """Initializer method for the `db` entrypoint
 
@@ -964,6 +1007,13 @@ def _init(subparser):
     # Create some entrypoints for additional commands
     subparsers = subparser.add_subparsers(required=False)
 
+    # Push subcommand
+    # Convert local ros2 bag to a rosbag (ROS 1) and then push it to the MiniAV Database
+    push = subparsers.add_parser("push", description="Push a bag file to the MiniAVDatabase.")
+    push.add_argument("files", nargs="*", help="The files to push. If none are provided, all MINIAV- prefixed files are selected.")
+    push.add_argument("local_path", help="The local path to the directory of the database.")
+    push.set_defaults(cmd=_run_push)
+
     # Combine subcommand
     # Used to combine ros bag files
     combine = subparsers.add_parser("combine", description="Combine a ROS1 and ROS2 bag by matching timestamps.")
@@ -983,6 +1033,3 @@ def _init(subparser):
     read.add_argument("config", help="YAML file that defines the read process")
     read.add_argument("-i", "--input", help="The database file to read")
     read.set_defaults(cmd=_run_read)
-
-    # Push subcommand
-    # Convert local ros2 bag to a rosbag (ROS 1) and then push it to the MiniAV Database
