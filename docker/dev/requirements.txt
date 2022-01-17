@@ -1,0 +1,8 @@
+wa_simulator
+pandas
+matplotlib
+numpy>=1.19
+opencv-python
+tornado
+black
+Pillow

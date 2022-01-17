@@ -6,6 +6,7 @@ such as `db` to interact with the MiniAV database.
 """
 # Command imports
 import miniav.db as db
+import miniav.dev as dev
 
 # Utility imports
 from miniav.utils.logger import set_verbosity
@@ -27,6 +28,7 @@ def _init():
     # Initialize the subparsers
     subparsers = parser.add_subparsers()
     db._init(subparsers.add_parser("db", description="Interact with the MiniAV database"))  # noqa
+    dev._init(subparsers.add_parser("dev", description="Work with the MiniAV development environment"))
 
     return parser
 
