@@ -85,7 +85,8 @@ class MiniAVDatabase:
     def __init__(self, local_path: Union['Path', str]):
         self._local_path = as_path(local_path)
 
-        assert self._local_path.exists()
+        if not self._local_path.exists():
+            raise FileNotFoundError(f"Local path '{local_path}' doesn't exist.")
 
     def push(self, bag: Union['MiniAVDataFile', str], keep: bool = True):
         """
@@ -859,12 +860,35 @@ def _run_push(args):
     ```{warning}
     Currently only local databases are supported with :meth:`~push`.
     ```
-
-    Raises:
-        RuntimeError: If no data files are explicitly provided and no bag files prefixed `MINIAV-` are found.
-        FileNotFoundError: If any of the data files explicitly provided are not found.
     """
-    print(args)
+    LOGGER.debug("Running 'db push' entrypoint...")
+
+    # Grab all the files
+    files = []
+    if len(args.files):
+        files.extend(args.files)
+    else:
+        # If no files are passed, grab all the files in the current directory that start with "MINIAV-"
+        import glob
+
+        miniav_files = glob.glob("MINIAV-*")
+        if len(miniav_files) == 0:
+            LOGGER.fatal("No data files were provided and no bag files prefixed with 'MINIAV-' where found in the current directory.")
+            return
+        files.extend(miniav_files)
+
+    # Push each file
+    if not args.dry_run:
+        LOGGER.info(f"Connecting with database at '{args.local_path}'")
+        db = MiniAVDatabase(args.local_path)
+
+        for file in files:
+            if not file_exists(file):
+                LOGGER.fatal(f"'{file}' is not a bag that can be pushed.")
+                return
+
+            LOGGER.info(f"Pushing '{file}'")
+            db.push(file)
 
 
 def _run_combine(args):

@@ -1,1 +1,1 @@
-miniav -vv db combine -c data/cli_demo.yaml || exit 1
+miniav -vv db push ros1.bag data/ || exit 1

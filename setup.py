@@ -11,7 +11,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 
 def parse_requirements():
-    with open('host-requirements.txt') as f:
+    with open('requirements.txt') as f:
         required = f.read().splitlines()
 
     return required
