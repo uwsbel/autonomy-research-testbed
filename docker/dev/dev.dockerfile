@@ -23,7 +23,7 @@ RUN rm -rf /tmp/dependencies
 
 # Install needed ros packages
 COPY workspace/src /tmp/workspace/src/
-RUN cd /tmp/workspace && rosdep install --from-paths src --ignore-src -r -y
+RUN cd /tmp/workspace && apt update && rosdep install --from-paths src --ignore-src -r -y
 RUN cd /tmp/ && rm -rf workspace
 
 # Install some python packages
