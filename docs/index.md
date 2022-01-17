@@ -7,7 +7,6 @@
 :maxdepth: 2
 
 Home <self>
-installation
 usage
 autoapi/miniav/index
 contributing

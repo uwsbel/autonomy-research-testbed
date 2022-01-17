@@ -14,9 +14,17 @@ The MiniAV platform provides the following resources for expediting development 
 
 To setup the miniav cli, it is fairly simple. 
 
+### Prerequisites
+
+Before you can install the MiniAV package, you will need to install a few packages. Please see the linked installation instructions before continuing.
+- [Docker](https://docker.com): [Installation instructions](https://docs.docker.com/get-docker/)
+- [docker-compose](https://docs.docker.com/compose/): [Installation instructions](https://docs.docker.com/compose/install/)
+
+Once the [prerequisites](#prerequisites) have been installed, you may proceed to installing the MiniAV package.
+
 ### Using pip
 
-The miniav package is also available on [PyPI](https://pypi.org/project/miniav). To install it, run the following command:
+The MiniAV package is available on [PyPI](https://pypi.org/project/miniav). To install it, run the following command:
 
 ```bash
 pip install miniav
@@ -24,7 +32,7 @@ pip install miniav
 
 ### From Sources
 
-Or, you can install the miniav package from sources. To do that, clone the miniav repo locally:
+Or, you can install the MiniAV package from sources. To do that, clone the miniav repo locally:
 
 ```bash
 git clone git@github.com:uwsbel/miniav.git

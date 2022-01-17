@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Put your shell customizations here
+# NOTE: In order for this file to be used, copy it to customize.sh
+
+# For example, you can add content to your .zshrc or .vimrc here
+# Ex: echo "alias ga='git add .'" >> /root/.bashrc
+
+# Default customization command
+# Default is bash
+if [ "$USERSHELL" = "bash" ]; then
+	echo 'export TERM=xterm-256color' >> $USERSHELLPROFILE
+	echo 'export PS1="\[\033[38;5;40m\]\h\[$(tput sgr0)\]:\[$(tput sgr0)\]\[\033[38;5;39m\]\w\[$(tput sgr0)\]\\$ \[$(tput sgr0)\]"' >> $USERSHELLPROFILE
+fi
