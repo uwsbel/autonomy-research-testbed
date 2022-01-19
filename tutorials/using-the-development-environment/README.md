@@ -25,8 +25,45 @@ To help facilitate complicated scenarios, it is common practice to utilize multi
 
 To implement the system we've discussed, `docker-compose` is utilized. The `docker-compose.yml` file located at the root of the `miniav` repository is displayed below.
 
-```{include} ../docker-compose.yml
-:code: yaml
+```yaml
+version: "3.9"
+services:
+  dev:
+    container_name: 'miniav-dev'
+    hostname: 'miniav-dev'
+    image: 'sbel/miniav:dev'
+    build:
+      context: ./
+      dockerfile: ./docker/dev/dev.dockerfile
+      network: host
+      args:
+        CONTEXT: docker/dev
+        REPONAME: miniav
+        ROSDISTRO: galactic
+    volumes:
+      - .:/root/miniav
+    environment:
+      - DISPLAY=novnc:0.0
+    working_dir: /root/
+    tty: true
+    networks:
+      - miniav
+  vnc:
+    container_name: 'miniav-vnc'
+    hostname: 'miniav-vnc'
+    build:
+      context: ./docker/vnc/
+      dockerfile: ./vnc.dockerfile
+      network: host
+    environment:
+      - RUN_XTERM=no
+    ports:
+      - "8080:8080"
+      - "5900:5900"
+    networks:
+      - miniav
+networks:
+  miniav:
 ```
 
 As it can be seen, there are two `services`: `dev` and `vnc`. `dev` is the ROS 2 development environment we'll use to write the ROS 2 code. `vnc` is the container used to visualize gui apps. Various attributes are included in the `.yml` file, such as build context, ROS version types, and environment variables. As seen in the `volumes` section under the `dev` service, the entire `miniav` repository will be mounted inside the container. A [volume](https://docs.docker.com/storage/volumes/) is simply a folder that is shared between the host OS and the container. This means any and all code additions should be made _only_ inside of this folder; if you edit any files outside of `/root/miniav`, then the changes will not be saved when the container is exited.
