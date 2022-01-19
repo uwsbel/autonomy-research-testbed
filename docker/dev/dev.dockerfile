@@ -9,6 +9,11 @@ ARG REPONAME
 ARG ROSDISTRO
 ARG DEBIAN_FRONTEND=noninteractive
 
+# Various arguments and user settings
+ARG USERSHELL=bash
+ARG USERSHELLPATH="/bin/${USERSHELL}"
+ARG USERSHELLPROFILE="/root/.${USERSHELL}rc"
+
 # Use mirrors instead of main server
 RUN sed -i 's|deb http://.*ubuntu.com.* \(focal.*\)|deb mirror://mirrors.ubuntu.com/mirrors.txt \1|g' /etc/apt/sources.list
 
@@ -34,13 +39,8 @@ RUN rm -rf /tmp/requirements.txt
 # Run any user scripts
 # Should be used to install additional packages
 COPY ${CONTEXT}/scripts/ /tmp/scripts/
-RUN cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && ./$f || exit 0; done
+RUN cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && echo $f && ./$f || exit 0; done
 RUN rm -rf /tmp/scripts
-
-# Various arguments and user settings
-ARG USERSHELL=bash
-ARG USERSHELLPATH="/bin/${USERSHELL}"
-ARG USERSHELLPROFILE="/root/.${USERSHELL}rc"
 
 # ROS Setup
 RUN sed -i 's|source|#source|g' /ros_entrypoint.sh

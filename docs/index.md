@@ -7,6 +7,7 @@
 :maxdepth: 2
 
 Home <self>
+tutorials/index
 usage
 autoapi/miniav/index
 contributing
