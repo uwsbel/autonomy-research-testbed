@@ -1,19 +1,19 @@
 # Using the MiniAV Development Environment
 
-The MiniAV development environment has been created to expedite the process from algorithm implementation to testing in simulation to deploying the control stack the MiniAV (or any other platform, really). 
+The MiniAV development environment has been created to expedite the process from algorithm implementation to testing in simulation to deploying the control stack on the MiniAV (or any other compatible platform). 
 
 ## Prerequisites
 
-- Have cloned the [miniav](https://github.com/uwsbel/miniav) repository
-- You have installed `miniav` ([resources for that](https://projects.sbel/org/miniav/))
+- You have cloned the [miniav](https://github.com/uwsbel/miniav) repository
+- You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/))
 - You have installed Docker ([resource for that](https://docs.docker.com/get-docker/))
 - You have installed docker-compose ([resource for that](https://docs.docker.com/compose/install/))
 
 ## Design Considerations
 
-The _most_ important component we considered when creating the development environment was whether the workflow was usable on multiple platforms, i.e. it would work as is on Windows, MacOS, and Unix systems. This was a nonnegotiable because then the MiniAV platform could be developed anywhere and wouldn't require any special hardware or "hacking" to work on a specific system. Further, the development environment and deployment environment (the system that runs on the actual vehicle) must also be the same or similar in design. This means that any customization to the dependency lists or sensor configurations that was made locally would carry over to the actual vehicle.
+The _most_ important component we considered when creating the development environment was whether the workflow was usable on multiple platforms, i.e. it would work as is on Windows, MacOS, and Linux systems. This was a nonnegotiable because then the MiniAV platform could be developed anywhere and wouldn't require any special hardware or "hacking" to work on a specific system. Further, the development environment and deployment environment (the system that runs on the actual vehicle) must also be the same or similar in design. This means that any customization to the dependency lists or sensor configurations that was made locally would carry over to the actual vehicle.
 
-Another important element we considered was using simulation to test the control stack. [Chrono](https://projectchrono.org) is the simulator of choice and it needed to interface with the development _and_ deployment environment natively. The control stack itself should be limiting hardware-wise (unless the implemented algorithms require a certain type of CPU, for example), but the Chrono simulations may require specific hardware, such as a NVIDIA GPU. Therefore, the solution must be able to communicate over the network considering everyone may not have access to a NVIDIA GPU on their computer, but a remote server/workstation may.
+Another important element we considered was using simulation to test the control stack. [Chrono](https://projectchrono.org) is the simulator of choice and it needed to interface with the development _and_ deployment environment natively. The control stack itself should not be limiting hardware-wise (unless the implemented algorithms require a certain type of CPU, for example), but the Chrono simulations may require specific hardware, such as a NVIDIA GPU. Therefore, the solution must be able to communicate over the network considering everyone may not have access to a NVIDIA GPU on their computer, but a remote server/workstation may.
 
 ## Background
 
@@ -25,7 +25,7 @@ To help facilitate complicated scenarios, it is common practice to utilize multi
 
 To implement the system we've discussed, `docker-compose` is utilized. The `docker-compose.yml` file located at the root of the `miniav` repository is displayed below.
 
-```{include} ../../docker-compose.yml
+```{include} ../docker-compose.yml
 :code: yaml
 ```
 
