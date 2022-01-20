@@ -22,13 +22,12 @@ RUN apt update && apt upgrade -y
 
 # Install dependencies
 COPY ${CONTEXT}/dependencies.txt /tmp/dependencies.txt
-RUN apt-get install --no-install-recommends -y `cat /tmp/dependencies.txt` \
-    && apt-get clean && apt-get -y autoremove && rm -rf /var/lib/apt/lists/*
+RUN apt-get install --no-install-recommends -y `cat /tmp/dependencies.txt`
 RUN rm -rf /tmp/dependencies
 
 # Install needed ros packages
 COPY workspace/src /tmp/workspace/src/
-RUN cd /tmp/workspace && apt update && rosdep install --from-paths src --ignore-src -r -y
+RUN cd /tmp/workspace && rosdep install --from-paths src --ignore-src -r -y
 RUN cd /tmp/ && rm -rf workspace
 
 # Install some python packages
@@ -41,6 +40,9 @@ RUN rm -rf /tmp/requirements.txt
 COPY ${CONTEXT}/scripts/ /tmp/scripts/
 RUN cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && echo $f && ./$f || exit 0; done
 RUN rm -rf /tmp/scripts
+
+# Clean up to reduce image size
+RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # ROS Setup
 RUN sed -i 's|source|#source|g' /ros_entrypoint.sh

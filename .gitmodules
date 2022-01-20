@@ -1,0 +1,6 @@
+[submodule "workspace/src/external/mocap_optitrack"]
+	path = workspace/src/external/mocap_optitrack
+	url = git@github.com:ros-drivers/mocap_optitrack.git
+[submodule "workspace/src/sensing/usb_cam"]
+	path = workspace/src/sensing/usb_cam
+	url = git@github.com:ros-drivers/usb_cam.git
