@@ -12,10 +12,10 @@
 #
 import miniav
 from datetime import date
-import os
+from pathlib import Path
 import sys
 
-root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+root_path = Path(__file__).resolve().parent.parent
 sys.path.insert(0, root_path)
 sys.setrecursionlimit(1500)
 
@@ -48,7 +48,7 @@ extensions = [
 
 # autoapi config
 autoapi_type = "python"
-autoapi_dirs = [".."]
+autoapi_dirs = ["../miniav"]
 autoapi_options = [
     "members",
     "show-inheritance",
@@ -57,10 +57,11 @@ autoapi_options = [
     "imported-members",
     # "inherited-members"  # Doesn't work with viewcode extension
 ]
-autoapi_ignore = ["*_import*"]
+autoapi_ignore = []
 autoapi_keep_files = False
 autoapi_generate_api_docs = True
 autoapi_add_toctree_entry = True
+autoapi_root = "usage/api"
 # autoapi_keep_files = True
 # autoapi_template_dir = "_templates"
 # autoapi_member_order = "groupwise"
