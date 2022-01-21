@@ -6,53 +6,32 @@ The MiniAV project is meant to be a testbed for automated driving algorithm deve
 
 The MiniAV platform provides the following resources for expediting development of autonomous algorithms:
 1. A parts list and instructions on how to build the physical platform
-2. A high-fidelity simulation environment built using [Chrono](https://projectchrono.org) that accurately models the vehicles dynamics and sensors
-3. A development workflow for writing ROS 2 code and premade algorithms to control the vehicle through a closed cone course
+2. A high-fidelity simulation environment built using [Chrono](https://projectchrono.org) to test autonomous algorithms
+3. A development workflow for writing ROS 2 code and various already implemented algorithms
 4. A database system to expedite data recording and parsing and an accompaning command line interface
 
-## Setup
+## Documentation
 
-To setup the miniav cli, it is fairly simple. 
+- [Home](https://projects.sbel.org/wa_simulator/index.html)
+- [Setup](https://projects.sbel.org/miniav/setup.html)
+- [Usage](https://projects.sbel.org/miniav/usage/index.html)
+	- [CLI](http://projects.sbel.org/miniav/usage/cli.html)
+	- [Python API](http://projects.sbel.org/miniav/usage/api/miniav/index.html)
+- [Contributing](http://projects.sbel.org/miniav/contributing.html)
+- [PyPI](https://pypi.org/project/miniav/)
+- [Github](https://github.com/uwsbel/miniav)
 
-### Prerequisites
+## Support
 
-Before you can install the MiniAV package, you will need to install a few packages. Please see the linked installation instructions before continuing.
-- [Docker](https://docker.com): [Installation instructions](https://docs.docker.com/get-docker/)
-- [docker-compose](https://docs.docker.com/compose/): [Installation instructions](https://docs.docker.com/compose/install/)
+Contact the [Simulation Based Engineering Laboratory](mailto:negrut@wisc.edu) for any questions or concerns regarding the contents of this repository.
 
-Once the [prerequisites](#prerequisites) have been installed, you may proceed to installing the MiniAV package.
+## See Also
 
-### Using pip
+Visit our website at [sbel.wisc.edu](https://sbel.wisc.edu)!
 
-The MiniAV package is available on [PyPI](https://pypi.org/project/miniav). To install it, run the following command:
+<br>
 
-```bash
-pip install miniav
-```
-
-### From Sources
-
-Or, you can install the MiniAV package from sources. To do that, clone the miniav repo locally:
-
-```bash
-git clone git@github.com:uwsbel/miniav.git
-cd miniav
-```
-
-Then, use `setuptools` to install the miniav package:
-
-```bash
-python setup.py install
-```
-
-_**Note: If you're planning on developing the package, you may wish to install it as symlinks:**_
-
-```bash
-python setup.py develop
-```
-
-### Test the demos
-
-You should now be all set up!
-
-You can test the installation by running the demos in `demos/`. They demonstrate the CLI and the python API.
+<div>
+	<img src="https://github.com/uwsbel/miniav/blob/master/docs/_static/SBEL-dark.png?raw=true" alt="Simulation Based Engineering Lab Logo" class="readme-img" height="100px">  
+	<img src="https://github.com/uwsbel/miniav/blob/master/docs/_static/UWCrest.png?raw=true" alt="University of Wisconsin - Madison Crest" class="readme-img" height="100px" align="right">
+</div>
