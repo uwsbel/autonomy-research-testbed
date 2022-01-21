@@ -1,4 +1,5 @@
 ```{include} ../README.md
+:end-line: -6
 ```
 
 ```{toctree}
