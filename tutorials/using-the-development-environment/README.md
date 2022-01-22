@@ -127,7 +127,9 @@ miniav-dev:~$
 
 Once inside the container, if you type `ls`, you should see the `miniav` folder that is a mapped volumes from the host system. As mentioned before, any code you write should be done here or your changes will persist once the container is destroyed.
 
-_To write more..._
+```{todo}
+To write more ...
+```
 
 ## Support
 
