@@ -10,16 +10,7 @@ The MiniAV platform provides the following resources for expediting development 
 3. A development workflow for writing ROS 2 code and various already implemented algorithms
 4. A database system to expedite data recording and parsing and an accompaning command line interface
 
-## Documentation
-
-- [Home](https://projects.sbel.org/wa_simulator/index.html)
-- [Setup](https://projects.sbel.org/miniav/setup.html)
-- [Usage](https://projects.sbel.org/miniav/usage/index.html)
-	- [CLI](http://projects.sbel.org/miniav/usage/cli.html)
-	- [Python API](http://projects.sbel.org/miniav/usage/api/miniav/index.html)
-- [Contributing](http://projects.sbel.org/miniav/contributing.html)
-- [PyPI](https://pypi.org/project/miniav/)
-- [Github](https://github.com/uwsbel/miniav)
+For more information about the design considerations and purpose for this project, see the [background](https://projects.sbel.org/miniav/background.html) section.
 
 ## Support
 

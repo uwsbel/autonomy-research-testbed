@@ -7,6 +7,7 @@
 :maxdepth: 2
 
 Home <self>
+background
 setup
 tutorials/index
 usage/index
