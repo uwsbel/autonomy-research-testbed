@@ -38,7 +38,7 @@ RUN rm -rf /tmp/requirements.txt
 # Run any user scripts
 # Should be used to install additional packages
 COPY ${CONTEXT}/scripts/ /tmp/scripts/
-RUN cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && echo $f && ./$f || exit 0; done
+RUN cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && ./$f || exit 0; done
 RUN rm -rf /tmp/scripts
 
 # Clean up to reduce image size
