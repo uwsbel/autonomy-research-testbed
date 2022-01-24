@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  dev:
+    container_name: 'miniav-dev'
+    hostname: 'miniav-dev'
+    image: 'sbel/miniav:dev'
+    build:
+      context: ./
+      dockerfile: ./docker/dev/dev.dockerfile
+      network: host
+      args:
+        CONTEXT: docker/dev
+        REPONAME: miniav
+        ROSDISTRO: galactic
+    volumes:
+      - .:/root/miniav
+    environment:
+      - DISPLAY=novnc:0.0
+    working_dir: /root/
+    tty: true
+    networks:
+      - miniav
+  vnc:
+    container_name: 'miniav-vnc'
+    hostname: 'miniav-vnc'
+    build:
+      context: ./docker/vnc/
+      dockerfile: ./vnc.dockerfile
+      network: host
+    environment:
+      - RUN_XTERM=no
+    ports:
+      - "8080:8080"
+      - "5900:5900"
+    networks:
+      - miniav
+networks:
+  miniav:
