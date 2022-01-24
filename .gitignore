@@ -17,8 +17,6 @@ __pycache__/
 # data/sqlite/bag files
 *.db3
 *.bag
-*.yml
-*.yaml
 
 # Ignore the version file since it changes often
 _version.py
