@@ -12,23 +12,25 @@ There are also many other existing platforms that provide similar functionality;
 
 This simulation environment, built on top of Chrono, utilizes multiple modules to create a virtual world for autonomy development. The vehicle module, [Chrono::Vehicle](https://api.projectchrono.org/group__vehicle.html), implements high-fidelity vehicle models, for which a MiniAV model is provided. The Chrono::Vehicle module also has advanced terrain models that can be used to represent hard, concret floors to Soil Contact Model (SCM) based deformable terrain; the latter useful for modeling off-road scenarios. Then [Chrono::Sensor](https://api.projectchrono.org/group__sensor.html) simulates sensors that can be used to replicate the data produced by the physical counterparts.
 
-## Hardware
+## Components
+
+### Hardware
 
 ```{todo}
 To write...
 ```
 
-## Control Stack
+### Control Stack
 
 ```{todo}
 To write...
 ```
 
-## Development Environment
+### Development Environment
 
 The development environment is built on top of [Docker](https://www.docker.com). A tutorial for how to use the development workflow can be found [here](./tutorials/using_the_development_environment.md).
 
-## Database
+### Database
 
 ```{todo}
 To write...
