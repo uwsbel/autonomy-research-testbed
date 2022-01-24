@@ -23,6 +23,7 @@ services:
   vnc:
     container_name: 'miniav-vnc'
     hostname: 'miniav-vnc'
+    image: "sbel/miniav:vnc"
     build:
       context: ./docker/vnc/
       dockerfile: ./vnc.dockerfile
