@@ -85,7 +85,7 @@ For any commands mentioned herein, it will be assumed they are run from within t
 
 ### Entering the Development Environment
 
-The first time you attempt to use the MiniAV development environment, the docker coontainer will need to be built. This may take upwards of 15 minutes, depending on the number of packages your control stack needs to install. After the initial build, you may never need to build the stack again (unless you need additional packages installed). To build the container the first time around, start up the container in the background, then attach to it, you may run the following command:
+The first time you attempt to use the MiniAV development environment, the docker container will need to be built (the `miniav` package will do this for you). This may take upwards of 15 minutes, depending on the number of packages your control stack needs to install. After the initial build, you may never need to build the stack again (unless you need additional packages installed). To build the container the first time around, you can run the following command:
 
 ```bash
 miniav dev
