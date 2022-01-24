@@ -33,7 +33,7 @@ setup(
     author='UW Simulation Based Engineering Lab',  # Optional
     license="BSD3",
     packages=find_packages(),  # Required
-    python_requires='>=3.6, <4',
+    python_requires='>=3.8.2, <4',
     install_requires=parse_requirements(),  # Optional
     entry_points={  # Optional
         'console_scripts': [

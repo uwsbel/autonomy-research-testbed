@@ -5,9 +5,9 @@ The MiniAV development environment has been created to expedite the process from
 ## Prerequisites
 
 - You have cloned the [miniav](https://github.com/uwsbel/miniav) repository
-- You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/setup.html))
 - You have installed Docker ([resource for that](https://docs.docker.com/get-docker/))
 - You have installed docker-compose ([resource for that](https://docs.docker.com/compose/install/))
+- You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/setup.html))
 
 ## Design Considerations
 
@@ -74,12 +74,12 @@ Beyond installing the packages outlined in [prerequisites](#prerequisites), ther
 
 ## Usage
 
-To use the development environment, very convenient commands are provided through the `miniav` CLI. The documentation for the `dev` command can be found [here](http://projects.sbel.org/miniav/usage.html#dev).
+To use the development environment, very convenient commands are provided through the `miniav` CLI. The documentation for the `dev` command can be found [here](http://projects.sbel.org/miniav/usage/cli.html#dev).
 
 As described in the documentation, the `dev` command has four arguments: `build`, `up`, `down`, and `attach`. These may sound familiar if you've used `docker-compose` before because the `dev` command essentially wraps `docker-compose`. Everything that the `miniav dev` command does, `docker-compose` can also do; the `miniav dev` cli command is simply made to expedite the process of entering a container and may also provide an easy mechanism to add additional functionality in the future.
 
 ```{note}
-For any commands mentioned herein, it will be assumed they are run from within the `miniav` repository. The `docker-compose.yml` file must be present in any of the parent folders, so they can also be run from any children in the `miniav` repository.
+For any commands mentioned herein, it will be assumed they are run from within the `miniav` repository.
 </div></div>
 ```
 
