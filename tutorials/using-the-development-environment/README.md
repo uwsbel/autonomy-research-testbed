@@ -5,7 +5,7 @@ The MiniAV development environment has been created to expedite the process from
 ## Prerequisites
 
 - You have cloned the [miniav](https://github.com/uwsbel/miniav) repository
-- You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/))
+- You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/setup.html))
 - You have installed Docker ([resource for that](https://docs.docker.com/get-docker/))
 - You have installed docker-compose ([resource for that](https://docs.docker.com/compose/install/))
 
