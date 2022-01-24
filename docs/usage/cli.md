@@ -1,4 +1,4 @@
-# CLI
+# CLI Documentation
 
 ```{raw} html
 ---

@@ -1,4 +1,4 @@
-# Usage Guide
+# API Reference
 
 The `miniav` Python package provides two entrypoints. You can either use the generated command line interface (CLI) or use it as a standard python package via `import miniav`. API references are provided below and can be accessed below.
 
