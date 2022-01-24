@@ -35,6 +35,7 @@ setup(
     packages=find_packages(),  # Required
     python_requires='>=3.8.2, <4',
     install_requires=parse_requirements(),  # Optional
+    url="https://projects.sbel.org/miniav",
     entry_points={  # Optional
         'console_scripts': [
             'miniav=miniav._miniav_base:_main',
