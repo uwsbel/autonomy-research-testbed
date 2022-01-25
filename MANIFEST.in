@@ -10,7 +10,7 @@ include LICENSE.txt
 include setup.py
 
 # Ignore non-package folders
-prune workspace/
+prune workspace
 prune demos
 prune docs
 prune docker
