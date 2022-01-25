@@ -9,6 +9,11 @@ The MiniAV development environment has been created to expedite the process from
 - You have installed docker-compose ([resource for that](https://docs.docker.com/compose/install/))
 - You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/setup.html))
 
+## Additional Prerequisites For Linux Users
+
+- You have installed Docker compose v2 ([resource for that](https://docs.docker.com/compose/cli-command/))
+- You can run Docker as a non-root user and have activated the Docker daemon ([resource for that](https://docs.docker.com/engine/install/linux-postinstall/))
+
 ## Design Considerations
 
 The _most_ important component we considered when creating the development environment was whether the workflow was usable on multiple platforms, i.e. it would work as is on Windows, MacOS, and Linux systems. This was a nonnegotiable because then the MiniAV platform could be developed anywhere and wouldn't require any special hardware or "hacking" to work on a specific system. Further, the development environment and deployment environment (the system that runs on the actual vehicle) must also be the same or similar in design. This means that any customization to the dependency lists or sensor configurations that was made locally would carry over to the actual vehicle.
