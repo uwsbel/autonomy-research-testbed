@@ -95,12 +95,13 @@ def _run_env(args):
             # Read the docker compose file and grab it's config
             config = docker.compose.config(return_json=True)
 
-            # For each port in each service, make sure they map to available ports
-            # If not, increment the published port by one. Only do this 5 times. If a port can't be found,
-            # stop trying.
             if args.up:
-                LOGGER.debug("Checking if any host ports are already in use.")
                 for service_name, service in config['services'].items():
+                    # For each port in each service, make sure they map to available ports
+                    # If not, increment the published port by one. Only do this 5 times. If a port can't be found,
+                    # stop trying.
+                    LOGGER.debug("Checking if any host ports are already in use for service '{service_name}'.")
+
                     if not 'ports' in service:
                         LOGGER.debug(f"'{service_name}' has no ports mapped. Continuing to next service...")
                         continue
@@ -138,7 +139,11 @@ def _run_env(args):
                     print(client.execute(name, shellcmd, interactive=True, tty=True))
                 except docker_exceptions.NoSuchContainer as e:
                     LOGGER.fatal(f"The containers have not been started. Please run again with the 'up' command.")
-                        
+        except docker_exceptions.DockerException as e:
+            msg = str(e)
+            if 'Error response from daemon:' in msg:
+                msg = msg.split('Error response from daemon:')[1][:-3]
+            LOGGER.error(f"Docker command raised exception: {msg}")
         finally:
             tmp.close()
             os.unlink(tmp.name)
