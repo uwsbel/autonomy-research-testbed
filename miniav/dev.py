@@ -4,9 +4,10 @@ CLI command that handles working with the MiniAV development environment
 
 # Imports from miniav
 from miniav.utils.logger import LOGGER
+from miniav.utils.files import search_upwards_for_file
 
 # Docker imports
-from python_on_whales import docker, exceptions as docker_exceptions
+from python_on_whales import docker, DockerClient, exceptions as docker_exceptions
 
 def _run_env(args):
     """
@@ -50,7 +51,9 @@ def _run_env(args):
     LOGGER.info("Running 'dev env' entrypoint...")
 
     # Check docker-compose is installed
-    assert docker.compose.is_installed()
+    if not docker.compose.is_installed():
+        LOGGER.fatal("The command 'docker compose' is not installed. See http://projects.sbel.org/miniav/tutorials/using_the_development_environment.html for more information.")
+        return
 
     # If no command is passed, start up the container and attach to it
     cmds = [args.build, args.up, args.down, args.attach] 
@@ -58,37 +61,87 @@ def _run_env(args):
         args.up = True
         args.attach = True
 
-    # Get the config
-    try:
-        config = docker.compose.config()
-    except docker_exceptions.DockerException as e:
-        if "no configuration file provided: not found" in str(e):
-            LOGGER.fatal("No docker-compose.yml configuration was found. Make sure you are running this command in the MiniAV repository.")
-            return
-        else:
-            raise e
+    # Search for a file called docker-compose.yml in any of the parent directories. This file
+    # is what holds the default configuration for the docker compose package. We'll read this file,
+    # update any of the config (if necessary), then generate a temporary file which will be passed to
+    # the docker compose command
+    compose_file = search_upwards_for_file('docker-compose.yml')
+    if compose_file is None:
+        LOGGER.fatal("No docker-compose.yml configuration was found in this directory or any parent directories. Make sure you are running this command in the MiniAV repository.")
+        return
 
     # Complete the arguments
     if not args.dry_run:
-        if args.down:
-            LOGGER.info(f"Tearing down...")
-            docker.compose.down()
-        if args.build:
-            LOGGER.info(f"Building...")
-            docker.compose.build()
-        if args.up:
-            LOGGER.info(f"Spinning up...")
-            docker.compose.up(detach=True)
-        if args.attach:
-            LOGGER.info(f"Attaching...")
-            try:
-                name = "miniav-dev"
-                usershell = [e for e in docker.container.inspect(name).config.env if "USERSHELL" in e][0]
-                shellcmd = usershell.split("=")[-1]
-                shellcmd = [shellcmd, "-c", f"{shellcmd}; echo"]
-                print(docker.execute(name, shellcmd, interactive=True, tty=True))
-            except docker_exceptions.NoSuchContainer as e:
-                LOGGER.fatal(f"The containers have not been started. Please run again with the 'up' command.")
+        import socket, os, tempfile, yaml
+
+        def _is_port_in_use(port: int) -> bool:
+            """Helper function to check if a port is currently in use."""
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                return s.connect_ex(('localhost', port)) == 0
+
+        
+        # We need to provide the ability to dynamically change the docker-compose file without it being in
+        # version control. Meaning, for instance, if someone has an existing program using port 5900, we can
+        # overwrite this value and give a new one. To accomplish this, we'll create a temporary file,
+        # make any necessary edits to the yaml which is now in the temp file, run the commands we need,
+        # then delete the temp file
+
+        # Do this in a try/except so that the temp file will always be deleted
+        try:
+
+            # Create the temporary file and don't let it delete automatically yet
+            tmp = tempfile.NamedTemporaryFile(delete=False)
+
+            # Read the docker compose file and grab it's config
+            config = docker.compose.config(return_json=True)
+
+            # For each port in each service, make sure they map to available ports
+            # If not, increment the published port by one. Only do this 5 times. If a port can't be found,
+            # stop trying.
+            if args.up:
+                LOGGER.debug("Checking if any host ports are already in use.")
+                for service_name, service in config['services'].items():
+                    if not 'ports' in service:
+                        LOGGER.debug(f"'{service_name}' has no ports mapped. Continuing to next service...")
+                        continue
+
+                    for port in service['ports']:
+                        for i in range(5):
+                            if _is_port_in_use(port['published']):
+                                LOGGER.warn(f"Tried to map container port '{port['target']}' to host port '{port['published']}' for service '{service_name}', but it is in use. Trying again with '{port['published'] + 1}'.")
+                                port['published'] += 1
+                            break
+
+            # Write the config to the temporary yaml file
+            with open(tmp.name, 'w') as yaml_file:
+                yaml.dump(config, yaml_file)
+
+            # Now set the compose file to the temporary file
+            client = DockerClient(compose_files=[tmp.name])
+
+            if args.down:
+                LOGGER.info(f"Tearing down...")
+                client.compose.down()
+            if args.build:
+                LOGGER.info(f"Building...")
+                client.compose.build()
+            if args.up:
+                LOGGER.info(f"Spinning up...")
+                client.compose.up(detach=True)
+            if args.attach:
+                LOGGER.info(f"Attaching...")
+                try:
+                    name = "miniav-dev"
+                    usershell = [e for e in client.container.inspect(name).config.env if "USERSHELL" in e][0]
+                    shellcmd = usershell.split("=")[-1]
+                    shellcmd = [shellcmd, "-c", f"{shellcmd}; echo"]
+                    print(client.execute(name, shellcmd, interactive=True, tty=True))
+                except docker_exceptions.NoSuchContainer as e:
+                    LOGGER.fatal(f"The containers have not been started. Please run again with the 'up' command.")
+                        
+        finally:
+            tmp.close()
+            os.unlink(tmp.name)
 
 def _init(subparser):
     """Initializer method for the `dev` entrypoint

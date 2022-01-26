@@ -9,7 +9,7 @@ The MiniAV development environment has been created to expedite the process from
 - You have installed docker-compose ([resource for that](https://docs.docker.com/compose/install/))
 - You have installed `miniav` ([resources for that](https://projects.sbel.org/miniav/setup.html))
 
-## Additional Prerequisites For Linux Users
+### Additional Prerequisites For Linux Users
 
 - You have installed Docker compose v2 ([resource for that](https://docs.docker.com/compose/cli-command/))
 - You can run Docker as a non-root user and have activated the Docker daemon ([resource for that](https://docs.docker.com/engine/install/linux-postinstall/))

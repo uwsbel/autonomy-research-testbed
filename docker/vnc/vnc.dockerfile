@@ -2,6 +2,10 @@ FROM theasp/novnc:latest
 
 # Make a few edits to the theasp/novnc container to function for our needs
 
+# Update the background image to use the SBEL logo
+COPY SBEL.png /app
+COPY bg.conf /app/conf.d/bg.conf
+
 # VNC specific adjustments so you can use it outside of VNC
 RUN sed -i "s/x11vnc -forever -shared/x11vnc -forever -shared -passwd miniav/g" /app/conf.d/x11vnc.conf
 
