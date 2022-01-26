@@ -123,3 +123,24 @@ def read_text(filename: str) -> str:
         str: The text inside filename
     """
     return Path(filename).read_text()
+
+def search_upwards_for_file(filename: str) -> str:
+    """Search in the current directory and all directories above it 
+    for a file of a particular name.
+
+    Arg:
+        filename (str): the filename to look for.
+
+    Returns:
+        str: the location of the first file found or None, if none was found
+    """
+    d = Path.cwd()
+    root = Path(d.root)
+
+    while d != root:
+        attempt = d / filename
+        if attempt.exists():
+            return str(attempt)
+        d = d.parent
+
+    return None

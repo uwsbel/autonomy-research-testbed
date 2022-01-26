@@ -18,17 +18,16 @@ ARG USERSHELLPROFILE="/root/.${USERSHELL}rc"
 RUN sed -i 's|deb http://.*ubuntu.com.* \(focal.*\)|deb mirror://mirrors.ubuntu.com/mirrors.txt \1|g' /etc/apt/sources.list
 
 # Check for updates
-RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get upgrade -y
 
 # Install dependencies
 COPY ${CONTEXT}/dependencies.txt /tmp/dependencies.txt
-RUN apt-get update && apt-get install --no-install-recommends -y `cat /tmp/dependencies.txt`
+RUN apt-get install --no-install-recommends -y `cat /tmp/dependencies.txt`
 RUN rm -rf /tmp/dependencies
 
 # Install needed ros packages
 COPY workspace/src /tmp/workspace/src/
-RUN cd /tmp/workspace && apt-get update && rosdep install --from-paths src --ignore-src -r -y
+RUN cd /tmp/workspace && rosdep install --from-paths src --ignore-src -r -y
 RUN cd /tmp/ && rm -rf workspace
 
 # Install some python packages
@@ -39,7 +38,7 @@ RUN rm -rf /tmp/requirements.txt
 # Run any user scripts
 # Should be used to install additional packages
 COPY ${CONTEXT}/scripts/ /tmp/scripts/
-RUN apt-get update && cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && ./$f || exit 0; done
+RUN cd /tmp/scripts && for f in *; do [ -x $f ] && [ -f $f ] && ./$f || exit 0; done
 RUN rm -rf /tmp/scripts
 
 # Clean up to reduce image size
