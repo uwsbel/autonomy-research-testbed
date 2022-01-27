@@ -47,6 +47,11 @@ def _run_env(args):
     If desired, pass `--down` to stop the container. Further, if the container exists and changes are
     made to the repository, the container will _not_ be built automatically. To do that, add the 
     `--build` argument.
+
+    ```{note}
+    `miniav dev` is an alias for `miniav dev env`. `env` can therefore be omitted for brevity.
+    </div></div>
+    ```
     """
     LOGGER.info("Running 'dev env' entrypoint...")
 
@@ -68,6 +73,10 @@ def _run_env(args):
     compose_file = search_upwards_for_file('docker-compose.yml')
     if compose_file is None:
         LOGGER.fatal("No docker-compose.yml configuration was found in this directory or any parent directories. Make sure you are running this command in the MiniAV repository.")
+        return
+
+    if any([a not in docker.compose.config().services.keys() for a in ['dev', 'vnc']]):
+        LOGGER.fatal("The docker-compose.yml configuration does not contain the services 'dev' and/or 'vnc'. Make sure you are running this command in the MiniAV repository.")
         return
 
     # Complete the arguments
@@ -96,7 +105,16 @@ def _run_env(args):
             config = docker.compose.config(return_json=True)
 
             if args.up:
+                # Ignore all running services
+                config['services'] = {name : service for name, service in config['services'].items() if len(docker.container.list(filters={"name": service["container_name"]})) == 0 }
+
+                # If all the services are already running, don't try to spin up
+                if len(config['services']) == 0:
+                    LOGGER.warn(f"No services need to be initialized. Turning off 'up'. If you didn't explicitly call 'up', this may be safely ignored.")
+                    args.up = False
+
                 for service_name, service in config['services'].items():
+
                     # For each port in each service, make sure they map to available ports
                     # If not, increment the published port by one. Only do this 5 times. If a port can't be found,
                     # stop trying.
@@ -135,7 +153,7 @@ def _run_env(args):
                     name = "miniav-dev"
                     usershell = [e for e in client.container.inspect(name).config.env if "USERSHELL" in e][0]
                     shellcmd = usershell.split("=")[-1]
-                    shellcmd = [shellcmd, "-c", f"{shellcmd}; echo"]
+                    shellcmd = [shellcmd, "-c", f"{shellcmd}"]
                     print(client.execute(name, shellcmd, interactive=True, tty=True))
                 except docker_exceptions.NoSuchContainer as e:
                     LOGGER.fatal(f"The containers have not been started. Please run again with the 'up' command.")
@@ -165,22 +183,20 @@ def _init(subparser):
     """
     LOGGER.debug("Initializing 'dev' entrypoint...")
 
+    def _add_dev_commands(parser):
+        parser.add_argument("-b", "--build", action="store_true", help="Build the env.", default=False)
+        parser.add_argument("-u", "--up", action="store_true", help="Spin up the env.", default=False)
+        parser.add_argument("-d", "--down", action="store_true", help="Tear down the env.", default=False)
+        parser.add_argument("-a", "--attach", action="store_true", help="Attach to the env.", default=False)
+        parser.set_defaults(cmd=_run_env)
+
     # Add a base 
-    dev = subparser
-    dev.add_argument("-b", "--build", action="store_true", help="Build the env.", default=False)
-    dev.add_argument("-u", "--up", action="store_true", help="Spin up the env.", default=False)
-    dev.add_argument("-d", "--down", action="store_true", help="Tear down the env.", default=False)
-    dev.add_argument("-a", "--attach", action="store_true", help="Attach to the env.", default=False)
-    dev.set_defaults(cmd=_run_env)
+    _add_dev_commands(subparser)
 
     # Create some entrypoints for additinal commands
     subparsers = subparser.add_subparsers(required=False)
 
     # Subcommand that can build, spin up, attach and tear down the dev environment
     env = subparsers.add_parser("env", description="Command to simplify usage of the docker-based development workflow. Basically wraps docker-compose.")
-    env.add_argument("-b", "--build", action="store_true", help="Build the env.", default=False)
-    env.add_argument("-u", "--up", action="store_true", help="Spin up the env.", default=False)
-    env.add_argument("-d", "--down", action="store_true", help="Tear down the env.", default=False)
-    env.add_argument("-a", "--attach", action="store_true", help="Attach to the env.", default=False)
-    env.set_defaults(cmd=_run_env)
+    _add_dev_commands(env)
 
