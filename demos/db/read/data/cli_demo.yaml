@@ -1,7 +1,0 @@
-input:
-  file: data/
-  messages:
-    vehicle_input:
-      file: data/VehicleInput.msg
-      name: custom_msgs/msg/VehicleInput
-
