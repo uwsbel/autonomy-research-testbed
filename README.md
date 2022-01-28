@@ -19,10 +19,3 @@ Contact the [Simulation Based Engineering Laboratory](mailto:negrut@wisc.edu) fo
 ## See Also
 
 Visit our website at [sbel.wisc.edu](https://sbel.wisc.edu)!
-
-<br>
-
-<div>
-	<img src="https://github.com/uwsbel/miniav/blob/master/docs/_static/SBEL-dark.png?raw=true" alt="Simulation Based Engineering Lab Logo" class="readme-img" height="100px">  
-	<img src="https://github.com/uwsbel/miniav/blob/master/docs/_static/UWCrest.png?raw=true" alt="University of Wisconsin - Madison Crest" class="readme-img" height="100px" align="right">
-</div>
