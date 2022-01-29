@@ -1,5 +1,0 @@
-bash zsh
-ssh vim
-git git-lfs
-python3-pip
-python3-tk
