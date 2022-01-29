@@ -1,5 +1,5 @@
 project: miniav
 dev:
-  context: docker/dev
+  scripts: docker/dev/scripts
   apt-dependencies: [bash, zsh, vim, git, git-lfs, python3-pip, python3-tk]
   pip-requirements: [wa_simulator, pandas, matplotlib, numpy>=1.19, opencv-python, tornado, black, Pillow]
