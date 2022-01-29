@@ -4,3 +4,6 @@
 [submodule "workspace/src/sensing/usb_cam"]
 	path = workspace/src/sensing/usb_cam
 	url = git@github.com:ros-drivers/usb_cam.git
+[submodule "workspace/src/simulation/chrono-ros-bridge"]
+	path = workspace/src/simulation/chrono-ros-bridge
+	url = git@github.com:uwsbel/chrono-ros-bridge
