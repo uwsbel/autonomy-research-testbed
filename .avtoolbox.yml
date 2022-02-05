@@ -1,7 +1,14 @@
 project: miniav
-dev:
-  scripts: docker/dev/scripts
-  apt-dependencies: [bash, zsh, vim, git, git-lfs, python3-pip, python3-tk]
-  pip-requirements: [wa_simulator, pandas, matplotlib, numpy>=1.19, opencv-python, tornado, black, Pillow]
-vnc:
-  vnc_password: ""
+default_services: 
+  - dev
+  - vnc
+services:
+  dev:
+    build:
+      args:
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk"
+        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow"
+  vnc:
+    build:
+      args:
+        VNC_PASSWORD: ""
