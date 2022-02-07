@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from custom_msgs.msg import VehicleState, ObjectList, Object
+from miniav_msgs.msg import VehicleState
+from miniav_perception_msgs.msg import ObjectArray, Object
 from sensor_msgs.msg import Image
 from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import PoseStamped
@@ -37,7 +38,7 @@ class PathPlanningNode(Node):
         #data that will be used by this class
         self.state = VehicleState()
         self.path = Path()
-        # self.objects = ObjectList()
+        # self.objects = ObjectArray()
 
         self.green_cones = np.array([])
         self.red_cones = np.array([])
@@ -48,7 +49,7 @@ class PathPlanningNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_state = self.create_subscription(VehicleState, 'miniav/state', self.state_callback, qos_profile)
-        self.sub_objects = self.create_subscription(ObjectList, 'miniav/objects', self.objects_callback, qos_profile)
+        self.sub_objects = self.create_subscription(ObjectArray, 'miniav/objects', self.objects_callback, qos_profile)
 
         if(self.vis):
             matplotlib.use("TKAgg")
