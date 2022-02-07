@@ -2,7 +2,8 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from custom_msgs.msg import VehicleState, ObjectList, Object
+from miniav_msgs.msg import VehicleState
+from miniav_perception_msgs.msg import ObjectArray, Object
 from ament_index_python.packages import get_package_share_directory
 import torch
 import torchvision
@@ -43,7 +44,7 @@ class ObjectRecognitionNode(Node):
         self.threshold = 0.001
 
         # READ IN SHARE DIRECTORY LOCATION
-        package_share_directory = get_package_share_directory('perception')
+        package_share_directory = get_package_share_directory('cone_detector')
 
         # READ IN PARAMETERS
         self.declare_parameter('model', "")
@@ -63,7 +64,7 @@ class ObjectRecognitionNode(Node):
             Image, 'miniav/image', self.image_callback, qos_profile)
         self.sub_state = self.create_subscription(
             VehicleState, 'miniav/state', self.state_callback, qos_profile)
-        self.pub_objects = self.create_publisher(ObjectList, 'miniav/objects', 10)
+        self.pub_objects = self.create_publisher(ObjectArray, 'miniav/objects', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
         # object recognition
@@ -195,7 +196,7 @@ class ObjectRecognitionNode(Node):
     def pub_callback(self):
         if(not self.go):
             return
-        msg = ObjectList()
+        msg = ObjectArray()
 
         boxes = self.prediction['boxes'].detach().cpu().numpy()
         labels = self.prediction['labels'].detach().cpu().numpy()
