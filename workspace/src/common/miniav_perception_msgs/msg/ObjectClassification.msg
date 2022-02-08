@@ -4,7 +4,7 @@
 float32 confidence
 
 # The classification types
-# See WA_OBJECT_CLASSIFICATION below
+# See MINIAV_OBJECT_CLASSIFICATION below
 uint8 classification 
 
 # Further custom classification types to be used to further define an object
@@ -14,4 +14,5 @@ uint8 custom_classification
 
 # THe possible classification types
 uint8 MINIAV_OBJECT_CLASSIFICATION_UNKNOWN=0
-uint8 MINIAV_OBJECT_CLASSIFICATION_CONE=1
+uint8 MINIAV_OBJECT_CLASSIFICATION_RED_CONE=1
+uint8 MINIAV_OBJECT_CLASSIFICATION_GREEN_CONE=2

@@ -82,14 +82,17 @@ class PathPlanningNode(Node):
         # self.get_logger().info("Detected cones: %s" % (str(len(msg.objects))))
 
         for obj in msg.objects:
-            pos = obj.position
-            id = obj.class_id
+            pos = [obj.pose.position.x,obj.pose.position.y,obj.pose.position.z]
+            id = obj.classification.classification
 
             #calculate position from camera parameters, rect, and distance
             if(id == 1):
                 self.red_cones.append(pos)
             elif(id == 2):
                 self.green_cones.append(pos)
+            else:
+                self.get_logger().info("Object with unknown label detected {}".format(id))
+        
 
     def order_cones(self,cones,start):
         ordered_cones = [start]

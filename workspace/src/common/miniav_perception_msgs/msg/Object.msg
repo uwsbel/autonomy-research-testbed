@@ -11,11 +11,11 @@
 unique_identifier_msgs/UUID uuid
 
 # A list of classifications for this Object
-miniav_perception_msgs/ObjectClassification[] classification
+miniav_perception_msgs/ObjectClassification classification
 
 # The position and orientation of the detected Object
-geometry_msgs/PoseWithCovariance pose
+geometry_msgs/Pose pose
 
 # The twist (derivative of pose) of the detected Object
-geometry_msgs/TwistWithCovariance twist
+geometry_msgs/Twist twist
 
