@@ -172,9 +172,6 @@ class ObjectRecognitionNode(Node):
         top_px = np.array([.5*(rectangle[0] + rectangle[2]),rectangle[1]])
         bottom_px = np.array([.5*(rectangle[0] + rectangle[2]),rectangle[3]])
 
-        # left = rectangle[0]
-        # right = rectangle[2]
-
         r1 = self.direction_to_pixel(top_px)
         r2 = self.direction_to_pixel(bottom_px)
 
@@ -215,12 +212,14 @@ class ObjectRecognitionNode(Node):
                 obj = Object()
 
                 position = self.calculate_position_from_box(boxes[b, :].astype(np.float64))
-                obj.position = position
-                obj.class_id = int(labels[b])
+                obj.pose.position.x = position[0]
+                obj.pose.position.y = position[1]
+                obj.pose.position.z = position[2]
+                obj.classification.classification = int(labels[b])
                 msg.objects.append(obj)
                 
                 if(self.vis):
-                    color = 'r' if obj.class_id==1 else 'g'
+                    color = 'r' if int(labels[b])==1 else 'g'
                     rect = patches.Rectangle((boxes[b, 0], boxes[b, 1]), boxes[b, 2]-boxes[b, 0], boxes[b, 3]-boxes[b,1], linewidth=1, edgecolor=color, facecolor='none')
                     self.ax.add_patch(rect)
                     self.patches.append(rect)
@@ -234,7 +233,7 @@ class ObjectRecognitionNode(Node):
             plt.pause(0.0001)
             self.counter += 1
 
-        t1 = time.time()
+        t1 = time.time()    
         # self.get_logger().info('Displaying Time = %s' % str(t1-t0))
 
         self.pub_objects.publish(msg)

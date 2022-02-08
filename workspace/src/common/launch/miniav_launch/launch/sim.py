@@ -33,7 +33,7 @@ def generate_launch_description():
             executable='object_recognition',
             name='object_recognition',
             parameters=[
-                 {"use_sim_time": True},
+                 {"use_sim_time": False},
                  {"model":"data/model_refined"},
                  {"camera_calibration_file":"data/calibration.json"},
                  {"vis": True}
