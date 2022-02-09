@@ -25,3 +25,4 @@ _version.py
 !.github/workflows/*
 
 docker-compose.yml
+.dockerignore
