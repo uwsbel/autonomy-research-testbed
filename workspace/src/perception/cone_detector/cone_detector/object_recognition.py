@@ -60,11 +60,9 @@ class ObjectRecognitionNode(Node):
         # publishers and subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_image = self.create_subscription(
-            Image, 'miniav/image', self.image_callback, qos_profile)
-        self.sub_state = self.create_subscription(
-            VehicleState, 'miniav/state', self.state_callback, qos_profile)
-        self.pub_objects = self.create_publisher(ObjectArray, 'miniav/objects', 10)
+        self.sub_image = self.create_subscription(Image, '~/input/image', self.image_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        self.pub_objects = self.create_publisher(ObjectArray, '~/output/objects', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
         # object recognition

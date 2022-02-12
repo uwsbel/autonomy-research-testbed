@@ -7,3 +7,6 @@
 [submodule "workspace/src/simulation/chrono-ros-bridge"]
 	path = workspace/src/simulation/chrono-ros-bridge
 	url = git@github.com:uwsbel/chrono-ros-bridge
+[submodule "workspace/src/external/rosboard"]
+	path = workspace/src/external/rosboard
+	url = git@github.com:dheera/rosboard.git

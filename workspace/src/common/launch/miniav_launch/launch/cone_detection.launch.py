@@ -5,24 +5,50 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    launch_description = LaunchDescription()
 
-    DeclareLaunchArgument("use_sim_time", default_value=TextSubstitution(text="False"))
-    DeclareLaunchArgument("model", default_value=TextSubstitution(text="data/model_refined"))
-    DeclareLaunchArgument("camera_calibration_file", default_value=TextSubstitution(text="data/calibration.json"))
-    DeclareLaunchArgument("vis", default_value=TextSubstitution(text="False"))
+    # ----------------
+    # Launch Arguments
+    # ----------------
+
+    def AddLaunchArgument(arg, default):
+        launch_description.add_action(
+            DeclareLaunchArgument(
+                arg,
+                default_value=TextSubstitution(text=default)
+            )
+        )
+
+    AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument("output/objects", "/perception/objects")
+
+    AddLaunchArgument("use_sim_time", "False")
+    AddLaunchArgument("model", "data/model_refined")
+    AddLaunchArgument("camera_calibration_file", "data/calibration.json")
+    AddLaunchArgument("vis", "False")
+
+    # -----
+    # Nodes
+    # -----
 
     node = Node(
-            package='cone_detector',
-            namespace='',
-            executable='object_recognition',
-            name='object_recognition',
-            parameters=[
-                 {"use_sim_time": LaunchConfiguration("use_sim_time",default=False)},
-                 {"model":LaunchConfiguration("model",default="data/model_refined")},
-                 {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",default="data/calibration.json")},
-                 {"vis": LaunchConfiguration("vis",default=False)}
-            ]
-        )
-    return  LaunchDescription([
-        node
-    ])
+        package='cone_detector',
+        namespace='',
+        executable='object_recognition',
+        name='object_recognition',
+        remappings=[
+            ("~/input/image", LaunchConfiguration("input/image")),
+            ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
+            ("~/output/objects", LaunchConfiguration("output/objects"))
+        ],
+        parameters=[
+             {"use_sim_time": LaunchConfiguration("use_sim_time")},
+             {"model":LaunchConfiguration("model")},
+             {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",)},
+             {"vis": LaunchConfiguration("vis")}
+        ]
+    )
+    launch_description.add_action(node)
+
+    return launch_description

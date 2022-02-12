@@ -19,7 +19,7 @@ def generate_launch_description():
                 get_package_share_directory('miniav_launch'),
                 'launch/miniav_stack.launch.py')),
         launch_arguments={
-            'use_sim_time': 'True'
+            'use_sim_time': 'False'
         }.items()
     )
 
