@@ -8,6 +8,11 @@ from ament_index_python import get_package_share_directory
 
 
 def generate_launch_description():
+    launch_description = LaunchDescription()
+
+    # ------------
+    # Launch Files
+    # ------------
 
     control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -15,6 +20,7 @@ def generate_launch_description():
                 get_package_share_directory('miniav_launch'),
                 'launch/control.launch.py'))
     )
+    launch_description.add_action(control)
 
     path_planning = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -22,6 +28,7 @@ def generate_launch_description():
                 get_package_share_directory('miniav_launch'),
                 'launch/path_planning.launch.py'))
     )
+    launch_description.add_action(path_planning)
 
     cone_detection = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -29,9 +36,6 @@ def generate_launch_description():
                 get_package_share_directory('miniav_launch'),
                 'launch/cone_detection.launch.py')),
     )
+    launch_description.add_action(cone_detection)
 
-    return LaunchDescription([
-        control,
-        path_planning,
-        cone_detection
-    ])
+    return launch_description

@@ -63,12 +63,9 @@ class ControlNode(Node):
         # publishers and subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_path = self.create_subscription(
-            Path, 'miniav/path', self.path_callback, qos_profile)
-        self.sub_state = self.create_subscription(
-            VehicleState, 'miniav/state', self.state_callback, qos_profile)
-        self.pub_vehicle_cmd = self.create_publisher(
-            VehicleInput, 'miniav/vehicle_cmd', 10)
+        self.sub_path = self.create_subscription(Path, '~/input/path', self.path_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
     # function to process data this class subscribes to
