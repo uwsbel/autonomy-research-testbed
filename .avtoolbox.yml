@@ -2,9 +2,19 @@ project: miniav
 default_services: 
   - dev
   - vnc
-optional_devices:
-  dev:
-    - /dev/video0
+custom_cli_arguments:
+  --gpus:
+    dev:
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                capabilities: [gpu]
+  --devices:
+    dev:
+      devices:
+        - /dev/video0
 services:
   dev:
     build:
