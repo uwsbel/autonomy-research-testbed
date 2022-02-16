@@ -23,6 +23,12 @@ RUN adduser --shell $USERSHELLPATH --disabled-password --gecos "" $USERNAME && \
 ARG APT_DEPENDENCIES
 RUN apt update && apt install -y wget $APT_DEPENDENCIES
 
+# Clean up to reduce image size
+RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+USER $USERNAME
+RUN sudo chown -R $USERNAME:$USERNAME /opt
+
 # Install miniconda
 ENV CONDA_DIR /opt/conda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
@@ -46,8 +52,8 @@ RUN if [ -n "$PIP_DEPENDENCIES" ]; then \
       pip install $PIP_DEPENDENCIES; \
     fi
 
-# Clean up to reduce image size
-RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+# Clean up conda
+RUN conda clean -a -y
 
 # Default bash config
 RUN if [ "$USERSHELL" = "bash" ]; then \
@@ -55,11 +61,11 @@ RUN if [ "$USERSHELL" = "bash" ]; then \
 			echo 'export PS1="\[\033[38;5;40m\]\h\[$(tput sgr0)\]:\[$(tput sgr0)\]\[\033[38;5;39m\]\w\[$(tput sgr0)\]\\$ \[$(tput sgr0)\]"' >> $USERSHELLPROFILE; \
 		fi
 
-# Set user and work directory
-USER $USERNAME
+# Set user work directory
 WORKDIR $USERHOME
 ENV HOME=$USERHOME
 ENV USERSHELLPATH=$USERSHELLPATH
 
-CMD ["/entrypoint.sh"]
+COPY ./entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
 CMD $USERSHELLPATH

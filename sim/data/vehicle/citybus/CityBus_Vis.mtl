@@ -1,0 +1,16 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl lambert15SG
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.500000 0.500000 0.500000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd textures/Bus_Texturing_Bus_Chassis_BaseColor.jpg
+map_Pr textures/Bus_Texturing_Bus_Chassis_Roughness.jpg
+map_Pm textures/Bus_Texturing_Bus_Chassis_Metallic.jpg
+map_d textures/Bus_Chassis_Opacity.jpg
