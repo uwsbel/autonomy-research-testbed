@@ -55,10 +55,15 @@ services:
       network: "host"
       args:
         USERNAME: "{project}"
-        APT_DEPENDENCIES: ""
+        APT_DEPENDENCIES: "libirrlicht-dev"
         CONDA_CHANNELS: "aryoung5 anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
         PIP_DEPENDENCIES: ""
+    environment:
+      - "USER_UID={uid}"
+      - "USER_GID={gid}"
+      - "NVIDIA_VISIBLE_DEVICES=all"
+      - "NVIDIA_DRIVER_CAPABILITIES=all"
     volumes: 
       - "{root}:/home/{username}/{project}"
     tty: true
