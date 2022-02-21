@@ -24,12 +24,12 @@ def generate_launch_description():
     )
 
     #TODO:
-    # camera_driver = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(
-    #             get_package_share_directory('miniav_launch'),
-    #             'launch/camera_driver.launch.py'))
-    # )
+    camera_driver = IncludeLaunchDescription(
+         PythonLaunchDescriptionSource(
+             os.path.join(
+                 get_package_share_directory('miniav_launch'),
+                 'launch/usb_cam.launch.py'))
+    )
 
     #TODO:
     # arduino_driver = IncludeLaunchDescription(
