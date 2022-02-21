@@ -6,124 +6,126 @@ import pychrono.geometry as geo
 import numpy as np
 
 
-def AddRandomCones(count, filename, class_id=1):
-    mmesh = geo.ChTriangleMeshConnected()
-    mmesh.SetLoadWavefrontMesh(filename, False, True)  
-    mmesh.SetTransform(chrono.ChVector(0, 0, 0), chrono.ChMatrix33(1)) 
-    for i in range(count):
-        # get terrain z location
-        x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
-        y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
-        z = terrain.GetHeight({x, y, 1000})
-        pos = chrono.ChVector(x, y, z)
-        rot = chrono.ChQuaternion(1, 0, 0, 0)
-        scale = chrono.ChVector(1, 1, 1)
-        trimesh_shape = chrono.ChTriangleMeshShape()
-        trimesh_shape.SetMesh(mmesh)
-        trimesh_shape.SetName(filename)
-        trimesh_shape.SetStatic(True)
-        trimesh_shape.SetScale(scale)
-        mesh_body = chrono.ChBody()
-        mesh_body.SetPos(pos)
-        mesh_body.SetRot(rot)
-        mesh_body.AddAsset(trimesh_shape)
-        mesh_body.SetBodyFixed(True)
-        vehicle.GetSystem().Add(mesh_body)
-        if (class_id == 1):
-            red_cone_assets.append(trimesh_shape)
-            red_cones.append(mesh_body)
-        else:
-            green_cone_assets.append(trimesh_shape)
-            green_cones.append(mesh_body)
-
-def AddConesFromFile():
-    file_name = "../" + cone_path_file
-    green_cone_mesh = geo.ChTriangleMeshConnected()
-    green_cone_mesh.SetLoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), False, True)  #not sure what get chronodatafile is
-    green_cone_mesh.SetTransform(chrono.ChVector(0, 0, 0), chrono.ChMatrix33(1))
-
-    red_cone_mesh = geo.ChTriangleMeshConnected()
-    red_cone_mesh.SetLoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), False, True)  #not sure what get chronodatafile is
-    red_cone_mesh.SetTransform(chrono.ChVector(0, 0, 0), chrono.ChMatrix33(1))
-
-    cone_file = open(file_name, 'r')
-    while True:
-        line = cone_file.readline()
-        if not line:
-            break
-        x_inner, y_inner, x_outer, y_outer = line.split(' ')
-
-        pos_green_x = x_inner + cone_offset_x
-        pos_green_y = y_inner + cone_offset_y
-        pos_green_z = terrain.GetHeight((pos_green_x, pos_green_y, 1000))
-
-        pos_red_x = x_outer + cone_offset_x
-        pos_red_y = y_outer + cone_offset_y
-        pos_red_z = terrain.GetHeight((pos_red_x, pos_red_y, 1000))
-
-        pos_green = chrono.ChVector(pos_green_x, pos_green_y, pos_green_z)
-        pos_red = chrono.ChVector(pos_red_x, pos_red_y, pos_red_z)
-        rot = chrono.ChQuaternion(1, 0, 0, 0)
-
-        green_cone_shape = chrono.ChTriangleMeshShape()
-        green_cone_shape.SetMesh(green_cone_mesh)
-        green_cone_shape.SetName("green_cone_shape")
-        green_cone_shape.SetStatic(True)
-        green_cone_assets.append(green_cone_shape)
-        green_body = chrono.ChBody()
-        green_body.SetPos(pos_green)
-        green_body.SetRot(rot)
-        green_body.AddAsset(green_cone_shape)
-        green_body.SetBodyFixed(True)
-        green_cones.append(green_body)
-        vehicle.GetSystem().Add(green_body)
-
-        red_cone_shape = chrono.ChTriangleMeshShape()
-        red_cone_shape.SetMesh(red_cone_mesh)
-        red_cone_shape.SetName("red_cone_shape")
-        red_cone_shape.SetStatic(True)
-        red_cone_assets.append(red_cone_shape)
-        red_body = chrono.ChBody()
-        red_body.SetPos(pos_red)
-        red_body.SetRot(rot)
-        red_body.AddAsset(red_cone_shape)
-        red_body.SetBodyFixed(True)
-        red_cones.append(red_body)
-        vehicle.GetSystem().Add(red_body)
-        
-    cone_file.close()
-
-def LabelConeAssets():
-        cone_id = 0
-        for cone in red_cone_assets:
-            cone_id += 1
-            for mat in cone.material_list:
-                mat.SetClassID(1)
-                mat.SetInstanceID(cone_id)
-
-
-        cone_id = 0
-        for cone in green_cone_assets:
-            cone_id += 1
-            for mat in cone.material_list:
-                mat.SetClassID(2)
-                mat.SetInstanceID(cone_id)
-
-def RedistributeCones():
-    for cone in green_cones:
-        x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
-        y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
-        z = terrain.GetHeight((x, y, 1000))
-        cone.SetPos((x, y, z))
-
-    for cone in red_cones:
-        x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
-        y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
-        z = terrain.GetHeight((x, y, 1000))
-        cone.SetPos((x, y, z))
-
-
 def main():
+    
+    def AddRandomCones(count, filename, class_id=1):
+        mmesh = geo.ChTriangleMeshConnected()
+        mmesh.SetLoadWavefrontMesh(filename, False, True)  
+        mmesh.SetTransform(chrono.ChVector(0, 0, 0), chrono.ChMatrix33(1)) 
+        for i in range(count):
+            # get terrain z location
+            x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
+            y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
+            z = terrain.GetHeight({x, y, 1000})
+            pos = chrono.ChVector(x, y, z)
+            rot = chrono.ChQuaternion(1, 0, 0, 0)
+            scale = chrono.ChVector(1, 1, 1)
+            trimesh_shape = chrono.ChTriangleMeshShape()
+            trimesh_shape.SetMesh(mmesh)
+            trimesh_shape.SetName(filename)
+            trimesh_shape.SetStatic(True)
+            trimesh_shape.SetScale(scale)
+            mesh_body = chrono.ChBody()
+            mesh_body.SetPos(pos)
+            mesh_body.SetRot(rot)
+            mesh_body.AddAsset(trimesh_shape)
+            mesh_body.SetBodyFixed(True)
+            vehicle.GetSystem().Add(mesh_body)
+            if (class_id == 1):
+                red_cone_assets.append(trimesh_shape)
+                red_cones.append(mesh_body)
+            else:
+                green_cone_assets.append(trimesh_shape)
+                green_cones.append(mesh_body)
+
+    def AddConesFromFile():
+        file_name = "../" + cone_path_file
+        green_cone_mesh = geo.ChTriangleMeshConnected()
+        green_cone_mesh.SetLoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), False, True)  #not sure what get chronodatafile is
+        green_cone_mesh.SetTransform(chrono.ChVector(0, 0, 0), chrono.ChMatrix33(1))
+
+        red_cone_mesh = geo.ChTriangleMeshConnected()
+        red_cone_mesh.SetLoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), False, True)  #not sure what get chronodatafile is
+        red_cone_mesh.SetTransform(chrono.ChVector(0, 0, 0), chrono.ChMatrix33(1))
+
+        cone_file = open(file_name, 'r')
+        while True:
+            line = cone_file.readline()
+            if not line:
+                break
+            x_inner, y_inner, x_outer, y_outer = line.split(' ')
+
+            pos_green_x = x_inner + cone_offset_x
+            pos_green_y = y_inner + cone_offset_y
+            pos_green_z = terrain.GetHeight((pos_green_x, pos_green_y, 1000))
+
+            pos_red_x = x_outer + cone_offset_x
+            pos_red_y = y_outer + cone_offset_y
+            pos_red_z = terrain.GetHeight((pos_red_x, pos_red_y, 1000))
+
+            pos_green = chrono.ChVector(pos_green_x, pos_green_y, pos_green_z)
+            pos_red = chrono.ChVector(pos_red_x, pos_red_y, pos_red_z)
+            rot = chrono.ChQuaternion(1, 0, 0, 0)
+
+            green_cone_shape = chrono.ChTriangleMeshShape()
+            green_cone_shape.SetMesh(green_cone_mesh)
+            green_cone_shape.SetName("green_cone_shape")
+            green_cone_shape.SetStatic(True)
+            green_cone_assets.append(green_cone_shape)
+            green_body = chrono.ChBody()
+            green_body.SetPos(pos_green)
+            green_body.SetRot(rot)
+            green_body.AddAsset(green_cone_shape)
+            green_body.SetBodyFixed(True)
+            green_cones.append(green_body)
+            vehicle.GetSystem().Add(green_body)
+
+            red_cone_shape = chrono.ChTriangleMeshShape()
+            red_cone_shape.SetMesh(red_cone_mesh)
+            red_cone_shape.SetName("red_cone_shape")
+            red_cone_shape.SetStatic(True)
+            red_cone_assets.append(red_cone_shape)
+            red_body = chrono.ChBody()
+            red_body.SetPos(pos_red)
+            red_body.SetRot(rot)
+            red_body.AddAsset(red_cone_shape)
+            red_body.SetBodyFixed(True)
+            red_cones.append(red_body)
+            vehicle.GetSystem().Add(red_body)
+            
+        cone_file.close()
+
+    def LabelConeAssets():
+            cone_id = 0
+            for cone in red_cone_assets:
+                cone_id += 1
+                for mat in cone.material_list:
+                    mat.SetClassID(1)
+                    mat.SetInstanceID(cone_id)
+
+
+            cone_id = 0
+            for cone in green_cone_assets:
+                cone_id += 1
+                for mat in cone.material_list:
+                    mat.SetClassID(2)
+                    mat.SetInstanceID(cone_id)
+
+    def RedistributeCones():
+        for cone in green_cones:
+            x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
+            y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
+            z = terrain.GetHeight((x, y, 1000))
+            cone.SetPos((x, y, z))
+
+        for cone in red_cones:
+            x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
+            y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
+            z = terrain.GetHeight((x, y, 1000))
+            cone.SetPos((x, y, z))
+
+
+
     # Create the RCCar vehicle, set parameters, and initialize
     vehicle = veh.RCCar()
     vehicle.SetContactMethod(contact_method)
@@ -183,7 +185,7 @@ def main():
     manager.scene.AddPointLight(chrono.ChVectorF(100, 100, 100), chrono.ChVectorF(1, 1, 1), 5000)
     
     b = sens.Background()
-    b.setBackgroundMode(BackgroundMode_GRADIENT) #not sure about this
+    b.setBackgroundMode(sens.BackgroundMode_GRADIENT)
     b.color_horizon = (.6, .7, .8)
     b.color_zenith = (.4, .5, .6)
     manager.scene.SetBackground(b)
@@ -204,7 +206,7 @@ def main():
                 height,                     # image height
                 fov,                        # FOV
                 2,
-                sens.CameraLensModelType(CameraLensModelType_FOV_LENS))  # super sample diameter
+                sens.CameraLensModelType(sens.CameraLensModelType_FOV_LENS))  # super sample diameter
 
     camera.SetName("Camera Sensor")
     c_window = float(0)
@@ -223,7 +225,7 @@ def main():
                 patch.GetGroundBody(),  # body camera is attached to
                 30,                      # update rate in Hz
                 chrono.ChFrame((init_loc_x + 2, init_loc_y, 10), 
-                chrono.Q_from_AngAxis(CH_C_PI_2, (0, 1, 0))),  # offset pose   ------ not sure what CH_C_PI_2 is
+                chrono.Q_from_AngAxis(chrono.CH_C_PI_2, (0, 1, 0))),  # offset pose   ------ not sure what CH_C_PI_2 is
                 1280,                                                           # image width
                 720,                                                            # image height
                 3.14 / 4,                                                       # FOV
