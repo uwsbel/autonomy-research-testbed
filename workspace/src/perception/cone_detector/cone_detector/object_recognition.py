@@ -115,7 +115,7 @@ class ObjectRecognitionNode(Node):
         x = np.asarray(self.image.data).reshape(
             h, w, -1).astype(np.float32) / 255.0
 
-        x = np.flip(x,axis=0).copy()
+        # x = np.flip(x,axis=0).copy()
 
         if(self.image.encoding == "bgr8"):
             x = np.flip(x[:,:,0:3],axis=2).copy()
