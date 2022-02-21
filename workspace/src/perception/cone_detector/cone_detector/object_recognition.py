@@ -42,6 +42,7 @@ class ObjectRecognitionNode(Node):
         self.prediction['scores'] = torch.tensor([])
 
         self.threshold = 0.001
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # READ IN SHARE DIRECTORY LOCATION
         package_share_directory = get_package_share_directory('cone_detector')
@@ -69,7 +70,7 @@ class ObjectRecognitionNode(Node):
         self.model = RecognitionNetwork()
         self.model.load(os.path.join(package_share_directory,self.model_file))
         self.model.eval()
-        self.get_logger().info('Model initialized | visualizing = %s' % str(self.vis))
+        self.get_logger().info('Model initialized | visualizing = %s | device = %s' % (str(self.vis),str(self.device)))
 
 
         # nn optimizations
@@ -78,10 +79,13 @@ class ObjectRecognitionNode(Node):
         torch.backends.cudnn.benchmark = True
         torch.backends.cudnn.enabled = True
 
-        self.model.model.half()
+        if(torch.cuda.is_available()):
+            self.model.model.half()
 
         #run a first test for optimization
-        dummy_input = torch.rand((3,720,1280),dtype=torch.float16,device='cuda:0')
+        dummy_input = torch.rand((3,720,1280),dtype=torch.float32,device=self.device)
+        if(torch.cuda.is_available()):
+            dummy_input = torch.rand((3,720,1280),dtype=torch.float16,device=self.device)
         self.model.predict([dummy_input])
 
         if(self.vis):
@@ -115,12 +119,11 @@ class ObjectRecognitionNode(Node):
         if(self.image.encoding == "bgr8"):
             x = np.flip(x[:,:,0:3],axis=2).copy()
 
-        # self.get_logger().info('Shape = %s, type= %s, max= %s' % (str(x.shape), str(x.dtype), np.max(x)))
-        torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().cuda()
-        # torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).cuda()
-        # im = self.ax.imshow(x, origin='lower')
-        # torch.cuda.synchronize()
-
+        torch_img = None 
+        if(torch.cuda.is_available()):
+            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
+        else:
+            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
         t1 = time.time()
 
         if(self.vis):
@@ -130,12 +133,8 @@ class ObjectRecognitionNode(Node):
                 self.im_show.set_data(x)
 
 
-        # x = [torch.rand(3, 1280, 720).cuda()]
         self.prediction = self.model.predict([torch_img])[0]
 
-        # self.get_logger().info('Pred= %s' % ("{}".format(type(self.prediction))))
-
-        # torch.cuda.synchronize()
         t2 = time.time()
         t = self.get_clock().now()
         # t_msg = self.get_clock().now()

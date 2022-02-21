@@ -4,6 +4,8 @@ default_services:
   - vnc
 custom_cli_arguments:
   --gpus:
+    argparse:
+      action: 'store_true'
     dev:
       deploy:
         resources:
@@ -11,17 +13,68 @@ custom_cli_arguments:
             devices:
               - driver: nvidia
                 capabilities: [gpu]
+    chrono:
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                capabilities: [gpu]
   --devices:
+    argparse:
+      action: 'store_true'
     dev:
       devices:
         - /dev/video0
+        - /dev/ttyACM0
+  --optix:
+    argparse:
+      required: true
+    chrono-conda:
+      volumes:
+        - "{optix}:/opt/optix-7.2"
 services:
   dev:
     build:
       args:
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
-        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision"
+        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
+    volumes: 
+      - $HOME/.local/:/home/miniav/.local
   vnc:
     build:
       args:
         VNC_PASSWORD: ""
+  chrono:
+    image: "avtoolbox/{project}:chrono"
+    hostname: "{project}-chrono"
+    container_name: "{project}-chrono"
+    build:
+      context: ./docker/chrono
+      dockerfile: ./chrono.dockerfile
+      network: "host"
+      args:
+        USERNAME: "{project}"
+        APT_DEPENDENCIES: "libirrlicht-dev"
+        CONDA_CHANNELS: "aryoung5 anaconda conda-forge"
+        CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
+        PIP_DEPENDENCIES: ""
+    environment:
+      - "USER_UID={uid}"
+      - "USER_GID={gid}"
+      - "NVIDIA_VISIBLE_DEVICES=all"
+      - "NVIDIA_DRIVER_CAPABILITIES=all"
+    volumes: 
+      - "{root}:/home/{username}/{project}"
+    tty: true
+  chrono-conda:
+    image: "avtoolbox/{project}:chrono-conda"
+    build:
+      context: ./docker/chrono-conda
+      dockerfile: ./chrono-conda.dockerfile
+      network: "host"
+      args:
+        APT_DEPENDENCIES: "libirrlicht-dev vim ccache libeigen3-dev xorg xauth libxxf86vm-dev freeglut3-dev openbox libglfw3-dev"
+        CONDA_CHANNELS: "anaconda conda-forge"
+        CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
+        PIP_DEPENDENCIES: ""
