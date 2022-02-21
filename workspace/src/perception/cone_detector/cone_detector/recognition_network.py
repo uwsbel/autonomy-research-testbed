@@ -31,6 +31,7 @@ class RecognitionNetwork():
         trainable_layers = 0
         pretrained = False
         pretrained_backbone = True
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         #fasterrcnn_mobilenet_v3_large_fpn
         #fasterrcnn_mobilenet_v3_large_320_fpn
@@ -42,11 +43,11 @@ class RecognitionNetwork():
 
         self.model.transform = GeneralizedRCNNTransform(min_size,max_size,(0.485, 0.456, 0.406), (0.229, 0.224, 0.225),fixed_size=(max_size,min_size))
 
-        self.model.cuda()
+        self.model.to(self.device)
 
     def eval(self):
         # self.model.transform = DummyTransform(720,1280,(0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-        self.model.eval().cuda()
+        self.model.eval().to(self.device)
 
     def predict(self, imgs):
         return self.model(imgs)
@@ -63,11 +64,11 @@ class RecognitionNetwork():
             img_list = []
             target_list = []
             for b in range(imgs.size()[0]):
-                img_tensor = imgs[b, :, :, :].cuda()
+                img_tensor = imgs[b, :, :, :].to(self.device)
                 target_dict = {}
                 ids = labels[b, :] > 0
-                target_dict["boxes"] = boxes[b, ids, :].cuda()
-                target_dict["labels"] = labels[b, ids].cuda()
+                target_dict["boxes"] = boxes[b, ids, :].to(self.device)
+                target_dict["labels"] = labels[b, ids].to(self.device)
                 img_list.append(img_tensor)
                 target_list.append(target_dict)
 
@@ -92,12 +93,12 @@ class RecognitionNetwork():
             img_list = []
             target_list = []
             for b in range(imgs.size()[0]):
-                img_tensor = imgs[b, :, :, :].cuda()
+                img_tensor = imgs[b, :, :, :].to(self.device)
                 target_dict = {}
                 ids = labels[b, :] > 0
                 # print("nonzero classes=",ids)
-                target_dict["boxes"] = boxes[b, ids, :].cuda()
-                target_dict["labels"] = labels[b, ids].cuda()
+                target_dict["boxes"] = boxes[b, ids, :].to(self.device)
+                target_dict["labels"] = labels[b, ids].to(self.device)
                 img_list.append(img_tensor)
                 target_list.append(target_dict)
 
@@ -127,11 +128,11 @@ class RecognitionNetwork():
             img_list = []
             target_list = []
             for b in range(imgs.size()[0]):
-                img_tensor = imgs[b, :, :, :].cuda()
+                img_tensor = imgs[b, :, :, :].to(self.device)
                 target_dict = {}
                 ids = labels[b, :] > 0
-                target_dict["boxes"] = boxes[b, ids, :].cuda()
-                target_dict["labels"] = labels[b, ids].cuda()
+                target_dict["boxes"] = boxes[b, ids, :].to(self.device)
+                target_dict["labels"] = labels[b, ids].to(self.device)
                 img_list.append(img_tensor)
                 target_list.append(target_dict)
 
@@ -277,10 +278,10 @@ class RecognitionNetwork():
             #         img_list = []
             #         target_list = []
             #         for b in range(imgs.size()[0]):
-            #             img_tensor = imgs[b, :, :, :].cuda()
+            #             img_tensor = imgs[b, :, :, :].to(self.device)
             #             target_dict = {}
-            #             target_dict["boxes"] = boxes[b, :, :].cuda()
-            #             target_dict["labels"] = labels[b, :].cuda()
+            #             target_dict["boxes"] = boxes[b, :, :].to(self.device)
+            #             target_dict["labels"] = labels[b, :].to(self.device)
             #             img_list.append(img_tensor)
             #             target_list.append(target_dict)
 
@@ -325,7 +326,7 @@ class RecognitionNetwork():
             #             break
 
     def load(self, path):
-        self.model.load_state_dict(torch.load(path))
+        self.model.load_state_dict(torch.load(path,map_location=self.device))
         print("Loaded pretrained model at {}".format(path))
 
     def save(self,output_dir="output",model_name="model"):
