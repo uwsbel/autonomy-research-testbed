@@ -104,13 +104,14 @@ class ObjectRecognitionNode(Node):
 
     def image_callback(self, msg):
         self.go = True
-        # self.get_logger().info("Received '%s'" % msg)
+        # self.get_logger().info("Received image msg")
         self.image = msg
 
         t0 = time.time()
-
+        
         h = self.image.height
         w = self.image.width
+        # self.get_logger().info("Image msg data: {} x {}".format(w,h))
         x = np.asarray(self.image.data).reshape(
             h, w, -1).astype(np.float32) / 255.0
 
@@ -121,9 +122,11 @@ class ObjectRecognitionNode(Node):
 
         torch_img = None 
         if(torch.cuda.is_available()):
-            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
+            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
         else:
-            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
+            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
+
+        # self.get_logger().info("Image tensor: {}".format(torch_img))
         t1 = time.time()
 
         if(self.vis):
