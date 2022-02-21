@@ -40,7 +40,7 @@ services:
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
     volumes: 
-      - "$HOME/.local/:$HOME/.local"
+      - $HOME/.local/:/home/miniav/.local
   vnc:
     build:
       args:
