@@ -135,12 +135,13 @@ class ChDriverInputs_DataParserFunctor(veh.ChExternalDriver_DataParserFunctor):
         self.driver = driver
 
     def Deserialize(self, reader):
-        steering = throttle = braking = 0.0
-        reader >> steering >> throttle >> braking
+        steering = reader.GetFloat()
+        throttle = reader.GetFloat()
+        braking = reader.GetFloat()
 
-        reader.SetThrottle(throttle)
-        reader.SetSteering(steering)
-        reader.SetBraking(braking)
+        self.driver.SetThrottle(throttle)
+        self.driver.SetSteering(steering)
+        self.driver.SetBraking(braking)
 
 
 #// =============================================================================
@@ -349,7 +350,7 @@ def main():
     c_window = float(0)
     camera.SetCollectionWindow(c_window)
 
-    camera.PushFilter(sens.ChFilterVisualize(640, 360))
+    # camera.PushFilter(sens.ChFilterVisualize(640, 360))
 
     if save_sensor_data:
         camera.PushFilter(sens.ChFilterSave(sensor_data_dir + "cam1/"))
@@ -368,7 +369,7 @@ def main():
                 3.14 / 4,                                                       # FOV
                 2)                                                              # super sample diameter
     camera2.SetName("Camera Sensor 2")
-    camera2.PushFilter(sens.ChFilterVisualize(1280, 720))
+    # camera2.PushFilter(sens.ChFilterVisualize(1280, 720))
     if save_sensor_data:
         camera2.PushFilter(sens.ChFilterSave(sensor_data_dir + "cam2/"))
     manager.AddSensor(camera2)
@@ -524,9 +525,9 @@ red_cones = list()
 green_cones = list()
 
 # Initial vehicle location
-init_loc_x = 0
-init_loc_y = 0
-init_angle_z = 0
+init_loc_x = -2.5
+init_loc_y = 0.5
+init_angle_z = 1.57
 
 initLoc = chrono.ChVectorD(init_loc_x, init_loc_y, 0.5)
 initRot = chrono.Q_from_AngZ(init_angle_z)

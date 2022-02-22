@@ -41,7 +41,7 @@ RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge /root/chrono
 
 # Overwrite the conda build script
-COPY build.sh /root/chrono/contrib/package-python/conda/
+COPY build.sh /root/chrono/contrib/packaging-python/conda/
 
 # Run the entrypoint
 COPY entrypoint.sh /

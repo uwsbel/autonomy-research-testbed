@@ -116,23 +116,23 @@ class ObjectRecognitionNode(Node):
 
         x = np.flip(x,axis=0).copy()
 
-        if(self.image.encoding == "bgr8"):
+        if self.image.encoding == "bgr8":
             x = np.flip(x[:,:,0:3],axis=2).copy()
 
         torch_img = None 
-        if(torch.cuda.is_available()):
-            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
+        if torch.cuda.is_available():
+            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
         else:
-            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
+            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
         t1 = time.time()
 
-        if(self.vis):
-            if(self.im_show == None):
+        if self.vis:
+            if self.im_show == None:
                 self.im_show = self.ax.imshow(x)
             else:
                 self.im_show.set_data(x)
 
-
+        # self.get_logger().warn(torch_img)
         self.prediction = self.model.predict([torch_img])[0]
 
         t2 = time.time()
