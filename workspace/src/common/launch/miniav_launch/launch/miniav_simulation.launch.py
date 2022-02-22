@@ -29,7 +29,8 @@ def generate_launch_description():
     AddLaunchArgument("output/time", "/clock")
     AddLaunchArgument("output/vehicle", "/vehicle/state")
     AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("ip", "127.0.0.1")
+    AddLaunchArgument("ip", "")
+    AddLaunchArgument("hostname", "")
     AddLaunchArgument("use_sim_time", "True")
 
     # ------------
@@ -66,6 +67,7 @@ def generate_launch_description():
         parameters=[
              {"use_sim_time": LaunchConfiguration("use_sim_time")},
              {"ip": LaunchConfiguration("ip")},
+             {"hostname": LaunchConfiguration("hostname")},
         ],
         on_exit=EmitEvent(event=Shutdown()),
 		
