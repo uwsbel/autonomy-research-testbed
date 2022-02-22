@@ -1,10 +1,11 @@
 import os
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import TextSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
+from launch.events import Shutdown
 
 from ament_index_python import get_package_share_directory
 
@@ -28,6 +29,7 @@ def generate_launch_description():
     AddLaunchArgument("output/time", "/clock")
     AddLaunchArgument("output/vehicle", "/vehicle/state")
     AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument("ip", "127.0.0.1")
     AddLaunchArgument("use_sim_time", "True")
 
     # ------------
@@ -39,7 +41,10 @@ def generate_launch_description():
             os.path.join(
                 get_package_share_directory('miniav_launch'),
                 'launch/miniav_stack.launch.py')),
-        launch_arguments={'use_sim_time': 'True'}.items()
+        launch_arguments=[
+            ('use_sim_time', 'True'),
+            ('use_sim_msg', 'True'),
+        ]
     )
     launch_description.add_action(stack)
 
@@ -60,7 +65,10 @@ def generate_launch_description():
         ],
         parameters=[
              {"use_sim_time": LaunchConfiguration("use_sim_time")},
-        ]
+             {"ip": LaunchConfiguration("ip")},
+        ],
+        on_exit=EmitEvent(event=Shutdown()),
+		
     )
     launch_description.add_action(chrono_ros_bridge)
 
