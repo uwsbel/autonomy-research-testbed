@@ -104,17 +104,18 @@ class ObjectRecognitionNode(Node):
 
     def image_callback(self, msg):
         self.go = True
-        # self.get_logger().info("Received '%s'" % msg)
+        # self.get_logger().info("Received image msg")
         self.image = msg
 
         t0 = time.time()
-
+        
         h = self.image.height
         w = self.image.width
+        # self.get_logger().info("Image msg data: {} x {}".format(w,h))
         x = np.asarray(self.image.data).reshape(
             h, w, -1).astype(np.float32) / 255.0
 
-        x = np.flip(x,axis=0).copy()
+        # x = np.flip(x,axis=0).copy()
 
         if self.image.encoding == "bgr8":
             x = np.flip(x[:,:,0:3],axis=2).copy()
