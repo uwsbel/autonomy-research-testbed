@@ -28,3 +28,4 @@ _version.py
 .avtoolbox.user_count
 .docker-compose.yml
 .dockerignore
+.copyright.tmpl
