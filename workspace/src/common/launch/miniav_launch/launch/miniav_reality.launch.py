@@ -9,38 +9,34 @@ from ament_index_python import get_package_share_directory
 
 def generate_launch_description():
 
-    DeclareLaunchArgument(
-        "use_sim_time", default_value=False
-    )
+    launch_description = LaunchDescription()
+
+    # ------------
+    # Launch Files
+    # ------------
 
     stack = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('miniav_launch'),
-                'launch/miniav_stack.launch.py')),
-        launch_arguments={
-            'use_sim_time': 'False'
-        }.items()
+                'launch/miniav_stack.launch.py'))
     )
+    launch_description.add_action(stack)
 
-    #TODO:
-    # camera_driver = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(
-    #             get_package_share_directory('miniav_launch'),
-    #             'launch/camera_driver.launch.py'))
-    # )
+    camera = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('miniav_launch'),
+                'launch/usb_cam.launch.py'))
+    )
+    launch_description.add_action(camera)
 
-    #TODO:
-    # arduino_driver = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(
-    #             get_package_share_directory('miniav_launch'),
-    #             'launch/arduino_driver.launch.py'))
-    # )
+    camera = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('miniav_launch'),
+                'launch/arduino_driver.launch.py'))
+    )
+    launch_description.add_action(camera)
 
-    return LaunchDescription([
-        stack
-        #TODO: camera_driver
-        #TODO: arduino_driver
-    ])
+    return launch_description

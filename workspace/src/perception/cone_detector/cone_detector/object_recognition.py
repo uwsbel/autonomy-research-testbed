@@ -104,35 +104,36 @@ class ObjectRecognitionNode(Node):
 
     def image_callback(self, msg):
         self.go = True
-        # self.get_logger().info("Received '%s'" % msg)
+        # self.get_logger().info("Received image msg")
         self.image = msg
 
         t0 = time.time()
-
+        
         h = self.image.height
         w = self.image.width
+        # self.get_logger().info("Image msg data: {} x {}".format(w,h))
         x = np.asarray(self.image.data).reshape(
             h, w, -1).astype(np.float32) / 255.0
 
-        x = np.flip(x,axis=0).copy()
+        # x = np.flip(x,axis=0).copy()
 
-        if(self.image.encoding == "bgr8"):
+        if self.image.encoding == "bgr8":
             x = np.flip(x[:,:,0:3],axis=2).copy()
 
         torch_img = None 
-        if(torch.cuda.is_available()):
-            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
+        if torch.cuda.is_available():
+            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
         else:
-            torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
+            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
         t1 = time.time()
 
-        if(self.vis):
-            if(self.im_show == None):
+        if self.vis:
+            if self.im_show == None:
                 self.im_show = self.ax.imshow(x)
             else:
                 self.im_show.set_data(x)
 
-
+        # self.get_logger().warn(torch_img)
         self.prediction = self.model.predict([torch_img])[0]
 
         t2 = time.time()

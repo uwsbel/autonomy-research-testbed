@@ -27,6 +27,7 @@ def generate_launch_description():
     AddLaunchArgument("control_file", "data/smallest_radius_right.csv")
     AddLaunchArgument("steering_gain", "1.6")
     AddLaunchArgument("throttle_gain", "0.08")
+    AddLaunchArgument("use_sim_msg", "False")
     AddLaunchArgument("use_sim_time", "False")
 
     # -----
@@ -45,6 +46,7 @@ def generate_launch_description():
             ],
             parameters=[
                 {"use_sim_time": LaunchConfiguration("use_sim_time")},
+                {"use_sim_msg": LaunchConfiguration("use_sim_msg")},
                 {"control_mode": LaunchConfiguration("control_mode",default="PID")},
                 {"control_file": LaunchConfiguration("control_file",default="data/smallest_radius_right.csv")},
                 {"steering_gain": LaunchConfiguration("steering_gain",default=1.6)},
