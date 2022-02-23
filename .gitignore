@@ -24,6 +24,7 @@ _version.py
 # Except
 !.github/workflows/*
 
+# Docker/avtoolbox stuff
 .atk.user_count
 .docker-compose.yml
 .dockerignore

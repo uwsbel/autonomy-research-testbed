@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from miniav_msgs.msg import VehicleState, VehicleInput
+from miniav_msgs.msg import VehicleState
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
@@ -40,6 +40,8 @@ class ControlNode(Node):
         self.declare_parameter('throttle_gain', 1.0)
         self.throttle_gain = self.get_parameter('throttle_gain').get_parameter_value().double_value
 
+        self.declare_parameter("use_sim_msg", False)
+        use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
 
         if(self.file == ""):
             self.mode = "PID"
@@ -54,6 +56,12 @@ class ControlNode(Node):
         # data that will be used by this class
         self.state = ""
         self.path = Path()
+        if use_sim_msg:
+            global VehicleInput
+            from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
+        else:
+            global VehicleInput
+            from miniav_msgs.msg import VehicleInput
         self.vehicle_cmd = VehicleInput()
 
         #waits for first path if using PID, otherwise runs right away
