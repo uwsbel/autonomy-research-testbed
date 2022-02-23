@@ -24,5 +24,6 @@ _version.py
 # Except
 !.github/workflows/*
 
-docker-compose.yml
+.atk.user_count
+.docker-compose.yml
 .dockerignore
