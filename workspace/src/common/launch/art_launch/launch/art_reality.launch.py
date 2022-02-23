@@ -18,15 +18,15 @@ def generate_launch_description():
     stack = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('miniav_launch'),
-                'launch/miniav_stack.launch.py'))
+                get_package_share_directory('art_launch'),
+                'launch/art_stack.launch.py'))
     )
     launch_description.add_action(stack)
 
     camera = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('miniav_launch'),
+                get_package_share_directory('art_launch'),
                 'launch/usb_cam.launch.py'))
     )
     launch_description.add_action(camera)
@@ -34,7 +34,7 @@ def generate_launch_description():
     camera = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('miniav_launch'),
+                get_package_share_directory('art_launch'),
                 'launch/arduino_driver.launch.py'))
     )
     launch_description.add_action(camera)

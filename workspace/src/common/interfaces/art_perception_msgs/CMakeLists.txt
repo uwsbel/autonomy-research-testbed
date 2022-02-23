@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(miniav_msgs)
+project(art_perception_msgs)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -22,6 +22,7 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(unique_identifier_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -38,10 +39,12 @@ endif()
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-	msg/VehicleState.msg
-	msg/VehicleInput.msg
+	msg/ObjectClassification.msg
 
-  DEPENDENCIES std_msgs geometry_msgs
+	msg/Object.msg
+	msg/ObjectArray.msg
+
+  DEPENDENCIES std_msgs geometry_msgs unique_identifier_msgs
 )
 
 ament_package()

@@ -2,8 +2,8 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from miniav_msgs.msg import VehicleState
-from miniav_perception_msgs.msg import ObjectArray, Object
+from art_msgs.msg import VehicleState
+from art_perception_msgs.msg import ObjectArray, Object
 from ament_index_python.packages import get_package_share_directory
 import torch
 import torchvision

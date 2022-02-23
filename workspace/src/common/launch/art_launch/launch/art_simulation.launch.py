@@ -40,8 +40,8 @@ def generate_launch_description():
     stack = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('miniav_launch'),
-                'launch/miniav_stack.launch.py')),
+                get_package_share_directory('art_launch'),
+                'launch/art_stack.launch.py')),
         launch_arguments=[
             ('use_sim_time', 'True'),
             ('use_sim_msg', 'True'),

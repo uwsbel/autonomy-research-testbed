@@ -11,7 +11,7 @@
 unique_identifier_msgs/UUID uuid
 
 # A list of classifications for this Object
-miniav_perception_msgs/ObjectClassification classification
+art_perception_msgs/ObjectClassification classification
 
 # The position and orientation of the detected Object
 geometry_msgs/Pose pose

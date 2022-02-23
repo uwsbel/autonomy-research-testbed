@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from miniav_msgs.msg import VehicleState
-from miniav_perception_msgs.msg import ObjectArray, Object
+from art_msgs.msg import VehicleState
+from art_perception_msgs.msg import ObjectArray, Object
 from sensor_msgs.msg import Image
 from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import PoseStamped

@@ -50,7 +50,7 @@ def generate_launch_description():
 
     args, unknown = parser.parse_known_args(sys.argv[4:])
 
-    usb_cam_dir = get_package_share_directory('miniav_launch')
+    usb_cam_dir = get_package_share_directory('art_launch')
 
     # get path to params file
     params_path = os.path.join(

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(miniav_launch)
+project(art_launch)
 
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()

@@ -1,4 +1,4 @@
-project: miniav
+project: art
 default_services: 
   - dev
   - vnc
@@ -36,9 +36,9 @@ custom_cli_arguments:
   --piplocals:
     argparse:
       action: 'store_true'
-    dev:
+    deploy:
       volumes: 
-        - $HOME/.local/:/home/miniav/.local
+        - "$HOME/.local/:/home/{username}/.local"
 services:
   dev:
     build:
@@ -49,8 +49,21 @@ services:
     build:
       args:
         VNC_PASSWORD: ""
+  deploy:
+    image: "atk/{project}:deploy"
+    hostname: "{project}-deploy"
+    container_name: "{project}-deploy"
+    build:
+      context: ./docker/deploy
+      dockerfile: ./deploy.dockerfile
+      network: "host"
+      args:
+        IMAGE: "atk/{project}:dev"
+    volumes: 
+      - "{root}:/home/{username}/{project}"
+    tty: true
   chrono:
-    image: "avtoolbox/{project}:chrono"
+    image: "atk/{project}:chrono"
     hostname: "{project}-chrono"
     container_name: "{project}-chrono"
     build:
@@ -72,7 +85,7 @@ services:
       - "{root}:/home/{username}/{project}"
     tty: true
   chrono-conda:
-    image: "avtoolbox/{project}:chrono-conda"
+    image: "atk/{project}:chrono-conda"
     build:
       context: ./docker/chrono-conda
       dockerfile: ./chrono-conda.dockerfile

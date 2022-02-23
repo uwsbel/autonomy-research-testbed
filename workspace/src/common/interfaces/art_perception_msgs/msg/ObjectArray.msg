@@ -2,4 +2,4 @@
 
 std_msgs/Header header
 
-miniav_perception_msgs/Object[] objects
+art_perception_msgs/Object[] objects

@@ -11,8 +11,8 @@ set +euo pipefail
 set -euo pipefail
 
 # Update the user id for permission reasons
-sudo groupmod -o -g $USER_GID miniav
-sudo usermod -u $USER_UID -g $USER_GID miniav
+sudo groupmod -o -g $USER_GID art
+sudo usermod -u $USER_UID -g $USER_GID art
 
 # exec the final command:
 exec "$@"
