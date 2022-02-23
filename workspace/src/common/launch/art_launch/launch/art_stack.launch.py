@@ -47,7 +47,7 @@ def generate_launch_description():
     control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('art_launch'),
+                get_package_share_directory('art_control_launch'),
                 'launch/control.launch.py'))
     )
     launch_description.add_action(control)
@@ -55,7 +55,7 @@ def generate_launch_description():
     path_planning = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('art_launch'),
+                get_package_share_directory('art_control_launch'),
                 'launch/path_planning.launch.py'))
     )
     launch_description.add_action(path_planning)
@@ -63,7 +63,7 @@ def generate_launch_description():
     cone_detection = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('art_launch'),
+                get_package_share_directory('art_perception_launch'),
                 'launch/cone_detection.launch.py')),
     )
     launch_description.add_action(cone_detection)

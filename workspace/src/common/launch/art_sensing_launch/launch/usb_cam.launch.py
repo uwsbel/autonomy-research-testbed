@@ -14,7 +14,7 @@
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 #
-# * Neither the name of the copyright holder nor the names of its
+# * Neither the name of the copyright holaunch_descriptioner nor the names of its
 #   contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
 #
@@ -41,13 +41,28 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    ld = LaunchDescription()
+    launch_description = LaunchDescription()
+
+    # ----------------
+    # Launch Arguments
+    # ----------------
+
+    def AddLaunchArgument(arg, default):
+        launch_description.add_action(
+            DeclareLaunchArgument(
+                arg,
+                default_value=TextSubstitution(text=default)
+            )
+        )
+
+    AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
 
     parser = argparse.ArgumentParser(description='usb_cam demo')
     parser.add_argument('-n', '--node-name', dest='node_name', type=str,
                         help='name for device', default='usb_cam')
 
     args, unknown = parser.parse_known_args(sys.argv[4:])
+
 
     usb_cam_dir = get_package_share_directory('art_launch')
 
@@ -60,12 +75,11 @@ def generate_launch_description():
 
     node_name = args.node_name
 
-    print(params_path)
-    ld.add_action(Node(
+    launch_description.add_action(Node(
         package='usb_cam', executable='usb_cam_node_exe', output='screen',
         name=node_name,
-        remappings=[("/image_raw","/sensing/front_facing_camera/raw")],
+        remappings=[("/image_raw", LaunchConfiguration("output/camera"))],
         # namespace=ns,
         parameters=[params_path]
         ))
-    return ld
+    return launch_description

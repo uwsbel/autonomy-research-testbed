@@ -56,17 +56,17 @@ def generate_launch_description():
     camera = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('art_launch'),
+                get_package_share_directory('art_sensing_launch'),
                 'launch/usb_cam.launch.py'))
     )
     launch_description.add_action(camera)
 
-    camera = IncludeLaunchDescription(
+    arduino = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('art_launch'),
+                get_package_share_directory('art_vehicle_launch'),
                 'launch/arduino_driver.launch.py'))
     )
-    launch_description.add_action(camera)
+    launch_description.add_action(arduino)
 
     return launch_description
