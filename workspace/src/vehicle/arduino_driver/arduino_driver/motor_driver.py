@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from miniav_msgs.msg import VehicleState, VehicleInput
+from art_msgs.msg import VehicleState, VehicleInput
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from rclpy.qos import QoSHistoryPolicy

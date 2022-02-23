@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from miniav_msgs.msg import VehicleState
+from art_msgs.msg import VehicleState
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
@@ -61,7 +61,7 @@ class ControlNode(Node):
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
         else:
             global VehicleInput
-            from miniav_msgs.msg import VehicleInput
+            from art_msgs.msg import VehicleInput
         self.vehicle_cmd = VehicleInput()
 
         #waits for first path if using PID, otherwise runs right away

@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ros:galactic
+ARG IMAGE
+FROM ${IMAGE}
 
 RUN apt update -y && apt install -y vim git gcc g++ libnuma1
 
