@@ -60,7 +60,7 @@ class ChCameraSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunc
         rgba8_buffer = self.cam.GetMostRecentRGBA8Buffer()
         if rgba8_buffer.HasData():
             rgba8_data = rgba8_buffer.GetRGBA8Data()
-            rgba8_data = np.ascontiguousarray(np.flipud(rgba8_data)) # Needs to be contigious
+            rgba8_data = np.ascontiguousarray(rgba8_data[::-1]) # Needs to be contigious
             shape = rgba8_data.shape
             writer.Key("width") << shape[1]
             writer.Key("height") << shape[0] 
@@ -360,7 +360,7 @@ def main():
     b.mode = sens.BackgroundMode_GRADIENT
     manager.scene.SetBackground(b)
 
-    camera_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, .2), chrono.Q_from_AngAxis(.2, chrono.ChVectorD(0, 1, 0)))
+    camera_pose = chrono.ChFrameD(chrono.ChVectorD(0.204, 0, 0.10018), chrono.Q_from_AngAxis(.2, chrono.ChVectorD(0, 1, 0)))
     width = 1280
     height = 720
     frame_rate = 30.0
