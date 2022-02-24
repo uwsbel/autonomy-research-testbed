@@ -60,6 +60,7 @@ class ChCameraSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunc
         rgba8_buffer = self.cam.GetMostRecentRGBA8Buffer()
         if rgba8_buffer.HasData():
             rgba8_data = rgba8_buffer.GetRGBA8Data()
+            rgba8_data = np.ascontiguousarray(np.flipud(rgba8_data)) # Needs to be contigious
             shape = rgba8_data.shape
             writer.Key("width") << shape[1]
             writer.Key("height") << shape[0] 
