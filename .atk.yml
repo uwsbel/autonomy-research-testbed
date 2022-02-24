@@ -81,6 +81,8 @@ services:
       USER_GID: "{gid}"
       NVIDIA_VISIBLE_DEVICES: "all"
       NVIDIA_DRIVER_CAPABILITIES: "all"
+    ports:
+      - "50000:50000"
     volumes: 
       - "{root}:/home/{username}/{project}"
     tty: true
