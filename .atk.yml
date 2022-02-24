@@ -83,6 +83,7 @@ services:
       NVIDIA_DRIVER_CAPABILITIES: "all"
     ports:
       - "50000:50000"
+    working_dir: "/home/{username}/{project}/sim"
     volumes: 
       - "{root}:/home/{username}/{project}"
     tty: true
