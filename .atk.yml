@@ -72,7 +72,7 @@ services:
       network: "host"
       args:
         USERNAME: "{project}"
-        APT_DEPENDENCIES: "libirrlicht-dev"
+        APT_DEPENDENCIES: "libirrlicht-dev libnvidia-gl-495"
         CONDA_CHANNELS: "aryoung5 anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
         PIP_DEPENDENCIES: ""
