@@ -52,13 +52,13 @@ def generate_launch_description():
     )
     launch_description.add_action(control)
 
-    path_planning = IncludeLaunchDescription(
+    planning = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('art_control_launch'),
-                'launch/path_planning.launch.py'))
+                get_package_share_directory('art_planning_launch'),
+                'launch/planning.launch.py'))
     )
-    launch_description.add_action(path_planning)
+    launch_description.add_action(planning)
 
     cone_detection = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
