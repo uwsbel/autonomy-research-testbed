@@ -14,10 +14,6 @@ __pycache__/
 .tox
 .cache
 
-# data/sqlite/bag files
-*.db3
-*.bag
-
 # Ignore the version file since it changes often
 _version.py
 
