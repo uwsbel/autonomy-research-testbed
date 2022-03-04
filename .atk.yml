@@ -38,7 +38,14 @@ custom_cli_arguments:
       action: 'store_true'
     deploy:
       volumes: 
-        - "$HOME/.local/:/home/{username}/.local"
+        - "$HOME/.local/:/home/{container_username}/.local"
+external:
+  db:
+    bags:
+      - id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
+        output: "{project_root}/demos/bags/ATK-02-25-2022-04-30-30"
+      - id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
+        output: "{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
 services:
   dev:
     build:
@@ -60,7 +67,7 @@ services:
       args:
         IMAGE: "atk/{project}:dev"
     volumes: 
-      - "{root}:/home/{username}/{project}"
+      - "{project_root}:/home/{container_username}/{project}"
     tty: true
   chrono:
     image: "atk/{project}:chrono"
@@ -83,9 +90,9 @@ services:
       NVIDIA_DRIVER_CAPABILITIES: "all"
     ports:
       - "50000:50000"
-    working_dir: "/home/{username}/{project}/sim"
+    working_dir: "/home/{container_username}/{project}/sim"
     volumes: 
-      - "{root}:/home/{username}/{project}"
+      - "{project_root}:/home/{container_username}/{project}"
     tty: true
   chrono-conda:
     image: "atk/{project}:chrono-conda"
