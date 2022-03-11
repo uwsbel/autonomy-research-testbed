@@ -7,19 +7,29 @@ custom_cli_arguments:
     argparse:
       action: 'store_true'
     dev:
-      deploy:
-        resources:
-          reservations:
-            devices:
-              - driver: nvidia
-                capabilities: [gpu]
+      docker:
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - driver: nvidia
+                  capabilities: [gpu]
+      singularity:
+        start:
+          options:
+            - nv
     chrono:
-      deploy:
-        resources:
-          reservations:
-            devices:
-              - driver: nvidia
-                capabilities: [gpu]
+      docker:
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - driver: nvidia
+                  capabilities: [gpu]
+      singularity:
+        start:
+          options:
+            - nv
   --devices:
     argparse:
       action: 'store_true'
@@ -32,20 +42,20 @@ custom_cli_arguments:
       required: true
     chrono-conda:
       volumes:
-        - "{optix}:/opt/optix-7.2"
+        - "@{optix}:/opt/optix-7.2"
   --piplocals:
     argparse:
       action: 'store_true'
     deploy:
       volumes: 
-        - "$HOME/.local/:/home/{container_username}/.local"
+        - "$HOME/.local/:/home/@{container_username}/.local"
 external:
   db:
     bags:
       - id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
-        output: "{project_root}/demos/bags/ATK-02-25-2022-04-30-30"
+        output: "@{project_root}/demos/bags/ATK-02-25-2022-04-30-30"
       - id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
-        output: "{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
+        output: "@{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
 services:
   dev:
     build:
@@ -57,47 +67,51 @@ services:
       args:
         VNC_PASSWORD: ""
   deploy:
-    image: "atk/{project}:deploy"
-    hostname: "{project}-deploy"
-    container_name: "{project}-deploy"
+    image: "atk/@{project}:deploy"
+    hostname: "@{project}-deploy"
+    container_name: "@{project}-deploy"
     build:
-      context: ./docker/deploy
+      context: ./containers/deploy
       dockerfile: ./deploy.dockerfile
       network: "host"
       args:
-        IMAGE: "atk/{project}:dev"
+        IMAGE: "atk/@{project}:dev"
     volumes: 
-      - "{project_root}:/home/{container_username}/{project}"
+      - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true
   chrono:
-    image: "atk/{project}:chrono"
-    hostname: "{project}-chrono"
-    container_name: "{project}-chrono"
+    image: "atk/@{project}:chrono"
+    hostname: "@{project}-chrono"
+    container_name: "@{project}-chrono"
     build:
-      context: ./docker/chrono
+      context: ./containers/chrono
       dockerfile: ./chrono.dockerfile
       network: "host"
       args:
-        USERNAME: "{project}"
+        USERNAME: "@{project}"
+        USERHOME: "/home/@{container_username}"
+        USERSHELL: "bash"
+        USERSHELLPATH: "/bin/bash"
+        USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
         APT_DEPENDENCIES: "libirrlicht-dev libnvidia-gl-495"
         CONDA_CHANNELS: "aryoung5 anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
         PIP_DEPENDENCIES: ""
     environment:
-      USER_UID: "{uid}"
-      USER_GID: "{gid}"
+      USER_UID: "@{uid}"
+      USER_GID: "@{gid}"
       NVIDIA_VISIBLE_DEVICES: "all"
       NVIDIA_DRIVER_CAPABILITIES: "all"
     ports:
       - "50000:50000"
-    working_dir: "/home/{container_username}/{project}/sim"
+    working_dir: "/home/@{container_username}/@{project}/sim"
     volumes: 
-      - "{project_root}:/home/{container_username}/{project}"
+      - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true
   chrono-conda:
-    image: "atk/{project}:chrono-conda"
+    image: "atk/@{project}:chrono-conda"
     build:
-      context: ./docker/chrono-conda
+      context: ./containers/chrono-conda
       dockerfile: ./chrono-conda.dockerfile
       network: "host"
       args:
