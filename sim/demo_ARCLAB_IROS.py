@@ -351,8 +351,7 @@ def main():
                 width,                      # image width
                 height,                     # image height
                 fov,                        # FOV
-                2,
-                sens.CameraLensModelType_FOV_LENS)  # super sample diameter
+                2)
     # camera.SetRadialLensParameters(chrono.ChVectorD(-0.369, 0.1257, -0.0194))
     camera.SetName("Camera Sensor")
     c_window = float(0)
