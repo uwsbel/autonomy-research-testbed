@@ -349,7 +349,6 @@ def main():
         AddRandomCones(num_cones / 2, chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), 2)
         AddRandomCones(num_cones / 2, chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), 1)
 
-
     # === create sensors ===
     manager = sens.ChSensorManager(vehicle.GetSystem())
     manager.scene.AddPointLight(chrono.ChVectorF(100, 100, 100), chrono.ChVectorF(1, 1, 1), 5000)
@@ -375,8 +374,7 @@ def main():
                 width,                      # image width
                 height,                     # image height
                 fov,                        # FOV
-                2,
-                sens.CameraLensModelType_FOV_LENS)  # super sample diameter
+                2)
 
     camera.SetName("Camera Sensor")
     c_window = float(0)
