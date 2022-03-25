@@ -34,4 +34,6 @@ ATK-*
 # Ignore singularity specific files
 *singularity.temp
 etc.hosts
+resolv.conf
 *.sif
+.atk-singularity.env
