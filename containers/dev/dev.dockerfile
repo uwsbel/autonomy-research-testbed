@@ -39,7 +39,7 @@ RUN if [ -n "$USER_GROUPS" ]; then \
 
 # Install dependencies
 ARG APT_DEPENDENCIES=""
-RUN apt-get update && apt-get install --no-install-recommends -y $APT_DEPENDENCIES
+RUN apt-get update && apt-get install --no-install-recommends -y python3-pip $APT_DEPENDENCIES
 
 # Install needed ros packages
 ARG ROS_WORKSPACE="workspace"
@@ -49,7 +49,7 @@ RUN rm -rf /tmp/workspace
 
 # Install some python packages
 ARG PIP_REQUIREMENTS=""
-RUN pip install $PIP_REQUIREMENTS
+RUN pip3 install $PIP_REQUIREMENTS
 
 # Run any user scripts
 # Should be used to install additional packages or customize the shell
