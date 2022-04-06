@@ -1,5 +1,5 @@
 project: art
-default_services: 
+default_containers: 
   - dev
   - vnc
 custom_cli_arguments:
@@ -43,29 +43,28 @@ custom_cli_arguments:
     chrono-conda:
       volumes:
         - "@{optix}:/opt/optix-7.2"
-  --piplocals:
-    argparse:
-      action: 'store_true'
-    deploy:
-      volumes: 
-        - "$HOME/.local/:/home/@{container_username}/.local"
 external:
   db:
-    bags:
-      - id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
+    files:
+      - name: "ATK-02-25-2022-04-30-30"
+        id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
         output: "@{project_root}/demos/bags/ATK-02-25-2022-04-30-30"
-      - id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
+      - name: "ATK-02-25-2022-03-19-00"
+        id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
         output: "@{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
+      - name: "pytorch-aarch64"
+        id: "1XEvtAMeOAJQx9kQoRhVNdZt07L4y1d-D"
+        output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
 services:
-  dev:
+  dev: &dev_service
     image: "atk/@{project}:dev"
     hostname: "@{project}-dev"
     container_name: "@{project}-dev"
-    build:
+    build: &dev_build
       context: "./"
       dockerfile: "./containers/dev/dev.dockerfile"
       network: "host"
-      args:
+      args: &dev_build_args
         PROJECT: "@{project}"
         USER_UID: "@{uid}"
         USER_GID: "@{gid}"
@@ -79,6 +78,16 @@ services:
      - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true
     working_dir: "/home/@{container_username}/@{project}/workspace"
+  nx:
+    <<: *dev_service
+    image: "atk/@{project}:nx"
+    hostname: "@{project}-nx"
+    container_name: "@{project}-nx"
+    build:
+      <<: *dev_build
+      args:
+        <<: *dev_build_args
+        CONTAINERNAME: "nx"
   vnc:
     image: "atk/@{project}:vnc"
     hostname: "@{project}-vnc"
