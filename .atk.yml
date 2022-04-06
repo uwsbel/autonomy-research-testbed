@@ -58,27 +58,45 @@ external:
         output: "@{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
 services:
   dev:
+    image: "atk/@{project}:dev"
+    hostname: "@{project}-dev"
+    container_name: "@{project}-dev"
     build:
-      args:
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
-        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
-  vnc:
-    build:
-      args:
-        VNC_PASSWORD: ""
-  deploy:
-    image: "atk/@{project}:deploy"
-    hostname: "@{project}-deploy"
-    container_name: "@{project}-deploy"
-    build:
-      context: ./containers/deploy
-      dockerfile: ./deploy.dockerfile
+      context: "./"
+      dockerfile: "./containers/dev/dev.dockerfile"
       network: "host"
       args:
-        IMAGE: "atk/@{project}:dev"
+        PROJECT: "@{project}"
+        USER_UID: "@{uid}"
+        USER_GID: "@{gid}"
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
+        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
+    environment:
+      DISPLAY: vnc:0.0
+      NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "all"
     volumes: 
-      - "@{project_root}:/home/@{container_username}/@{project}"
+     - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true
+    working_dir: "/home/@{container_username}/@{project}/workspace"
+  vnc:
+    image: "atk/@{project}:vnc"
+    hostname: "@{project}-vnc"
+    container_name: "@{project}-vnc"
+    build:
+      context: "./containers/vnc"
+      dockerfile: "./vnc.dockerfile"
+      network: "host"
+      args:
+        VNC_PASSWORD: "@{project}"
+        RUN_XTERM: "yes"
+        RUN_FLUXBOX: "yes"
+    environment:
+      RUN_XTERM: no
+      RUN_FLUXBOX: yes
+    ports:
+      - "8080:8080"
+      - "5900:5900"
   chrono:
     image: "atk/@{project}:chrono"
     hostname: "@{project}-chrono"
@@ -119,3 +137,6 @@ services:
         CONDA_CHANNELS: "anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
         PIP_DEPENDENCIES: ""
+networks:
+  default:
+    name: "@{project}"
