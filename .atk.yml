@@ -18,6 +18,13 @@ custom_cli_arguments:
         start:
           options:
             - nv
+    nx:
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                capabilities: [gpu]
     chrono:
       docker:
         deploy:
@@ -34,6 +41,10 @@ custom_cli_arguments:
     argparse:
       action: 'store_true'
     dev:
+      devices:
+        - /dev/video0
+        - /dev/ttyACM0
+    nx:
       devices:
         - /dev/video0
         - /dev/ttyACM0
@@ -70,6 +81,7 @@ services:
         USER_GID: "@{gid}"
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
+        USER_GROUPS: "dialout video"
     environment:
       DISPLAY: vnc:0.0
       NVIDIA_VISIBLE_DEVICES: "all"
