@@ -20,8 +20,20 @@ _version.py
 # Except
 !.github/workflows/*
 
-# Docker/avtoolbox stuff
+# Docker/atk stuff
 .atk.user_count
-.docker-compose.yml
+.atk-compose.yml
 .dockerignore
 .copyright.tmpl
+
+# Ignore all bags
+*.db3
+*.bag
+ATK-*
+
+# Ignore singularity specific files
+*singularity.temp
+etc.hosts
+resolv.conf
+*.sif
+.atk-singularity.env
