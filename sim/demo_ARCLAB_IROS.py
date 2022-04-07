@@ -342,7 +342,7 @@ def main():
     height = 720
     frame_rate = 30.0
     fov = 1.396  # 80 degree FOV camera)
-    fov = 1.59
+    # fov = 1.59
 
     camera = sens.ChCameraSensor(
                 vehicle.GetChassisBody(), # body camera is attached to
@@ -352,8 +352,8 @@ def main():
                 height,                     # image height
                 fov,                        # FOV
                 2,
-                sens.CameraLensModelType_FOV_LENS)  # super sample diameter
-    # camera.SetRadialLensParameters(chrono.ChVectorD(-0.369, 0.1257, -0.0194))
+                sens.RADIAL)  # super sample diameter
+    camera.SetRadialLensParameters(chrono.ChVectorF(-0.369, 0.1257, -0.0194))
     camera.SetName("Camera Sensor")
     c_window = float(0)
     camera.SetCollectionWindow(c_window)
@@ -529,7 +529,7 @@ chrono.SetChronoDataPath(data_folder)
 veh.SetDataPath(chrono.GetChronoDataPath() + 'vehicle/')
 
 vis = True
-save_sensor_data = False
+save_sensor_data = True
 sensor_data_dir = "sensor_output/"
 
 num_cones = 100
