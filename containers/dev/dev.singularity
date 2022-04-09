@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: MIT
+Bootstrap: docker
+From: ros:@{ROS_DISTRO}
+
+%files
+	@{ROS_WORKSPACE}/src temp_workspace/src
+	@{SCRIPTS_DIR}	temp_scripts
+
+%post
+	DEBIAN_FRONTEND=noninteractive
+
+	# Check for updates
+	apt-get update && apt-get upgrade -y
+
+	# Install dependencies
+	apt-get update && apt-get install --no-install-recommends -y @{APT_DEPENDENCIES}
+
+	# Install needed ros packages
+	cd temp_workspace && apt-get update && rosdep update && rosdep install --from-paths src --ignore-src -r -y 
+	rm -rf temp_workspace	
+
+	# Install some python packages
+	pip install @{PIP_REQUIREMENTS}
+
+	# Run any user scripts
+	# Should be used to install additional packages or customize the shell
+	apt-get update && for f in temp_scripts/*; do [ -x $f] && [ -f $f ] && $f || continue; done
+	rm -rf temp_scripts
+
+	# Clean up to reduce image size
+	apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+	# User Setup
+	mkdir @{USERHOME}
+
+	# ROS Setup
+	sed -i 's|source|#source|g' /ros_entrypoint.sh
+	echo ". /opt/ros/@{ROS_DISTRO}/setup.sh" >> @{USERSHELLPROFILE}
+	echo "[ -f @{USERHOME}/@{PROJECT}/workspace/install/setup.@{USERSHELL} ] && . @{USERHOME}/@{PROJECT}/workspace/install/setup.@{USERSHELL}" >> @{USERSHELLPROFILE}
+	/bin/@{USERSHELL} -c "source /opt/ros/@{ROS_DISTRO}/setup.@{USERSHELL}"
+
+%environment
+	export HOME=@{USERHOME}
+	export USERSHELLPATH=@{USERSHELLPATH}
+	export USERSHELLPROFILE=@{USERSHELLPROFILE}
+
+%runscript
+	cd $HOME
+	exec $USERSHELLPATH --rcfile $USERSHELLPROFILE
+
+%startscript
+	cd $HOME
+	exec $USERSHELLPATH --rcfile $USERSHELLPROFILE 
+
+%labels
+	MAINTAINER="Simulation Based Engineering Laboratory <negrut@wisc.edu>"
