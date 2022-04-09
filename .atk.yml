@@ -1,5 +1,5 @@
 project: art
-default_services: 
+default_containers: 
   - dev
   - vnc
 custom_cli_arguments:
@@ -18,6 +18,13 @@ custom_cli_arguments:
         start:
           options:
             - nv
+    nx:
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                capabilities: [gpu]
     chrono:
       docker:
         deploy:
@@ -37,48 +44,80 @@ custom_cli_arguments:
       devices:
         - /dev/video0
         - /dev/ttyACM0
+    nx:
+      devices:
+        - /dev/video0
+        - /dev/ttyACM0
   --optix:
     argparse:
       required: true
     chrono-conda:
       volumes:
         - "@{optix}:/opt/optix-7.2"
-  --piplocals:
-    argparse:
-      action: 'store_true'
-    deploy:
-      volumes: 
-        - "$HOME/.local/:/home/@{container_username}/.local"
 external:
   db:
-    bags:
-      - id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
+    files:
+      - name: "ATK-02-25-2022-04-30-30"
+        id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
         output: "@{project_root}/demos/bags/ATK-02-25-2022-04-30-30"
-      - id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
+      - name: "ATK-02-25-2022-03-19-00"
+        id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
         output: "@{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
+      - name: "pytorch-aarch64"
+        id: "1XEvtAMeOAJQx9kQoRhVNdZt07L4y1d-D"
+        output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
 services:
-  dev:
-    build:
-      args:
+  dev: &dev_service
+    image: "atk/@{project}:dev"
+    hostname: "@{project}-dev"
+    container_name: "@{project}-dev"
+    build: &dev_build
+      context: "./"
+      dockerfile: "./containers/dev/dev.dockerfile"
+      network: "host"
+      args: &dev_build_args
+        PROJECT: "@{project}"
+        USER_UID: "@{uid}"
+        USER_GID: "@{gid}"
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
-  vnc:
+        USER_GROUPS: "dialout video"
+    environment:
+      DISPLAY: vnc:0.0
+      NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "all"
+    volumes: 
+     - "@{project_root}:/home/@{container_username}/@{project}"
+    tty: true
+    working_dir: "/home/@{container_username}/@{project}/workspace"
+  nx:
+    <<: *dev_service
+    image: "atk/@{project}:nx"
+    hostname: "@{project}-nx"
+    container_name: "@{project}-nx"
     build:
+      <<: *dev_build
       args:
-        VNC_PASSWORD: ""
-  deploy:
-    image: "atk/@{project}:deploy"
-    hostname: "@{project}-deploy"
-    container_name: "@{project}-deploy"
+        <<: *dev_build_args
+        CONTAINERNAME: "nx"
+  vnc:
+    image: "atk/@{project}:vnc"
+    hostname: "@{project}-vnc"
+    container_name: "@{project}-vnc"
     build:
-      context: ./containers/deploy
-      dockerfile: ./deploy.dockerfile
+      context: "./containers/vnc"
+      dockerfile: "./vnc.dockerfile"
       network: "host"
       args:
-        IMAGE: "atk/@{project}:dev"
-    volumes: 
-      - "@{project_root}:/home/@{container_username}/@{project}"
-    tty: true
+        VNC_PASSWORD: "@{project}"
+        RUN_XTERM: "yes"
+        RUN_FLUXBOX: "yes"
+    environment:
+      RUN_XTERM: no
+      RUN_FLUXBOX: yes
+    ports:
+      - "8080:8080"
+      - "5900:5900"
   chrono:
     image: "atk/@{project}:chrono"
     hostname: "@{project}-chrono"
@@ -119,3 +158,6 @@ services:
         CONDA_CHANNELS: "anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
         PIP_DEPENDENCIES: ""
+networks:
+  default:
+    name: "@{project}"
