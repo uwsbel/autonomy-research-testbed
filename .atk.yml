@@ -3,10 +3,10 @@ default_containers:
   - dev
   - vnc
 custom_cli_arguments:
-  --gpus:
+  gpus:
     argparse:
       action: 'store_true'
-    dev:
+    all:
       docker:
         deploy:
           resources:
@@ -18,37 +18,14 @@ custom_cli_arguments:
         start:
           options:
             - nv
-    nx:
-      deploy:
-        resources:
-          reservations:
-            devices:
-              - driver: nvidia
-                capabilities: [gpu]
-    chrono:
-      docker:
-        deploy:
-          resources:
-            reservations:
-              devices:
-                - driver: nvidia
-                  capabilities: [gpu]
-      singularity:
-        start:
-          options:
-            - nv
-  --devices:
+  devices:
     argparse:
       action: 'store_true'
-    dev:
+    all:
       devices:
         - /dev/video0
         - /dev/ttyACM0
-    nx:
-      devices:
-        - /dev/video0
-        - /dev/ttyACM0
-  --optix:
+  optix:
     argparse:
       required: true
     chrono-conda:
