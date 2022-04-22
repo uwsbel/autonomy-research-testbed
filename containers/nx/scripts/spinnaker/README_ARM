@@ -1,0 +1,439 @@
+//=============================================================================
+// Copyright (c) 2001-2020 FLIR Systems, Inc. All Rights Reserved.
+//
+// This software is the confidential and proprietary information of FLIR
+// Integrated Imaging Solutions, Inc. ("Confidential Information"). You
+// shall not disclose such Confidential Information and shall use it only in
+// accordance with the terms of the license agreement you entered into
+// with FLIR Integrated Imaging Solutions, Inc. (FLIR).
+//
+// FLIR MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+// SOFTWARE, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE, OR NON-INFRINGEMENT. FLIR SHALL NOT BE LIABLE FOR ANY DAMAGES
+// SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING
+// THIS SOFTWARE OR ITS DERIVATIVES.
+//=============================================================================
+
+===============================================================================
+==
+== README
+==
+===============================================================================
+
+===============================================================================
+TABLE OF CONTENTS
+===============================================================================
+1. DEPENDENCIES
+1.1. UBUNTU 20.04 DEPENDENCIES
+1.1.1. DEPENDENCY INSTALLATION
+1.2. UBUNTU 18.04 DEPENDENCIES
+1.2.1. DEPENDENCY INSTALLATION
+2. SPINNAKER INSTALLATION
+3. USB CAMERA SETUP
+4. GIGE CAMERA SETUP
+4.1. DISABLE REVERSE PATH FILTERING (RPF)
+4.2. INCREASE RECEIVE BUFFER SIZE
+4.3. ENABLE JUMBO PACKET
+5. SPINNAKER REMOVAL
+6. GENICAM GENTL PRODUCER SETUP
+6.1. GENTL LOGGING
+7. RUNNING PREBUILT UTILITIES
+7.1. SPINUPDATECONSOLE
+
+
+===============================================================================
+1. DEPENDENCIES
+===============================================================================
+
+To install Spinnaker on Linux a few prerequisite libraries will need to be installed.
+
+-------------------------------------------------------------------------------
+1.1. UBUNTU 20.04 DEPENDENCIES
+-------------------------------------------------------------------------------
+For Ubuntu 20.04 LTS, below is a list of libraries that Spinnaker depends on:
+
+Required:
+1) libusb-1.0-0 (version 1.0.17 or greater recommended)
+
+Strongly recommended:
+Ubuntu 20.04 LTS:   Linux kernel version 5.4 or later.
+
+-------------------------------------------------------------------------------
+1.1.1. DEPENDENCY INSTALLATION
+-------------------------------------------------------------------------------
+To install these dependencies, the most straightforward approach is to use your
+system's built-in package management utility. In the case of Ubuntu, the utility
+is named "apt". Below is a set of one-line commands that can be used to install
+all the required dependencies for various releases of 20.04 Ubuntu Long Term Support
+(LTS).
+
+user$:  sudo apt-get install libusb-1.0-0
+
+-------------------------------------------------------------------------------
+1.2. UBUNTU 18.04 DEPENDENCIES
+-------------------------------------------------------------------------------
+For Ubuntu 18.04 LTS, below is a list of libraries that Spinnaker depends on:
+
+Required:
+1) libusb-1.0-0 (version 1.0.17 or greater recommended)
+
+Strongly recommended:
+Ubuntu 18.04 LTS:   Linux kernel version 4.9.140 or later.
+
+-------------------------------------------------------------------------------
+1.2.1. DEPENDENCY INSTALLATION
+-------------------------------------------------------------------------------
+To install these dependencies, the most straightforward approach is to use your
+system's built-in package management utility. In the case of Ubuntu, the utility
+is named "apt". Below is a set of one-line commands that can be used to install
+all the required dependencies for various releases of 18.04 Ubuntu Long Term Support
+(LTS).
+
+user$:  sudo apt-get install libusb-1.0-0
+
+===============================================================================
+2. SPINNAKER INSTALLATION
+===============================================================================
+
+Once all the dependencies are installed, just install the Spinnaker deb files.
+There are fifteen different packages that need to be installed.
+
+The Spinnaker packages are:
+- libgentl_<version>_<platform>.deb
+- libspinnaker_<version>_<platform>.deb
+- libspinnaker-dev_<version>_<platform>.deb
+- libspinnaker-c_<version>_<platform>.deb
+- libspinnaker-c-dev_<version>_<platform>.deb
+- libspinvideo_<version>_<platform>.deb
+- libspinvideo-dev_<version>_<platform>.deb
+- libspinvideo-c_<version>_<platform>.deb
+- libspinvideo-c-dev_<version>_<platform>.deb
+- spinnaker_<version>_<platform>.deb
+- spinnaker-doc_<version>_<platform>.deb
+- spinupdate_<version>_<platform>.deb
+- spinupdate-dev_<version>_<platform>.deb
+- spinview-qt_<version>_<platform>.deb
+- spinview-qt-dev_<version>_<platform>.deb
+
+The packages with a preceding 'lib' are all the shared objects and their
+respective dev packages.  The spinnaker-doc package contains our documentation in
+pdf format (located in /opt/spinnaker/doc).
+
+To install these packages, we provide an easy to use install script. You can
+run the script in the same directory that you have unpacked the software into.
+The install script is called 'install_spinnaker_arm.sh'
+
+code eg:
+user$ sudo sh install_spinnaker_arm.sh
+
+This script will install all the Spinnaker libraries, example code, example
+apps and documentation.  The Spinnaker install script will also ask you to
+configure udev so that a user will be able to use the USB devices.  If
+you choose to configure the USB devices this script will change
+permissions on the nodes to give this particular user full read and write
+access to the device nodes.  It will overwrite the default Ubuntu permissions.
+After running this script everything should be installed and set up for use.
+
+Unfortunately restarting udev doesn't seem to set the permissions on the device
+nodes immediately.  You may need to restart the machine before the user can
+access the device nodes.
+
+===============================================================================
+3. USB CAMERA SETUP
+===============================================================================
+
+By default, USB-FS on Linux systems only allows 16 MB of buffer memory for all
+USB devices. This may result in image acquisition issues from high-resolution
+cameras or multiple-camera set ups. This limit must be increased to make use of
+the imaging hardware's full capabilities.
+
+This method applies to Ubuntu standard installations. For ARM boards running
+other distributions, see our article on Using Spinnaker on ARM and Embedded Systems:
+<https://www.flir.com/support-center/iis/machine-vision/application-note/using-spinnaker-on-arm-and-embedded-systems/>
+
+The Spinnaker installer asks to automatically set the appropriate USB-FS memory
+settings, but you can also run the configuration script at any time:
+
+    $ sudo sh configure_usbfs.sh
+
+To manually configure the USB-FS memory:
+
+    1. If the /etc/rc.local file does NOT already exist on your system, run the
+       following commands to create and make it executable
+
+        $ sudo touch /etc/rc.local
+        $ sudo chmod 744 /etc/rc.local
+
+    2. Open the /etc/rc.local file in any text editor,
+
+        $ sudo nano /etc/rc.local
+
+    and paste the following command at the end of the file:
+
+        sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'
+
+    3. Save your changes and close the file.
+
+    4. Restart the machine.
+
+To confirm that the memory limit has been updated, run the command:
+
+    $ cat /sys/module/usbcore/parameters/usbfs_memory_mb
+
+If this fails to set the memory limit, one can TEMPORARILY modify the
+USB-FS memory until the next restart by running the following command:
+
+    $ sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'
+
+If using multiple USB3 cameras, the USB-FS memory limit may need to exceed 1000.
+More information on these changes can be found at:
+<https://www.flir.com/support-center/iis/machine-vision/application-note/understanding-usbfs-on-linux>
+
+On some ARM platforms, the number of buffers that can be submitted to libusb
+is further limited by the following two kernel settings.
+
+1. coherent_pool
+    If Spinnaker fails to begin acquisition and you find messages in dmesg similar to
+    "xhci_hcd 0000:01:00.0: Ring expansion failed" or
+    "usb 2-1: usbfs: usb_submit_urb returned -12",
+    You may want to increase the coherent atomic allocation pool by:
+        
+        1.1 Opening /boot/firmware/cmdline.txt with elevated permission in any text editor.
+
+        1.2 Add the following line at the end of the file or modify the existing entry if it exists:
+            
+            coherent_pool=5M
+
+        1.3 Restart the machine.
+
+2. swiotlb
+    If Spinnaker fails to begin acquisition and you find messages in dmesg similar to
+    "xhci_hcd 0000:01:00.0: swiotlb buffer is full (sz: 16384 bytes), total 32768 (slots), used 32414 (slots)" or
+    "usb 2-1: usbfs: usb_submit_urb returned -11",
+    You may want to increase the swiotlb buffer by:
+
+        1.1 Opening /boot/firmware/cmdline.txt with elevated permission in any text editor.
+
+        1.2 Add the following line at the end of the file or modify the existing entry if it exists:
+            
+            swiotlb=32768
+
+        1.3 Restart the machine.
+
+===============================================================================
+4. GIGE CAMERA SETUP
+===============================================================================
+
+-------------------------------------------------------------------------------
+4.1. DISABLE REVERSE PATH FILTERING (RPF)
+-------------------------------------------------------------------------------
+RPF is a security feature that limits the effect of DDOS attacks. To ensure
+that GigE cameras enumerate properly, RPF needs to be disabled.
+
+To PERMANENTLY disable reverse path filtering:
+    1. Run the following command:
+    $ sudo gedit /etc/sysctl.d/10-network-security.conf
+
+    Comment out the lines below in /etc/sysctl.d/10-network-security.conf:
+
+    # Turn on Source Address Verification in all interfaces to
+    # in order to prevent some spoofing attacks.
+    ## net.ipv4.conf.default.rp_filter=1
+    ## net.ipv4.conf.all.rp_filter=1
+
+    2. Restart the computer.
+
+
+To TEMPORARILY disable reverse path filtering for a specific network adapter
+until the next reboot, eg. eth1, run the following commands:
+    $ sudo sysctl -w net.ipv4.conf.all.rp_filter=0
+    $ sudo sysctl -w net.ipv4.conf.eth1.rp_filter=0
+
+Once RPF is disabled, the GigE camera should show up in SpinView Devices panel.
+If the camera's subnet mismatches the subnet of the network adapter (with
+an exclamation mark), right-click GEV Interface and click "Auto Force IP".
+
+To configure the IP address / subnet mask, or set a persisent IP, more
+information can be found at:
+<https://www.flir.com/support-center/iis/machine-vision/knowledge-base/setting-an-ip-address-for-a-gige-camera-to-be-recognized-in-linux/>
+
+-------------------------------------------------------------------------------
+4.2. INCREASE RECEIVE BUFFER SIZE
+-------------------------------------------------------------------------------
+The receive buffer size is strongly recommended to be increased, in order to
+greatly improve streaming results.
+
+To PERMANENTLY update the receive buffer size:
+    1. Run the following command:
+    $ sudo gedit /etc/sysctl.conf
+
+    Add the following lines to the bottom of the /etc/sysctl.conf file:
+
+    net.core.rmem_max=10485760
+    net.core.rmem_default=10485760
+
+    Once changes are persisted, they can be reloaded at any time by running the
+    following command in sysctl:
+    $ sudo sysctl -p
+
+
+To TEMPORARILY update the receive buffer size until the next reboot, run the
+following commands:
+    $ sudo sysctl -w net.core.rmem_max=10485760
+    $ sudo sysctl -w net.core.rmem_default=10485760
+
+More information can be found at:
+<https://www.flir.com/support-center/iis/machine-vision/knowledge-base/lost-ethernet-data-packets-on-linux-systems-using-flycapture2/>
+
+-------------------------------------------------------------------------------
+4.3. ENABLE JUMBO PACKET
+-------------------------------------------------------------------------------
+
+Jumbo Packet is strongly recommended to be enabled for the network adapter and
+the camera, in order to greatly improve streaming results.
+
+Run ifconfig and find the network adapter that the cameras are connected to
+(eg. enp15s0):
+
+$ ifconfig
+
+It might be necessary to disconnect the camera and run ifconfig again to find
+the output difference, in order to find the network adapter name.
+
+To PERMANENTLY enable Jumbo Packet for a specific network adapter (eg. enp15s0), follow
+one of the methods below.
+
+Note that when the following methods are used in conjunction with each other on Ubuntu 20.04 or newer,
+your interface may sometimes be assigned 2 IP addresses, thus showing up twice in Spinnaker.
+
+    Method 1: Netplan (Ubuntu 20.04 or newer)
+    
+        1. Open up your netplan YAML configuration in /etc/netplan/ in a text editor (as sudo):
+           (eg. 01-network-manager-all.yaml)
+
+           $ sudo gedit /etc/netplan/01-network-manager-all.yaml
+    
+        2. Set the Maximum Transfer Unit (MTU) of the network adapter to the maximum allowable
+           value for your interface (eg. 9000):
+        (change enp15s0 to match the name of the adapter connected to the camera,
+        the address and netmask of the network adapter can also be configured here):
+    
+            network:
+              ethernets:
+                 enp15s0:
+                    mtu: 9000
+                    addresses: 169.254.0.64/16
+                    dhcp4: no
+
+        3. Restart the network by entering the command in the terminal
+           $ sudo netplan apply
+
+    Method 2: /etc/network/interfaces (Ubuntu 18.04 or older)
+
+        1. Open up /etc/network/interfaces in a text editor (as sudo)
+            $ sudo gedit /etc/network/interfaces
+
+        2. Add the following lines
+        (change enp15s0 to match the name of the adapter connected to the camera,
+        the address and netmask of the network adapter can also be configured here):
+
+            iface enp15s0 inet static
+            address 169.254.0.64
+            netmask 255.255.0.0
+            mtu 9000
+
+            auto enp15s0
+
+        3. Reboot the computer before using any GigE cameras.
+
+To TEMPORARILY update enable Jumbo Packet until the next reboot, for a specific
+network adapter, eg. enp15s0, run the following commands:
+    $ sudo ifconfig enp15s0 mtu 9000
+
+
+To enable Jumbo Packet for the GigE camera, change SCPS Packet Size
+(GevSCPSPacketSize) to 9000 in SpinView or via Spinnaker API.
+
+
+If using multiple interfaces, ensure that the addresses used are on different
+subnets (eg. 169.254.0.64/255.255.0.0 and 169.253.0.64/255.255.0.0).
+More information can be found at:
+<https://www.flir.com/support-center/iis/machine-vision/application-note/setting-up-multiple-gige-cameras/>
+
+===============================================================================
+5. SPINNAKER REMOVAL
+===============================================================================
+
+To remove Spinnaker just run the uninstall script that we provide.  The
+removal script will also remove the udev rules therefore restoring the original
+ubuntu permissions on the device nodes.
+
+code eg:
+user$: sudo sh remove_spinnaker_arm.sh
+
+===============================================================================
+6. GENICAM GENTL PRODUCER SETUP
+===============================================================================
+
+In order to use the FLIR GenTL producer with applications that support consuming
+the FLIR GenTL producer, the location of FLIR_GenTL.cti must be added to the
+"GENICAM_GENTL32_PATH" or "GENICAM_GENTL64_PATH" environment variables for 32-bit
+and 64-bit producers.
+
+The Spinnaker installer asks to automatically set these environment variables,
+but you can also run the configuration script at any time:
+
+The appropriate environment variable can be updated by running:
+    for 32-bit installed library versions:
+    $ sudo sh configure_gentl_paths.sh 32
+
+    for 64-bit installed library versions:
+    $ sudo sh configure_gentl_paths.sh 64
+
+
+-------------------------------------------------------------------------------
+6.1. GENTL LOGGING
+-------------------------------------------------------------------------------
+To enable FLIR GenTL logging, copy the logging configuration file "log4cpp.gentl.property"
+from /opt/spinnaker/lib/spinnaker-gentl to the location that the consumer application
+executes from. The logging configuration file can be modified for specific levels
+of logging.
+
+===============================================================================
+7. RUNNING PREBUILT UTILITIES
+===============================================================================
+
+In addition to prebuilt examples (eg: Acquisition, ChunkData, etc),
+along with the source code for these examples, Spinnaker SDK also ships a tool
+for upgrading firmware (ie: SpinUpdateConsole).
+
+To make using these tools more convenient, Spinnaker SDK ships with a few
+command-line scripts used to automatically set the appropriate environment
+variables so these tools can be run from any PWD via the command-line, or when
+launching the tools via a custom icon/shortcut.
+
+The Spinnaker installer asks to automatically set these environment variables,
+but you can also run the configuration script at any time:
+
+The appropriate environment variable can be updated by running:
+    $ sudo sh configure_spinnaker_paths.sh
+
+After environment variables are setup, you can then run the tools by simply
+invoking their "launcher" command via the command line, and it is not
+required to change the PWD to "/opt/spinnaker/bin" or modify environment variables
+in order to launch them.
+Note that to run an example from a non-login shell (e.g. by using sudo),
+you will need to pass the user environment variables.
+This can be done with the "-E" parameter, e.g. "sudo -E /opt/spinnaker/bin/Enumeration"
+
+-------------------------------------------------------------------------------
+7.1. SpinUpdateConsole
+-------------------------------------------------------------------------------
+
+SpinUpdateConsole: A console application for updating the firmware on FLIR cameras.
+Location:   /opt/spinnaker/bin/SpinUpdateConsole
+Short Name: SpinUpdateConsole
+Launcher:   SpinUpdateConsole
+
+

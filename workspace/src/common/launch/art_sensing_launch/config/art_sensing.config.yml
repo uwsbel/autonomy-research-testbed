@@ -1,0 +1,14 @@
+flir_camera_synchronizer:
+  ros__parameters:
+
+flir_spinnaker_ros2:
+  launch__parameters:
+    cameras:
+      fwc: # Forward Wide Camera
+        serial: 20105617
+        type: blackfly_s
+        topic: "/sensing/fwc/raw/image"
+      fnc: # Forward Narrow Camera
+        serial: 22042209
+        type: blackfly_s
+        topic: "/sensing/fnc/raw/image"

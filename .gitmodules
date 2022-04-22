@@ -10,3 +10,12 @@
 [submodule "workspace/src/external/rosboard"]
 	path = workspace/src/external/rosboard
 	url = git@github.com:dheera/rosboard.git
+[submodule "workspace/src/sensing/flir_camera_driver"]
+	path = workspace/src/sensing/flir_camera_driver
+	url = git@github.com:WisconsinAutonomous/flir_camera_driver.git
+[submodule "workspace/src/perception/yolo_tensorrt"]
+	path = workspace/src/perception/yolo_tensorrt
+	url = git@github.com:WisconsinAutonomous/yolo_tensorrt.git
+[submodule "workspace/src/common/launch/launch_utils"]
+	path = workspace/src/common/launch/launch_utils
+	url = git@github.com:WisconsinAutonomous/launch_utils.git

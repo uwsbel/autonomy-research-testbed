@@ -22,9 +22,15 @@ custom_cli_arguments:
     argparse:
       action: 'store_true'
     all:
-      devices:
-        - /dev/video0
-        - /dev/ttyACM0
+      privileged: true
+  x11:
+    argparse:
+      action: 'store_true'
+    agx:
+      volumes:
+        - "/tmp/.X11-unix:/tmp/.X11-unix"
+      environment:
+        DISPLAY: ${DISPLAY}
   optix:
     argparse:
       required: true
@@ -43,6 +49,9 @@ external:
       - name: "pytorch-aarch64"
         id: "1XEvtAMeOAJQx9kQoRhVNdZt07L4y1d-D"
         output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
+      - name: "tensorrt-aarch64"
+        id: "1QHvnrUrASsdVueiQeu6tRwZit5ANEskA"
+        output: "@{project_root{/containres/nx/scripts/tensorrt/tensorrt-8.2.3.0-cp38-none-linux_aarch64.whl"
 services:
   dev: &dev_service
     image: "atk/@{project}:dev"
@@ -58,11 +67,12 @@ services:
         USER_GID: "@{gid}"
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial"
-        USER_GROUPS: "dialout video"
+        USER_GROUPS: "dialout video flirimaging"
     environment:
       DISPLAY: vnc:0.0
       NVIDIA_VISIBLE_DEVICES: "all"
       NVIDIA_DRIVER_CAPABILITIES: "all"
+      CYCLONEDDS_URI: "file:///home/@{project}/@{project}/misc/cyclonedds.xml"
     volumes: 
      - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true

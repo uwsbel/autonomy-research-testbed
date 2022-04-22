@@ -28,12 +28,15 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
+
+# Internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument, AddComposableNode, SetLaunchArgument
+from launch_utils.launch.conditions import MultipleIfConditions
 
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import TextSubstitution, LaunchConfiguration
+from launch.substitutions import TextSubstitution, GetLaunchArgument
 from launch_ros.actions import Node
 from launch.events import Shutdown
 
@@ -41,68 +44,44 @@ from ament_index_python import get_package_share_directory
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
-
-    AddLaunchArgument("input/vehicle_inputs", "/control/vehicle_inputs")
-    AddLaunchArgument("output/time", "/clock")
-    AddLaunchArgument("output/vehicle", "/vehicle/state")
-    AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("ip", "")
-    AddLaunchArgument("hostname", "")
-    AddLaunchArgument("use_sim_time", "True")
-
-    # ------------
-    # Launch Files
-    # ------------
-
-    stack = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_launch'),
-                'launch/art_stack.launch.py')),
-        launch_arguments=[
-            ('use_sim_time', 'True'),
-            ('use_sim_msg', 'True'),
-        ]
-    )
-    launch_description.add_action(stack)
+    AddLaunchArgument(ld, "input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "output/time", "/clock")
+    AddLaunchArgument(ld, "output/vehicle", "/vehicle/state")
+    AddLaunchArgument(ld, "output/camera", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "ip", "")
+    AddLaunchArgument(ld, "hostname", "")
+    AddLaunchArgument(ld, "use_sim_time", "True")
 
     # -----
     # Nodes
     # -----
 
-    chrono_ros_bridge = Node(
-        package='chrono_ros_bridge',
-        namespace='',
-        executable='chrono_ros_bridge',
-        name='chrono_ros_bridge',
+    AddComposableNode(
+        ld,
+        plugin="chrono::ros::ChROSBridge",
+        executable="chrono_ros_bridge_node",
+        package="chrono_ros_bridge",
+        name="chrono_ros_bridge",
         remappings=[
-            ("~/input/driver_inputs", LaunchConfiguration("input/vehicle_inputs")),
-            ("~/output/time", LaunchConfiguration("output/time")),
-            ("~/output/vehicle", LaunchConfiguration("output/vehicle")),
-            ("~/output/camera/front_facing_camera", LaunchConfiguration("output/camera")),
+            ("~/input/driver_inputs", GetLaunchArgument("input/vehicle_inputs")),
+            ("~/output/time", GetLaunchArgument("output/time")),
+            ("~/output/vehicle", GetLaunchArgument("output/vehicle")),
+            ("~/output/camera/front_facing_camera", GetLaunchArgument("output/camera")),
         ],
         parameters=[
-             {"use_sim_time": LaunchConfiguration("use_sim_time")},
-             {"ip": LaunchConfiguration("ip")},
-             {"hostname": LaunchConfiguration("hostname")},
+             {"use_sim_time": GetLaunchArgument("use_sim_time")},
+             {"ip": GetLaunchArgument("ip")},
+             {"hostname": GetLaunchArgument("hostname")},
         ],
         on_exit=EmitEvent(event=Shutdown()),
-		
+        node_kwargs={"output": "screen"},
     )
-    launch_description.add_action(chrono_ros_bridge)
 
-    return launch_description
+    return ld
 
