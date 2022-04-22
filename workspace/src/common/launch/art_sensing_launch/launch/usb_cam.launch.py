@@ -49,8 +49,8 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("cam_name", "usb_cam")
+    AddLaunchArgument(ld, "output/camera", "/sensing/fwc/raw/image")
+    AddLaunchArgument(ld, "cam_name", "usb_cam")
 
     # -----
     # Nodes
@@ -61,7 +61,6 @@ def generate_launch_description():
         executable="usb_cam_node_exe",
         package="usb_cam",
         name=GetLaunchArgument("cam_name"),
-        remappings=[
         remappings=[
             ("/image_raw", GetLaunchArgument("output/camera"))
         ],

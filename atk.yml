@@ -56,7 +56,7 @@ external:
         output: "@{project_root}/containers/jetson/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
       - name: "tensorrt-aarch64"
         id: "1QHvnrUrASsdVueiQeu6tRwZit5ANEskA"
-        output: "@{project_root{/containres/jetson/scripts/tensorrt/tensorrt-8.2.3.0-cp38-none-linux_aarch64.whl"
+        output: "@{project_root}/containers/jetson/scripts/tensorrt/tensorrt-8.2.3.0-cp38-none-linux_aarch64.whl"
 services:
   dev: &dev_service
     image: "atk/@{project}:dev"
