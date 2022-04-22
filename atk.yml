@@ -48,10 +48,10 @@ external:
         output: "@{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
       - name: "pytorch-aarch64"
         id: "1XEvtAMeOAJQx9kQoRhVNdZt07L4y1d-D"
-        output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
+        output: "@{project_root}/containers/jetson/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
       - name: "tensorrt-aarch64"
         id: "1QHvnrUrASsdVueiQeu6tRwZit5ANEskA"
-        output: "@{project_root{/containres/nx/scripts/tensorrt/tensorrt-8.2.3.0-cp38-none-linux_aarch64.whl"
+        output: "@{project_root{/containres/jetson/scripts/tensorrt/tensorrt-8.2.3.0-cp38-none-linux_aarch64.whl"
 services:
   dev: &dev_service
     image: "atk/@{project}:dev"
@@ -77,16 +77,16 @@ services:
      - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true
     working_dir: "/home/@{container_username}/@{project}/workspace"
-  nx:
+  jetson:
     <<: *dev_service
-    image: "atk/@{project}:nx"
-    hostname: "@{project}-nx"
-    container_name: "@{project}-nx"
+    image: "atk/@{project}:jetson"
+    hostname: "@{project}-jetson"
+    container_name: "@{project}-jetson"
     build:
       <<: *dev_build
       args:
         <<: *dev_build_args
-        CONTAINERNAME: "nx"
+        CONTAINERNAME: "jetson"
   vnc:
     image: "atk/@{project}:vnc"
     hostname: "@{project}-vnc"
