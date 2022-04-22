@@ -43,8 +43,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-from rclpy.qos import QoSHistoryPolicy
-from rclpy.qos import QoSProfile
+from rclpy.qos import QoSProfile, QoSHistoryPolicy, QoSReliabilityPolicy
 
 import sys
 import os
@@ -91,9 +90,10 @@ class ObjectRecognitionNode(Node):
         # publishers and subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
+        qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
         self.sub_image = self.create_subscription(Image, '~/input/image', self.image_callback, qos_profile)
         self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
-        self.pub_objects = self.create_publisher(ObjectArray, '~/output/objects', 10)
+        self.pub_objects = self.create_publisher(ObjectArray, '~/output/objects', 1)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
         # object recognition

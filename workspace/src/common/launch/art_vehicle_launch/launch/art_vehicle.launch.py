@@ -17,34 +17,22 @@ def generate_launch_description():
     # Launch Parameters
     # -----------------
 
-    use_flir = AddLaunchArgument(ld, "use_flir", "True")
+    use_arduino = AddLaunchArgument(ld, "use_arduino", "True")
 
     # ---------------
     # Launch Includes
     # ---------------
 
-    flir_camera_driver = IncludeLaunchDescription(
+    arduino_driver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
-                FindPackageShare('art_sensing_launch'),
+                FindPackageShare('art_vehicle_launch'),
                 'launch',
-                'flir_camera_driver.launch.py'
+                'arduino_driver.launch.py'
             ])
         ]),
-        condition=IfCondition(use_flir),
+        condition=IfCondition(use_arduino),
     )
-    ld.add_action(flir_camera_driver)
-
-    usb_cam = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('art_sensing_launch'),
-                'launch',
-                'usb_cam.launch.py'
-            ])
-        ]),
-        condition=UnlessCondition(use_flir),
-    )
-    ld.add_action(usb_cam)
+    ld.add_action(arduino_driver)
 
     return ld

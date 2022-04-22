@@ -28,45 +28,41 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# Internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
+
+# ROS imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
-
-    AddLaunchArgument("use_sim_time", "False")
+    AddLaunchArgument(ld, "use_sim_time", "False")
+    AddLaunchArgument(ld, "output/vehicle_inputs", "/control/vehicle_inputs")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-            package='arduino_driver',
-            namespace='',
-            executable='motor_driver',
-            name='motor_driver',
-            remappings=[
-                ("~/output/vehicle_inputs", LaunchConfiguration("output/vehicle_inputs"))
-            ],
-            parameters=[
-                {"use_sim_time": LaunchConfiguration("use_sim_time")}
-            ]
-        )
-    launch_description.add_action(node)
+        package='arduino_driver',
+        namespace='',
+        executable='motor_driver',
+        name='motor_driver',
+        remappings=[
+            ("~/output/vehicle_inputs", GetLaunchArgument("output/vehicle_inputs"))
+        ],
+        parameters=[
+            {"use_sim_time": GetLaunchArgument("use_sim_time")}
+        ]
+    )
+    ld.add_action(node)
 
-    return launch_description
+    return ld

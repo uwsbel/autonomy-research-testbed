@@ -1,14 +1,15 @@
 # Internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument
-from launch_utils.substitutions import QuoteExpandedPythonExpression
+from launch_utils.launch.substitutions import QuoteWrappedPythonExpression
 
 # ROS imports
 from launch import LaunchDescription
 from launch.substitutions import PathJoinSubstitution
-from launch.actions import IncludeLaunchDescription, SetLaunchConfiguration
-from launch_ros.substitutions import FindPackageShare
-from launch.conditions import IfCondition
+from launch.actions import IncludeLaunchDescription, SetLaunchConfiguration, LogInfo
+from launch.conditions import IfCondition, LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import ComposableNodeContainer
 
 from ament_index_python import get_package_share_directory
 
@@ -58,13 +59,13 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
-    use_sim = QuoteExpandedPythonExpression([GetLaunchArgument("scenario"), " == ", "sim"])
-    wauto_stack_launch = IncludeLaunchDescription(
+    use_sim = QuoteWrappedPythonExpression([GetLaunchArgument("scenario"), " == ", "'sim'"])
+    art_stack_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
-                FindPackageShare('wauto_launch'),
+                FindPackageShare('art_launch'),
                 'launch',
-                'wauto_stack.launch.py'
+                'art_stack.launch.py'
             ])
         ]),
         launch_arguments=[
@@ -72,30 +73,30 @@ def generate_launch_description():
             ('use_sim_msg', use_sim),
         ],
     )
-    ld.add_action(wauto_stack_launch)
+    ld.add_action(art_stack_launch)
 
-    wauto_real_launch = IncludeLaunchDescription(
+    art_real_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
-                FindPackageShare('wauto_launch'),
+                FindPackageShare('art_launch'),
                 'launch',
-                'wauto_real.launch.py'
+                'art_real.launch.py'
             ])
         ]),
-        condition=LaunchConfigurationEquals(GetLaunchArgument("scenario"), "real"),
+        condition=LaunchConfigurationEquals("scenario", "real"),
     )
-    ld.add_action(wauto_real_launch)
+    ld.add_action(art_real_launch)
 
-    wauto_sim_launch = IncludeLaunchDescription(
+    art_sim_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
-                FindPackageShare('wauto_launch'),
+                FindPackageShare('art_launch'),
                 'launch',
-                'wauto_sim.launch.py'
+                'art_sim.launch.py'
             ])
         ]),
-        condition=LaunchConfigurationEquals(GetLaunchArgument("scenario"), "sim"),
+        condition=LaunchConfigurationEquals("scenario", "sim"),
     )
-    ld.add_action(wauto_sim_launch)
+    ld.add_action(art_sim_launch)
 
     return ld

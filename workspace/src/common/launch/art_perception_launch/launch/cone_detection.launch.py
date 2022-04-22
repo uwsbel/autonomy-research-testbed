@@ -49,7 +49,7 @@ def generate_launch_description():
             )
         )
 
-    AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument("input/image", "/sensing/fwc/raw/image")
     AddLaunchArgument("input/vehicle_state", "/vehicle/state")
     AddLaunchArgument("output/objects", "/perception/objects")
 

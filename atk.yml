@@ -2,6 +2,11 @@ project: art
 default_containers: 
   - dev
   - vnc
+hardware_specific_attributes:
+  - mac_address: 10:a5:1d:e9:53:cc
+    all:
+      security_opt:
+      - seccomp:unconfined
 custom_cli_arguments:
   gpus:
     argparse:
@@ -26,7 +31,7 @@ custom_cli_arguments:
   x11:
     argparse:
       action: 'store_true'
-    agx:
+    all:
       volumes:
         - "/tmp/.X11-unix:/tmp/.X11-unix"
       environment:

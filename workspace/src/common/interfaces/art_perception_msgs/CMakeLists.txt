@@ -44,6 +44,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 	msg/Object.msg
 	msg/ObjectArray.msg
 
+	msg/Roi.msg
+	msg/RoiArray.msg
+
   DEPENDENCIES std_msgs geometry_msgs unique_identifier_msgs
 )
 

@@ -66,4 +66,4 @@ def generate_launch_description():
     )
     ld.add_action(vehicle)
 
-    return launch_description
+    return ld

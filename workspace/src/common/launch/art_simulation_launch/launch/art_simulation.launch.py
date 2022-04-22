@@ -34,9 +34,9 @@ from launch_utils import AddLaunchArgument, GetLaunchArgument, AddComposableNode
 from launch_utils.launch.conditions import MultipleIfConditions
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, EmitEvent
+from launch.actions import IncludeLaunchDescription, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import TextSubstitution, GetLaunchArgument
+from launch.substitutions import TextSubstitution
 from launch_ros.actions import Node
 from launch.events import Shutdown
 
@@ -79,8 +79,9 @@ def generate_launch_description():
              {"ip": GetLaunchArgument("ip")},
              {"hostname": GetLaunchArgument("hostname")},
         ],
-        on_exit=EmitEvent(event=Shutdown()),
-        node_kwargs={"output": "screen"},
+        node_kwargs={
+          "output": "screen",
+        },
     )
 
     return ld
