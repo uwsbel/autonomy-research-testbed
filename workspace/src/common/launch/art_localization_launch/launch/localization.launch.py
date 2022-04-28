@@ -28,52 +28,52 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
-
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
-from ament_index_python import get_package_share_directory
+from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.actions import DeclareLaunchArgument
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
     launch_description = LaunchDescription()
 
-    # ------------
-    # Launch Files
-    # ------------
+    # ----------------
+    # Launch Arguments
+    # ----------------
 
-    control = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_control_launch'),
-                'launch/control.launch.py'))
-    )
+    def AddLaunchArgument(arg, default):
+        launch_description.add_action(
+            DeclareLaunchArgument(
+                arg,
+                default_value=TextSubstitution(text=default)
+            )
+        )
 
-    launch_description.add_action(control)
+    AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
+    AddLaunchArgument("output/vehicle_state", "/vehicle_state")
 
-    localization = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_localization_launch'),
-                'launch/localization.launch.py'))
-    )
-    launch_description.add_action(localization)
-    planning = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_planning_launch'),
-                'launch/planning.launch.py'))
-    )
-    launch_description.add_action(planning)
 
-    cone_detection = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_perception_launch'),
-                'launch/cone_detection.launch.py')),
+    AddLaunchArgument("use_sim_msg", "False")
+    AddLaunchArgument("use_sim_time", "False")
+
+    # -----
+    # Nodes
+    # -----
+
+    node = Node(
+        package='localization_py',
+        namespace='',
+        executable='state_estimation',
+        name='state_estimation',
+        remappings=[
+                ("~/input/gps", LaunchConfiguration("input/gps")),
+                ("~/output/vehicle_state", LaunchConfiguration("output/vehicle_state")),
+        ],
+        parameters=[
+            {"use_sim_time": LaunchConfiguration("use_sim_time")},
+            {"use_sim_msg": LaunchConfiguration("use_sim_msg")},
+        ]
     )
-    launch_description.add_action(cone_detection)
+    launch_description.add_action(node)
 
     return launch_description

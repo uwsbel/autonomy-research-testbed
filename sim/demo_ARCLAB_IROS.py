@@ -387,6 +387,8 @@ def main():
 
 
     noise_model = sens.ChNoiseNone()
+    #gps_noise_model = sens.ChNoiseNone()
+    gps_noise_model = sens.ChNoiseNormal(chrono.ChVectorD(0, 0, 0), chrono.ChVectorD(0.6, 0.6, 0.6))
     imu_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
     gps_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
     gps_reference = chrono.ChVectorD(-89.400, 43.070, 260.0)
@@ -410,7 +412,7 @@ def main():
     manager.AddSensor(mag)
 
     # gps
-    gps = sens.ChGPSSensor(vehicle.GetChassisBody(), 10, gps_offset_pose, gps_reference, noise_model)
+    gps = sens.ChGPSSensor(vehicle.GetChassisBody(), 10, gps_offset_pose, gps_reference, gps_noise_model)
     gps.SetName("GPS")
     gps.PushFilter(sens.ChFilterGPSAccess())
     manager.AddSensor(gps)
