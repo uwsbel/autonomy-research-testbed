@@ -25,6 +25,7 @@ custom_cli_arguments:
       devices:
         - /dev/video0
         - /dev/ttyACM0
+        - /dev/ttyUSB0
   optix:
     argparse:
       required: true
