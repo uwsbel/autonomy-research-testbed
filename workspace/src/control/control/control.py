@@ -132,6 +132,9 @@ class ControlNode(Node):
             self.steering = self.steering_gain * ratio
             # self.get_logger().info('Target steering = %s' % self.steering)
 
+        #for circle
+        self.steering = -0.5
+
         #TODO: remove after debugging
         # self.steering = 0.0
         self.throttle = self.throttle_gain*0.55 #only doing lateral conmtrol for now
