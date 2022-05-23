@@ -22,9 +22,11 @@ custom_cli_arguments:
     argparse:
       action: 'store_true'
     all:
+      #privileged: true
       devices:
         - /dev/video0
         - /dev/ttyACM0
+        - /dev/ttyUSB0
   optix:
     argparse:
       required: true

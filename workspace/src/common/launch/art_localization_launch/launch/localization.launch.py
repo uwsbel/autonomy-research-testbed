@@ -50,6 +50,11 @@ def generate_launch_description():
         )
 
     AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
+    AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
+    AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
+    AddLaunchArgument("input/gyro", "/chrono_ros_bridge/output/gyroscope/data")
+    AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
+    
     AddLaunchArgument("output/vehicle_state", "/vehicle_state")
 
 
@@ -67,6 +72,10 @@ def generate_launch_description():
         name='state_estimation',
         remappings=[
                 ("~/input/gps", LaunchConfiguration("input/gps")),
+                ("~/input/groundTruth", LaunchConfiguration("input/groundTruth")),
+                ("~/input/mag", LaunchConfiguration("input/mag")),
+                ("~/input/gyro", LaunchConfiguration("input/gyro")),
+                ("~/input/accel", LaunchConfiguration("input/accel")),
                 ("~/output/vehicle_state", LaunchConfiguration("output/vehicle_state")),
         ],
         parameters=[
