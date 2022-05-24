@@ -151,7 +151,7 @@ class ChGPSSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor
     def Serialize(self, writer):
         buffer = self.gps.GetMostRecentGPSBuffer()
         if buffer.HasData():
-            data = buffer.GetGPSData()
+            data = buffer.GetGPSData().astype(str)
             writer.Key("latitude") << data[0]
             writer.Key("longitude") << data[1]
             writer.Key("altitude") << data[2]

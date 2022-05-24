@@ -86,7 +86,7 @@ def generate_launch_description():
     chrono_ros_bridge = Node(
         package='chrono_ros_bridge',
         namespace='',
-        executable='chrono_ros_bridge',
+        executable='chrono_ros_bridge_node',
         name='chrono_ros_bridge',
         remappings=[
             ("~/input/driver_inputs", LaunchConfiguration("input/vehicle_inputs")),
