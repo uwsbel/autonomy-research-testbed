@@ -133,7 +133,7 @@ class ControlNode(Node):
             # self.get_logger().info('Target steering = %s' % self.steering)
 
         #for circle
-        self.steering = -0.5
+        #self.steering = -0.5
 
         #TODO: remove after debugging
         # self.steering = 0.0
