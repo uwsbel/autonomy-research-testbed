@@ -15,14 +15,11 @@ custom_cli_arguments:
                 - driver: nvidia
                   capabilities: [gpu]
       singularity:
-        start:
-          options:
-            - nv
+        nv: true
   devices:
     argparse:
       action: 'store_true'
     all:
-      #privileged: true
       devices:
         - /dev/video0
         - /dev/ttyACM0
@@ -33,6 +30,24 @@ custom_cli_arguments:
     chrono-conda:
       volumes:
         - "@{optix}:/opt/optix-7.2"
+  singularity:
+    argparse:
+      action: 'store_true'
+    all:
+      singularity:
+        sudo_override: False
+        network:
+          enable: true
+          allocate_ip: false
+          mode: "bridge"
+        start:
+          options:
+            - contain
+            - writable
+        build:
+          options:
+            - force
+            - sandbox
 external:
   db:
     files:

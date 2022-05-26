@@ -3,11 +3,17 @@ Bootstrap: docker
 From: ros:@{ROS_DISTRO}
 
 %files
-	@{ROS_WORKSPACE}/src temp_workspace/src
-	@{SCRIPTS_DIR}	temp_scripts
+	workspace/src temp_workspace/src
+	containers/dev/scripts temp_scripts
 
 %post
 	DEBIAN_FRONTEND=noninteractive
+
+	USERHOME=/home/@{PROJECT}
+	USERSHELL="bash"
+	USERSHELLPATH="/bin/${USERSHELL}"
+	USERSHELLPROFILE="${USERHOME}/.${USERSHELL}rc"
+	ROS_DISTRO=galactic
 
 	# Check for updates
 	apt-get update && apt-get upgrade -y
@@ -31,18 +37,27 @@ From: ros:@{ROS_DISTRO}
 	apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 	# User Setup
-	mkdir @{USERHOME}
+	mkdir ${USERHOME}
+	mkdir ${USERHOME}/@{PROJECT}
+	mkdir ${USERHOME}/Documents
+	touch /.singularity.d/env/atk.sh
 
 	# ROS Setup
 	sed -i 's|source|#source|g' /ros_entrypoint.sh
 	echo ". /opt/ros/@{ROS_DISTRO}/setup.sh" >> @{USERSHELLPROFILE}
-	echo "[ -f @{USERHOME}/@{PROJECT}/workspace/install/setup.@{USERSHELL} ] && . @{USERHOME}/@{PROJECT}/workspace/install/setup.@{USERSHELL}" >> @{USERSHELLPROFILE}
-	/bin/@{USERSHELL} -c "source /opt/ros/@{ROS_DISTRO}/setup.@{USERSHELL}"
+	echo "[ -f ${USERHOME}/@{PROJECT}/workspace/install/setup.${USERSHELL} ] && . ${USERHOME}/@{PROJECT}/workspace/install/setup.${USERSHELL}" >> ${USERSHELLPROFILE}
+	/bin/${USERSHELL} -c "source /opt/ros/${ROS_DISTRO}/setup.${USERSHELL}"
 
 %environment
-	export HOME=@{USERHOME}
-	export USERSHELLPATH=@{USERSHELLPATH}
-	export USERSHELLPROFILE=@{USERSHELLPROFILE}
+	USERHOME=/home/@{PROJECT}
+	USERSHELL="bash"
+	USERSHELLPATH="/bin/${USERSHELL}"
+	USERSHELLPROFILE="${USERHOME}/.${USERSHELL}rc"
+	ROS_DISTRO=galactic
+
+	export HOME=${USERHOME}
+	export USERSHELLPATH=${USERSHELLPATH}
+	export USERSHELLPROFILE=${USERSHELLPROFILE}
 
 %runscript
 	cd $HOME
