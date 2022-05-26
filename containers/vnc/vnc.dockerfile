@@ -34,6 +34,6 @@ RUN cp /usr/share/novnc/vnc_lite.html /usr/share/novnc/index.html
 RUN sed -i "/rfb.resizeSession = WebUtil.getConfigVar('resize', false);/a rfb.scaleViewport = true;rfb.resizeSession = true;" /usr/share/novnc/index.html
 
 # Copy over the supervisord.conf file
-COPY . /app
-CMD ["/app/entrypoint.sh"]
+COPY . /opt
+CMD ["/opt/entrypoint.sh"]
 
