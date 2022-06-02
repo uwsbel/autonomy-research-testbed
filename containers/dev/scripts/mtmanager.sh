@@ -15,3 +15,4 @@ sudo apt-get install wget
 wget http://security.ubuntu.com/ubuntu/pool/main/i/icu/libicu60_60.2-3ubuntu3.2_amd64.deb
 sudo apt-get install ./libicu60_60.2-3ubuntu3.2_amd64.deb
 rm ./libicu60_60.2-3ubuntu3.2_amd64.deb
+sudo apt-get install rapidjson-dev
