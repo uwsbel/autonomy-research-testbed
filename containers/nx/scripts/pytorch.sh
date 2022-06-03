@@ -16,10 +16,10 @@ apt-get update && \
 # install prebuild pytorch binaries
 #
 cd /tmp/scripts/pytorch
-unzip torch-1.9.0-python3.8-aarch64.zip && \
-    pip3 install torch-1.9.0-cp38-cp38-linux_aarch64.whl \
-        torchvision-0.10.0a0+300a8a4-cp38-cp38-linux_aarch64.whl \
-        torchaudio-0.10.0a0+ee74056-cp38-cp38-linux_aarch64.whl
+# unzip torch-1.9.0-python3.8-aarch64.zip && \
+pip3 install torch-1.9.0-cp38-cp38-linux_aarch64.whl \
+    torchvision-0.10.0a0+300a8a4-cp38-cp38-linux_aarch64.whl \
+    torchaudio-0.10.0a0+ee74056-cp38-cp38-linux_aarch64.whl
 
 # 
 # install numpy via pip
