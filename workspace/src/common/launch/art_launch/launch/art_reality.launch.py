@@ -69,4 +69,13 @@ def generate_launch_description():
     )
     launch_description.add_action(arduino)
 
+    xsens = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('bluespace_ai_xsens_mti_driver'),
+                'launch/xsens_mti_node.launch.py'))
+    )
+    launch_description.add_action(xsens)
+
+
     return launch_description
