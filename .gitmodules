@@ -13,3 +13,4 @@
 [submodule "workspace/src/bluespace_ai_xsens_ros_mti_driver"]
 	path = workspace/src/bluespace_ai_xsens_ros_mti_driver
 	url = git@github.com:bluespace-ai/bluespace_ai_xsens_ros_mti_driver
+  ignore = dirty
