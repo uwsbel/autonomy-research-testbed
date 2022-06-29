@@ -53,6 +53,7 @@ RUN pip3 install $PIP_REQUIREMENTS
 
 # Run any user scripts
 # Should be used to install additional packages or customize the shell
+# Files in scripts should be executable (chmod +x) or else they may not run
 ARG SCRIPTS_DIR="containers/${CONTAINERNAME}/scripts"
 COPY $SCRIPTS_DIR /tmp/scripts/
 RUN apt-get update && for f in /tmp/scripts/*; do [ -x $f ] && [ -f $f ] && $f || continue; done
