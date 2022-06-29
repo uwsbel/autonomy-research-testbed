@@ -38,16 +38,13 @@ from ament_index_python.packages import get_package_share_directory
 
 import tensorrt as trt
 import time
-import pycuda.driver as cuda
 import numpy as np
-import pycuda.tools as tools
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import torchvision.ops as ops
-import torchvision.transforms as transforms
+# import torchvision.transforms as transforms
 import torch
-
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
@@ -105,36 +102,53 @@ class YOLODetectionNode(Node):
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
 
-        self.get_logger().info('Intializing TensorRT detector. This may take a couple minutes.')
-
-
-        #initialize the cuda and the TensorRT Engine
-        cuda.init()
-        device = cuda.Device(0)
-        self.cuda_context = tools.make_default_context()
-        # self.cuda_context.push()
-
+        
+        #initialize the TensorRT Engine
         logger = trt.Logger(trt.Logger.INFO)
         self.engine = None
 
-        explicit_batch = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-        builder = trt.Builder(logger)
-        network = builder.create_network(explicit_batch)
-        parser = trt.OnnxParser(network, logger)
-        config = builder.create_builder_config()
-
-        with open(os.path.join(package_share_directory,self.model_file), 'rb') as f:
-            if not parser.parse(f.read()):
-                for error in range(parser.num_errors):
-                    print(parser.get_error(error))
-                exit(1)
-        self.engine = builder.build_engine(network,config) 
+        onnx_file = os.path.join(package_share_directory,self.model_file)
+        engine_file = onnx_file + ".engine"
+        if(os.path.exists(engine_file)):
+            print("Engine file found.")
+            runtime = trt.Runtime(logger)
+            with open(engine_file, 'rb') as f:
+                self.engine = runtime.deserialize_cuda_engine(f.read())
             
-        if(self.engine == None):
-            raise RuntimeError("Engine is not initialized from file: "+os.path.join(package_share_directory,self.model_file))
+            if(self.engine == None):
+                raise RuntimeError("Engine is not initialized.")
+
+        else:
+            self.get_logger().info('No existing engine file found, so building from Onnx. This may take a few minutes. Next time will be much faster.')
+
+            if(not os.path.exists(onnx_file)):
+                raise RuntimeError("Onnx file not found"+os.path.join(onnx_file))
+
+            explicit_batch = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+            builder = trt.Builder(logger)
+            network = builder.create_network(explicit_batch)
+            parser = trt.OnnxParser(network, logger)
+            config = builder.create_builder_config()
+            config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 1 << 30)
+
+            with open(onnx_file, 'rb') as f:
+                if not parser.parse(f.read()):
+                    error_str = ""
+                    for error in range(parser.num_errors):
+                        error_str+=str(parser.get_error(error))
+                        # print(parser.get_error(error))
+                    # exit(1)
+                    raise RuntimeError(error_str)
+            self.engine = builder.build_engine(network,config) 
+            
+            if(self.engine == None):
+                raise RuntimeError("Engine is not initialized from file: "+os.path.join(onnx_file))
+            
+            self.get_logger().info('Saving serialized engine for faster future loads.')
+            with open(engine_file, 'wb') as f:
+                f.write(self.engine.serialize())
 
         self.trt_context = self.engine.create_execution_context()
-        
 
         self.output_shape = None
         for binding in self.engine:
@@ -143,8 +157,6 @@ class YOLODetectionNode(Node):
                 input_size = trt.volume(input_shape) * self.engine.max_batch_size * np.dtype(np.float16).itemsize  # in bytes
             else:
                 self.output_shape = self.engine.get_binding_shape(binding)
-
-        self.stream = cuda.Stream()
 
         self.confidence_thresh = .5
         self.iou_thresh = .45
@@ -209,7 +221,7 @@ class YOLODetectionNode(Node):
             h, w, -1).astype(np.float32) / 255.0
         if self.image.encoding == "bgr8":
             img = np.flip(img[:,:,0:3],axis=2)
-        img = img[720-704:,:,0:3]
+        img = img[:704,:,0:3]
         device_input = torch.from_numpy(img).cuda().half().permute(2,0,1).unsqueeze(0)
 
         # img = torch.HalfTensor(self.image.data).reshape(h, w, -1) / 255.0
@@ -223,9 +235,7 @@ class YOLODetectionNode(Node):
 
         t1 = time.time()
 
-        self.trt_context.execute_async(bindings=[device_input.data_ptr(), self.device_output.data_ptr()],stream_handle=self.stream.handle)
-
-        self.stream.synchronize()
+        self.trt_context.execute_v2(bindings=[device_input.data_ptr(), self.device_output.data_ptr()])
 
         boxes,scores,class_id = self.nms(self.device_output[0,:,:])
 
@@ -304,6 +314,8 @@ class YOLODetectionNode(Node):
             self.patches.clear()
             self.ax.texts.clear()
 
+        self.get_logger().info('Detected %s cones' % len(self.boxes)) 
+        
         for b,box in enumerate(self.boxes):
             position = self.calculate_position_from_box(box.astype(np.float64))
             obj = Object()
