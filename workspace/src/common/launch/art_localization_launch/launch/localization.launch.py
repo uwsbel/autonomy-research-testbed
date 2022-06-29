@@ -56,7 +56,7 @@ def generate_launch_description():
     AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
     
     AddLaunchArgument("output/vehicle_state", "/vehicle_state")
-
+    AddLaunchArgument("vis", "False")
 
     AddLaunchArgument("use_sim_msg", "False")
     AddLaunchArgument("use_sim_time", "False")
@@ -81,6 +81,7 @@ def generate_launch_description():
         parameters=[
             {"use_sim_time": LaunchConfiguration("use_sim_time")},
             {"use_sim_msg": LaunchConfiguration("use_sim_msg")},
+            {"vis": LaunchConfiguration("vis")}
         ]
     )
     launch_description.add_action(node)

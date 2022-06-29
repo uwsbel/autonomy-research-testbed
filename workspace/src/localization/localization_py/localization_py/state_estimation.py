@@ -25,14 +25,19 @@ from Chrono_coordinate_transfer import graph
 class StateEstimationNode(Node):
     def __init__(self):
         super().__init__('state_estimation_node')
+        
+        self.declare_parameter('vis', False)
+        self.vis = self.get_parameter('vis').get_parameter_value().bool_value
 
         #update frequency of this node
         self.freq = 10.0
-        matplotlib.use("TKAgg")
-        #data that will be used by this class
-        #TODO: a lot of these variables aren't used, this data needs to be cleaned up
-        self.fig = plt.figure()
-        self.fig.suptitle('Kalman Filter', fontsize = 20)
+
+        if(self.vis):
+            matplotlib.use("TKAgg")
+            #data that will be used by this class
+            #TODO: a lot of these variables aren't used, this data needs to be cleaned up
+            self.fig = plt.figure()
+            self.fig.suptitle('Kalman Filter', fontsize = 20)
         self.gps = ""
         self.groundTruth = ""
         #self.imu = ""
@@ -153,16 +158,16 @@ class StateEstimationNode(Node):
         
         self.hkfx.append(self.kfx)
         self.hkfy.append(self.kfy)
-        
-        plt.cla()
-        plt.plot(self.hkfx, self.hkfy, label = 'KF predictions', color = 'b', linewidth = 0.5)
-     #   plt.plot(self.htx, self.hty, label = 'True Position', color = 'g', linewidth = 0.5)
-        plt.plot(self.hx, self.hy, label='Measured Position', color = 'r')
-        plt.xlabel('Position_x (m)', fontsize=20)
-        plt.ylabel('Position_y (m)', fontsize=20)
-        plt.legend()
-        plt.draw()
-        plt.pause(0.0001)
+        if(self.vis):
+            plt.cla()
+            plt.plot(self.hkfx, self.hkfy, label = 'KF predictions', color = 'b', linewidth = 0.5)
+        #   plt.plot(self.htx, self.hty, label = 'True Position', color = 'g', linewidth = 0.5)
+            plt.plot(self.hx, self.hy, label='Measured Position', color = 'r')
+            plt.xlabel('Position_x (m)', fontsize=20)
+            plt.ylabel('Position_y (m)', fontsize=20)
+            plt.legend()
+            plt.draw()
+            plt.pause(0.0001)
         error = math.sqrt((self.x)**2 + self.y**2) - math.sqrt(self.kfx**2+self.kfy**2)
         self.accumulated_error = self.accumulated_error + abs(error)
 
