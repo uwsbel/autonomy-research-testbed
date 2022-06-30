@@ -314,7 +314,7 @@ class YOLODetectionNode(Node):
             self.patches.clear()
             self.ax.texts.clear()
 
-        self.get_logger().info('Detected %s cones' % len(self.boxes)) 
+        # self.get_logger().info('Detected %s cones' % len(self.boxes)) 
         
         for b,box in enumerate(self.boxes):
             position = self.calculate_position_from_box(box.astype(np.float64))

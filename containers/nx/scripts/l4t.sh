@@ -29,7 +29,7 @@ chmod 644 /etc/apt/trusted.gpg.d/jetson-ota-public.asc && \
     apt-get clean
 
 # cuda tools setup
-apt update && apt install -y cuda-tools-11-4
+apt update && apt install -y libopenblas-dev cuda-tools-11-4
 
 #tensorrt setup
 apt update && apt install -y  tensorrt python3-libnvinfer-dev 
@@ -37,11 +37,14 @@ apt update && apt install -y  tensorrt python3-libnvinfer-dev
 #torch for cuda 11.4, python3.8
 # apt install -y libcurand-dev-11-4 libcufft-dev-11-4
 # wget https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
-wget https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
-pip uninstall pytorch
-pip uninstall torchvision
+# wget https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+pip uninstall -y torch
+pip uninstall -y torchvision
+# pip install torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+pip install /tmp/scripts/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
 pip install /tmp/scripts/pytorch/torchvision-0.13.0-cp38-cp38-linux_aarch64.whl
-pip install torchvision==0.13.0
+
+# pip install torchvision==0.13.0
 
 #
 # Tegra setup
