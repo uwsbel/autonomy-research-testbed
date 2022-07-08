@@ -92,6 +92,7 @@ services:
     image: "atk/@{project}:nx"
     hostname: "@{project}-nx"
     container_name: "@{project}-nx"
+    network_mode: "host"
     build:
       <<: *dev_build
       args:
