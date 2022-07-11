@@ -32,7 +32,7 @@ chmod 644 /etc/apt/trusted.gpg.d/jetson-ota-public.asc && \
 apt update && apt install -y libopenblas-dev cuda-tools-11-4
 
 #tensorrt setup
-apt update && apt install -y  tensorrt python3-libnvinfer-dev 
+apt update && apt install -y tensorrt python3-libnvinfer-dev 
 
 #torch for cuda 11.4, python3.8
 # apt install -y libcurand-dev-11-4 libcufft-dev-11-4
