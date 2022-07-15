@@ -24,6 +24,11 @@ custom_cli_arguments:
         - /dev/video0
         - /dev/ttyACM0
         - /dev/ttyUSB0
+  network_mode_host:
+    argparse:
+      action: 'store_true'
+    all:
+      network_mode: "host"
   optix:
     argparse:
       required: true
