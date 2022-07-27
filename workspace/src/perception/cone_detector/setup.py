@@ -53,7 +53,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'object_recognition = cone_detector.object_recognition:main'
+            'object_recognition = cone_detector.object_recognition:main',
+            'yolov5_detector = cone_detector.yolov5_detector:main'
         ],
     },
 )

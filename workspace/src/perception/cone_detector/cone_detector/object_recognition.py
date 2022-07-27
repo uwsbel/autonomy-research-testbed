@@ -60,7 +60,7 @@ class ObjectRecognitionNode(Node):
         super().__init__('object_recognition_node')
 
         # update frequency of this node
-        self.freq = 10.0
+        self.freq = 50.0
 
         self.go = False
 
@@ -145,7 +145,7 @@ class ObjectRecognitionNode(Node):
         x = np.asarray(self.image.data).reshape(
             h, w, -1).astype(np.float32) / 255.0
 
-        # x = np.flip(x,axis=0).copy()
+        x = np.flip(x,axis=0).copy()
 
         if self.image.encoding == "bgr8":
             x = np.flip(x[:,:,0:3],axis=2).copy()
@@ -155,13 +155,13 @@ class ObjectRecognitionNode(Node):
             torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
         else:
             torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
-        t1 = time.time()
 
         if self.vis:
             if self.im_show == None:
                 self.im_show = self.ax.imshow(x)
             else:
                 self.im_show.set_data(x)
+        t1 = time.time()
 
         # self.get_logger().warn(torch_img)
         self.prediction = self.model.predict([torch_img])[0]
@@ -171,7 +171,7 @@ class ObjectRecognitionNode(Node):
         # t_msg = self.get_clock().now()
         t_msg = rclpy.time.Time.from_msg(self.image.header.stamp)
         collection_to_perception = (t.nanoseconds - t_msg.nanoseconds) / 1e9
-        self.get_logger().info('Inference= %s, Col2Perc= %s, ID= %s' % ("{:.4f}".format(t2-t0),"{:.4f}".format(collection_to_perception),self.image.header.frame_id))
+        self.get_logger().info('Inference= %s, Col2Perc= %s, ID= %s' % ("{:.4f}".format(t2-t1),"{:.4f}".format(collection_to_perception),self.image.header.frame_id))
 
 
     def estimate_cone_distance(self, rectangle):

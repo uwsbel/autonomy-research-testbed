@@ -116,12 +116,13 @@ class PathPlanningNode(Node):
             id = obj.classification.classification
 
             #calculate position from camera parameters, rect, and distance
-            if(id == 1):
-                self.red_cones.append(pos)
-            elif(id == 2):
-                self.green_cones.append(pos)
-            else:
-                self.get_logger().info("Object with unknown label detected {}".format(id))
+            if(np.linalg.norm(pos) < 2.0*self.lookahead):
+                if(id == 1):
+                    self.red_cones.append(pos)
+                elif(id == 2):
+                    self.green_cones.append(pos)
+                else:
+                    self.get_logger().info("Object with unknown label detected {}".format(id))
         
 
     def order_cones(self,cones,start):

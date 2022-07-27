@@ -531,7 +531,7 @@ chrono.SetChronoDataPath(data_folder)
 veh.SetDataPath(chrono.GetChronoDataPath() + 'vehicle/')
 
 vis = True
-save_sensor_data = True
+save_sensor_data = False
 sensor_data_dir = "sensor_output/"
 
 num_cones = 100
