@@ -13,3 +13,9 @@
 # install pytorch
 #
 pip3 install --ignore-installed torch torchvision --extra-index-url https://download.pytorch.org/whl/cu113
+
+#
+# index must be updated before we install tensorry
+#
+pip3 install nvidia-pyindex
+pip3 install nvidia-tensorrt

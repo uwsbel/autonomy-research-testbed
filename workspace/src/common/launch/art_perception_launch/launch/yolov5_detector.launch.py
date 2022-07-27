@@ -28,58 +28,57 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
-
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
-from ament_index_python import get_package_share_directory
+from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.actions import DeclareLaunchArgument
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
     launch_description = LaunchDescription()
 
-    # ------------
-    # Launch Files
-    # ------------
+    # ----------------
+    # Launch Arguments
+    # ----------------
 
-    control = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_control_launch'),
-                'launch/control.launch.py'))
-    )
+    def AddLaunchArgument(arg, default):
+        launch_description.add_action(
+            DeclareLaunchArgument(
+                arg,
+                default_value=TextSubstitution(text=default)
+            )
+        )
 
-    launch_description.add_action(control)
+    AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument("output/objects", "/perception/objects")
 
-    localization = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_localization_launch'),
-                'launch/localization.launch.py'))
-    )
-    launch_description.add_action(localization)
-    planning = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_planning_launch'),
-                'launch/planning.launch.py'))
-    )
-    launch_description.add_action(planning)
+    AddLaunchArgument("use_sim_time", "False")
+    AddLaunchArgument("model", "data/real.onnx")
+    AddLaunchArgument("camera_calibration_file", "data/calibration.json")
+    AddLaunchArgument("vis", "False")
 
-    # cone_detection = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(
-    #             get_package_share_directory('art_perception_launch'),
-    #             'launch/cone_detection.launch.py')),
-    # )
-    cone_detection = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_perception_launch'),
-                'launch/yolov5_detector.launch.py')),
+    # -----
+    # Nodes
+    # -----
+
+    node = Node(
+        package='cone_detector',
+        namespace='',
+        executable='yolov5_detector',
+        name='yolov5_detector',
+        remappings=[
+            ("~/input/image", LaunchConfiguration("input/image")),
+            ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
+            ("~/output/objects", LaunchConfiguration("output/objects"))
+        ],
+        parameters=[
+             {"use_sim_time": LaunchConfiguration("use_sim_time")},
+             {"model":LaunchConfiguration("model")},
+             {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",)},
+             {"vis": LaunchConfiguration("vis")}
+        ]
     )
-    launch_description.add_action(cone_detection)
+    launch_description.add_action(node)
 
     return launch_description

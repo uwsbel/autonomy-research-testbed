@@ -65,6 +65,9 @@ external:
       - name: "pytorch-aarch64"
         id: "1XEvtAMeOAJQx9kQoRhVNdZt07L4y1d-D"
         output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
+      - name: "torch-1.12cu11-aarch64"
+        id: "1eOpFBNbP4L8_Ort5nmDIxqEJQcbluNdA"
+        output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.12cu11-aarch64"
 services:
   dev: &dev_service
     image: "atk/@{project}:dev"
@@ -78,8 +81,8 @@ services:
         PROJECT: "@{project}"
         USER_UID: "@{uid}"
         USER_GID: "@{gid}"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev"
-        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow pyserial"
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv"
+        PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt"
         USER_GROUPS: "dialout video"
     environment:
       DISPLAY: vnc:0.0
@@ -94,6 +97,7 @@ services:
     image: "atk/@{project}:nx"
     hostname: "@{project}-nx"
     container_name: "@{project}-nx"
+    network_mode: "host"
     build:
       <<: *dev_build
       args:

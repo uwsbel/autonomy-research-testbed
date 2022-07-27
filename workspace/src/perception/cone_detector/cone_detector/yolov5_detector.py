@@ -35,13 +35,16 @@ from sensor_msgs.msg import Image
 from art_msgs.msg import VehicleState
 from art_perception_msgs.msg import ObjectArray, Object
 from ament_index_python.packages import get_package_share_directory
-import torch
-import torchvision
+
+import tensorrt as trt
 import time
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import torchvision.ops as ops
+# import torchvision.transforms as transforms
+import torch
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
@@ -53,9 +56,7 @@ import json
 ament_tools_root = os.path.join(os.path.dirname(__file__), '.')
 sys.path.insert(0, os.path.abspath(ament_tools_root))
 
-from recognition_network import RecognitionNetwork
-
-class ObjectRecognitionNode(Node):
+class YOLODetectionNode(Node):
     def __init__(self):
         super().__init__('object_recognition_node')
 
@@ -73,6 +74,10 @@ class ObjectRecognitionNode(Node):
 
         self.threshold = 0.001
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        if(not torch.cuda.is_available()):
+            self.get_logger().info('cuda support in torch is not available. Either reconfigure with cuda, or fall back to a difference perception node.')
+            exit(1)
 
         # READ IN SHARE DIRECTORY LOCATION
         package_share_directory = get_package_share_directory('cone_detector')
@@ -96,27 +101,70 @@ class ObjectRecognitionNode(Node):
         self.pub_objects = self.create_publisher(ObjectArray, '~/output/objects', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
-        # object recognition
-        self.model = RecognitionNetwork()
-        self.model.load(os.path.join(package_share_directory,self.model_file))
-        self.model.eval()
-        self.get_logger().info('Model initialized | visualizing = %s | device = %s' % (str(self.vis),str(self.device)))
 
+        
+        #initialize the TensorRT Engine
+        logger = trt.Logger(trt.Logger.INFO)
+        self.engine = None
 
-        # nn optimizations
-        # torch._C._jit_set_bailout_depth(1)
-        # self.model.model = torch.jit.optimize_for_inference(torch.jit.script(self.model.model.eval().half())).eval().cuda()
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cudnn.enabled = True
+        onnx_file = os.path.join(package_share_directory,self.model_file)
+        engine_file = onnx_file + ".engine"
+        if(os.path.exists(engine_file)):
+            print("Engine file found.")
+            runtime = trt.Runtime(logger)
+            with open(engine_file, 'rb') as f:
+                self.engine = runtime.deserialize_cuda_engine(f.read())
+            
+            if(self.engine == None):
+                raise RuntimeError("Engine is not initialized.")
 
-        if(torch.cuda.is_available()):
-            self.model.model.half()
+        else:
+            self.get_logger().info('No existing engine file found, so building from Onnx. This may take a few minutes. Next time will be much faster.')
 
-        #run a first test for optimization
-        dummy_input = torch.rand((3,720,1280),dtype=torch.float32,device=self.device)
-        if(torch.cuda.is_available()):
-            dummy_input = torch.rand((3,720,1280),dtype=torch.float16,device=self.device)
-        self.model.predict([dummy_input])
+            if(not os.path.exists(onnx_file)):
+                raise RuntimeError("Onnx file not found"+os.path.join(onnx_file))
+
+            explicit_batch = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+            builder = trt.Builder(logger)
+            network = builder.create_network(explicit_batch)
+            parser = trt.OnnxParser(network, logger)
+            config = builder.create_builder_config()
+            config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 1 << 30)
+
+            with open(onnx_file, 'rb') as f:
+                if not parser.parse(f.read()):
+                    error_str = ""
+                    for error in range(parser.num_errors):
+                        error_str+=str(parser.get_error(error))
+                        # print(parser.get_error(error))
+                    # exit(1)
+                    raise RuntimeError(error_str)
+            self.engine = builder.build_engine(network,config) 
+            
+            if(self.engine == None):
+                raise RuntimeError("Engine is not initialized from file: "+os.path.join(onnx_file))
+            
+            self.get_logger().info('Saving serialized engine for faster future loads.')
+            with open(engine_file, 'wb') as f:
+                f.write(self.engine.serialize())
+
+        self.trt_context = self.engine.create_execution_context()
+
+        self.output_shape = None
+        for binding in self.engine:
+            if self.engine.binding_is_input(binding):
+                input_shape = self.engine.get_binding_shape(binding)
+                input_size = trt.volume(input_shape) * self.engine.max_batch_size * np.dtype(np.float16).itemsize  # in bytes
+            else:
+                self.output_shape = self.engine.get_binding_shape(binding)
+
+        self.confidence_thresh = .5
+        self.iou_thresh = .45
+        self.max_detections = 100
+
+        self.device_output = torch.zeros(tuple(self.output_shape), device="cuda:0",dtype=torch.float16)
+
+        self.get_logger().info('Model initialized | visualizing = %s' % (str(self.vis)))
 
         if(self.vis):
             matplotlib.use("TKAgg")
@@ -127,6 +175,33 @@ class ObjectRecognitionNode(Node):
             self.counter = 0
 
     # function to process data this class subscribes to
+    def nms(self,pred):
+
+        #multiply class predictions by scores
+        pred[:, 5:] *= pred[:, 4:5]
+
+        #chance anchor point to corner rather than center
+        boxes =  pred[:,0:4]
+        boxes[:, 0] -= boxes[:, 2]/2
+        boxes[:, 1] -= boxes[:, 3]/2
+        boxes[:, 2] += boxes[:, 0]
+        boxes[:, 3] += boxes[:, 1]
+
+        #get the confidence and class id
+        scores,class_id = pred[:, 5:].max(1, keepdims=False)
+
+        boxes = boxes[scores>self.confidence_thresh,:]
+        class_id = class_id[scores>self.confidence_thresh]
+        scores = scores[scores>self.confidence_thresh]
+
+        #have torchvision to nms
+        res = ops.batched_nms(boxes=boxes, scores=scores, idxs=class_id, iou_threshold=self.iou_thresh)
+
+        if(res.shape[0]>self.max_detections):
+            res = res[:self.max_detections]
+
+        return boxes[res,:],scores[res],class_id[res]
+
 
     def state_callback(self, msg):
         # self.get_logger().info("Received '%s'" % msg)
@@ -141,37 +216,46 @@ class ObjectRecognitionNode(Node):
         
         h = self.image.height
         w = self.image.width
-        # self.get_logger().info("Image msg data: {} x {}".format(w,h))
-        x = np.asarray(self.image.data).reshape(
+
+        img = np.asarray(self.image.data).reshape(
             h, w, -1).astype(np.float32) / 255.0
-
-        x = np.flip(x,axis=0).copy()
-
         if self.image.encoding == "bgr8":
-            x = np.flip(x[:,:,0:3],axis=2).copy()
+            img = np.flip(img[:,:,0:3],axis=2)
+        img = img[:704,:,0:3]
+        device_input = torch.from_numpy(img).cuda().half().permute(2,0,1).unsqueeze(0)
 
-        torch_img = None 
-        if torch.cuda.is_available():
-            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).half().to(self.device)
-        else:
-            torch_img = torch.from_numpy(x.transpose(2, 0, 1)[0:3, :, :]).to(self.device)
+        # img = torch.HalfTensor(self.image.data).reshape(h, w, -1) / 255.0
+        # if self.image.encoding == "bgr8":
+        #     img = img.flip([2])
+        # img = img.cuda()
+        # img = img[720-704:,:,0:3]
+        # device_input = img.permute(2,0,1).unsqueeze(0) 
+                
+        device_input = device_input.contiguous()
+
+        t1 = time.time()
+
+        self.trt_context.execute_v2(bindings=[device_input.data_ptr(), self.device_output.data_ptr()])
+
+        boxes,scores,class_id = self.nms(self.device_output[0,:,:])
+
+        self.boxes = boxes.cpu().numpy()
+        self.scores = scores.cpu().numpy()
+        self.labels = class_id.cpu().numpy()
+
+        t2 = time.time()
 
         if self.vis:
             if self.im_show == None:
-                self.im_show = self.ax.imshow(x)
+                self.im_show = self.ax.imshow(img.astype(np.float32))
             else:
-                self.im_show.set_data(x)
-        t1 = time.time()
+                self.im_show.set_data(img.astype(np.float32))
 
-        # self.get_logger().warn(torch_img)
-        self.prediction = self.model.predict([torch_img])[0]
-
-        t2 = time.time()
         t = self.get_clock().now()
         # t_msg = self.get_clock().now()
         t_msg = rclpy.time.Time.from_msg(self.image.header.stamp)
         collection_to_perception = (t.nanoseconds - t_msg.nanoseconds) / 1e9
-        self.get_logger().info('Inference= %s, Col2Perc= %s, ID= %s' % ("{:.4f}".format(t2-t1),"{:.4f}".format(collection_to_perception),self.image.header.frame_id))
+        self.get_logger().info('Prep= %s, Inference= %s, Col2Perc= %s, ID= %s' % ("{:.4f}".format(t1-t0),"{:.4f}".format(t2-t1),"{:.4f}".format(collection_to_perception),self.image.header.frame_id))
 
 
     def estimate_cone_distance(self, rectangle):
@@ -191,7 +275,6 @@ class ObjectRecognitionNode(Node):
 
         direction = np.array([1,pt_x*h_factor,pt_y*h_factor])
         direction = direction / np.linalg.norm(direction)
-
 
         return direction
 
@@ -223,10 +306,6 @@ class ObjectRecognitionNode(Node):
             return
         msg = ObjectArray()
 
-        boxes = self.prediction['boxes'].detach().cpu().numpy()
-        labels = self.prediction['labels'].detach().cpu().numpy()
-        scores = self.prediction['scores'].detach().cpu().numpy()
-        
         t0 = time.time()
 
         #clear old rectangles
@@ -235,26 +314,26 @@ class ObjectRecognitionNode(Node):
             self.patches.clear()
             self.ax.texts.clear()
 
-        for b in range(boxes.shape[0]):    
-            if(scores[b] > self.threshold and labels[b]>0):
-                obj = Object()
+        # self.get_logger().info('Detected %s cones' % len(self.boxes)) 
+        
+        for b,box in enumerate(self.boxes):
+            position = self.calculate_position_from_box(box.astype(np.float64))
+            obj = Object()
+            obj.pose.position.x = position[0]
+            obj.pose.position.y = position[1]
+            obj.pose.position.z = position[2]
+            obj.classification.classification = int(self.labels[b])+1
+            msg.objects.append(obj)
 
-                position = self.calculate_position_from_box(boxes[b, :].astype(np.float64))
-                obj.pose.position.x = position[0]
-                obj.pose.position.y = position[1]
-                obj.pose.position.z = position[2]
-                obj.classification.classification = int(labels[b])
-                msg.objects.append(obj)
-                
-                if(self.vis):
-                    color = 'r' if int(labels[b])==1 else 'g'
-                    rect = patches.Rectangle((boxes[b, 0], boxes[b, 1]), boxes[b, 2]-boxes[b, 0], boxes[b, 3]-boxes[b,1], linewidth=1, edgecolor=color, facecolor='none')
-                    self.ax.add_patch(rect)
-                    self.patches.append(rect)
-
-                    self.ax.text(boxes[b, 0], boxes[b, 1], "{:.2f}".format(scores[b]), fontsize=8)
-                    self.ax.text(boxes[b, 0], boxes[b, 3], "{:.2f},{:.2f},{:.2f}".format(
-                        position[0],position[1],position[2]), fontsize=8)
+            if(self.vis):
+                color = 'r' if self.labels[b] == 0 else 'g'
+                x = box[0] #- box[2]/2
+                y = box[1]# - box[3]/2
+                w = box[2] - box[0]
+                h = box[3] - box[1]
+                rect = patches.Rectangle((x,y), w,h, linewidth=1, edgecolor=color, facecolor='none')
+                self.ax.add_patch(rect)
+                self.patches.append(rect)
 
         if(self.vis):
             plt.draw()
@@ -262,13 +341,12 @@ class ObjectRecognitionNode(Node):
             self.counter += 1
 
         t1 = time.time()    
-        # self.get_logger().info('Displaying Time = %s' % str(t1-t0))
 
         self.pub_objects.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
-    recognition = ObjectRecognitionNode()
+    recognition = YOLODetectionNode()
     rclpy.spin(recognition)
     recognition.destroy_node()
     rclpy.shutdown()

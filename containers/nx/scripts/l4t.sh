@@ -4,15 +4,14 @@
 
 DEBIAN_FRONTEND=noninteractive
 
-L4T_RELEASE_MAJOR=32.6
-L4T_RELEASE_MINOR=1
-CUDA=10.2
-SOC="t194"
-
-L4T_RELEASE=$L4T_RELEASE_MAJOR.$L4T_RELEASE_MINOR
+export L4T_RELEASE_MAJOR=34.1
+export L4T_RELEASE_MINOR=1
+export CUDA=11.4
+export SOC="t194"
+export L4T_RELEASE=$L4T_RELEASE_MAJOR.$L4T_RELEASE_MINOR
 
 apt-get update && \
-    apt-get install -y --no-install-recommends apt-utils software-properties-common && \
+    apt-get install -y --no-install-recommends apt-utils software-properties-common wget && \
     apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
@@ -24,10 +23,28 @@ echo $L4T_RELEASE_MAJOR
 wget https://repo.download.nvidia.com/jetson/jetson-ota-public.asc -O /etc/apt/trusted.gpg.d/jetson-ota-public.asc
 chmod 644 /etc/apt/trusted.gpg.d/jetson-ota-public.asc && \
     apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
-    echo "deb https://repo.download.nvidia.com/jetson/common r$L4T_RELEASE_MAJOR main" > /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
+    echo "deb https://repo.download.nvidia.com/jetson/common r$L4T_RELEASE_MAJOR main" >> /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
     echo "deb https://repo.download.nvidia.com/jetson/${SOC} r$L4T_RELEASE_MAJOR main" >> /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
+
+# cuda tools setup
+apt update && apt install -y libopenblas-dev cuda-tools-11-4
+
+#tensorrt setup
+apt update && apt install -y tensorrt python3-libnvinfer-dev 
+
+#torch for cuda 11.4, python3.8
+# apt install -y libcurand-dev-11-4 libcufft-dev-11-4
+# wget https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+# wget https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+pip uninstall -y torch
+pip uninstall -y torchvision
+# pip install torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+pip install /tmp/scripts/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+pip install /tmp/scripts/pytorch/torchvision-0.13.0-cp38-cp38-linux_aarch64.whl
+
+# pip install torchvision==0.13.0
 
 #
 # Tegra setup
