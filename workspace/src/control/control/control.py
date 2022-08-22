@@ -143,6 +143,8 @@ class ControlNode(Node):
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
+        # msg.header = self.get_clock().now().to_msg()
+        # print(msg.header)
         self.pub_vehicle_cmd.publish(msg)
         
 

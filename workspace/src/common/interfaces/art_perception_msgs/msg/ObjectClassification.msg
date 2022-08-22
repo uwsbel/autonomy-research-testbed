@@ -1,3 +1,6 @@
+# Used for timestamps
+std_msgs/Header header
+
 # This message defines an object classification
 
 # Value between 0 and 1 defining the percent confidence of the detection

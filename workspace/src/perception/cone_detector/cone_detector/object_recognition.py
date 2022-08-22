@@ -263,7 +263,7 @@ class ObjectRecognitionNode(Node):
 
         t1 = time.time()    
         # self.get_logger().info('Displaying Time = %s' % str(t1-t0))
-
+        msg.header = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)
 
 def main(args=None):
