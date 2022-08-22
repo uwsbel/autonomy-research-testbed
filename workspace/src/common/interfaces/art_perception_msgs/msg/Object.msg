@@ -1,3 +1,6 @@
+# Used for timestamps
+std_msgs/Header header
+
 #	This message defines an "Object"
 #
 # An "Object" is defined as a detected, and possibly further classified, entity of interest
