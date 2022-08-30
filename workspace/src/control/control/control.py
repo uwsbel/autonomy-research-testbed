@@ -71,6 +71,7 @@ class ControlNode(Node):
         self.throttle_gain = self.get_parameter('throttle_gain').get_parameter_value().double_value
 
         self.declare_parameter("use_sim_msg", False)
+        global use_sim_msg
         use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
 
         if(self.file == ""):
@@ -143,8 +144,10 @@ class ControlNode(Node):
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
-        # msg.header = self.get_clock().now().to_msg()
-        # print(msg.header)
+
+        # add header timestamps
+        if not use_sim_msg:
+            msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_vehicle_cmd.publish(msg)
         
 
