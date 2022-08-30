@@ -71,8 +71,7 @@ class ControlNode(Node):
         self.throttle_gain = self.get_parameter('throttle_gain').get_parameter_value().double_value
 
         self.declare_parameter("use_sim_msg", False)
-        global use_sim_msg
-        use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
+        self.use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
 
         if(self.file == ""):
             self.mode = "PID"
@@ -87,7 +86,7 @@ class ControlNode(Node):
         # data that will be used by this class
         self.state = ""
         self.path = Path()
-        if use_sim_msg:
+        if self.use_sim_msg:
             global VehicleInput
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
         else:
@@ -145,9 +144,9 @@ class ControlNode(Node):
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
 
-        # add header timestamps
-        if not use_sim_msg:
+        if not self.use_sim_msg:
             msg.header.stamp = self.get_clock().now().to_msg()
+
         self.pub_vehicle_cmd.publish(msg)
         
 
