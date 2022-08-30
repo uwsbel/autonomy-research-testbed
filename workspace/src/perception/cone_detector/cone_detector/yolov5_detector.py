@@ -341,7 +341,7 @@ class YOLODetectionNode(Node):
             self.counter += 1
 
         t1 = time.time()    
-
+        msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)
 
 def main(args=None):
