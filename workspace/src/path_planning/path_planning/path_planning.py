@@ -223,6 +223,7 @@ class PathPlanningNode(Node):
         pt = PoseStamped()
         pt.pose.position.x = target_pt[0]
         pt.pose.position.y = target_pt[1]
+        msg.header.stamp = self.get_clock().now().to_msg()
         msg.poses.append(pt)
         self.pub_path.publish(msg)
 
