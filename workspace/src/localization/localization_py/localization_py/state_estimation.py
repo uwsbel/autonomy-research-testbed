@@ -80,7 +80,6 @@ class StateEstimationNode(Node):
         self.z_accel = 0
 
 
-
         #time between imu updates, sec
         self.dt_imu = .1
 
@@ -177,10 +176,10 @@ class StateEstimationNode(Node):
         #TODO: is this right?
         msg.pose.position.x = float(self.kfx)
         msg.pose.position.y = float(self.kfy)
+
+        # add header timestamps
         msg.header.stamp = self.get_clock().now().to_msg()
-        # print(msg.header)
         self.pub_objects.publish(msg)
-        self.get_logger().info(str(msg.header.stamp))
     def KFstep(self):
         self.kf_x.update(self.x*self.kf_data_multiplier)
         self.kf_y.update(self.y*self.kf_data_multiplier)
