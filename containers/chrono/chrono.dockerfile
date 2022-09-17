@@ -11,6 +11,8 @@ ARG USERSHELL=bash
 ARG USERSHELLPATH="/bin/${USERSHELL}"
 ARG USERSHELLPROFILE="$USERHOME/.${USERSHELL}rc"
 
+ARG CONTAINERNAME="chrono"
+
 # Check for updates
 RUN apt update && apt upgrade -y && apt install sudo -y
 
@@ -56,6 +58,15 @@ RUN if [ -n "$PIP_DEPENDENCIES" ]; then \
 # Clean up conda
 RUN conda clean -a -y
 
+# Run any user scripts
+# Should be used to install additional packages or customize the shell
+# Files in scripts should be executable (chmod +x) or else they may not run
+# note I added this from the file below
+#ARG SCRIPTS_DIR="containers/${CONTAINERNAME}/scripts"
+#COPY $SCRIPTS_DIR tmp/scripts/
+#RUN apt-get update && for f in /tmp/scripts/*; do [ -x $f ] && [ -f $f ] && $f || continue; done
+# RUN rm -rf /tmp/scripts
+
 # Default bash config
 RUN if [ "$USERSHELL" = "bash" ]; then \
 			echo 'export TERM=xterm-256color' >> $USERSHELLPROFILE; \ 
@@ -69,3 +80,36 @@ ENV USERSHELLPATH=$USERSHELLPATH
 ENV USERSHELLPROFILE=$USERSHELLPROFILE
 
 CMD $USERSHELLPATH
+
+# Build the pychrono install
+RUN wget https://uwmadison.box.com/shared/static/jw3wa5a219nngqzuljtc3ovcr8m5kj7q.sh -O optix75.sh
+RUN chmod +x optix75.sh
+RUN mkdir /opt/optix75
+RUN ./optix75.sh --prefix=/opt/optix75 --skip-license
+RUN rm optix75.sh
+RUN git clone https://github.com/projectchrono/chrono.git -b feature/sensor
+RUN mkdir chrono/build
+RUN cd chrono/build && cmake ../ -G Ninja \
+ -DCMAKE_BUILD_TYPE=Release \
+ -DBUILD_BENCHMARKING=OFF \
+ -DBUILD_DEMOS=OFF \
+ -DBUILD_TESTING=OFF \
+ -DENABLE_MODULE_IRRLICHT=ON \
+ -DENABLE_MODULE_POSTPROCESS=ON \
+ -DENABLE_MODULE_PYTHON=ON \
+ -DENABLE_MODULE_SENSOR=ON \
+ -DENABLE_OPENMP=ON \
+ -DEigen3_DIR=/usr/lib/cmake/eigen3 \
+ -DOptiX_INCLUDE=/opt/optix75/include \
+ -DOptiX_INSTALL_DIR=/opt/optix75 \
+ -DNUMPY_INCLUDE_DIR=/usr/lib/python3/dist-packages/numpy/core/include \
+ && ninja && sudo ninja install
+RUN export PYTHONPATH=/home/art/chrono/build/bin
+
+# run the pychrono build
+#COPY entrypoint.sh /
+#CMD ["/entrypoint.sh"]
+#RUN /entrypoint.sh
+
+
+
