@@ -138,7 +138,7 @@ services:
         APT_DEPENDENCIES: "libirrlicht-dev libnvidia-gl-495 libeigen3-dev cmake cmake-curses-gui libglu1-mesa-dev freeglut3-dev mesa-common-dev wget swig libglfw3 libglfw3-dev x11proto-gl-dev glew-utils git libxxf86vm-dev libglew-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
         CONDA_CHANNELS: "anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip cudatoolkit anaconda-client conda-build"
-        PIP_DEPENDENCIES: ""
+        PIP_DEPENDENCIES: "numpy"
     environment:
       USER_UID: "@{uid}"
       USER_GID: "@{gid}"
@@ -150,17 +150,35 @@ services:
     volumes: 
       - "@{project_root}:/home/@{container_username}/@{project}"
     tty: true
-  chrono-conda:
-    image: "atk/@{project}:chrono-conda"
+  pip-pychrono:
+    image: "atk/@{project}:pip-pychrono"
+    hostname: "@{project}-pip-pychrono"
+    container_name: "@{project}-pip-pychrono"
     build:
-      context: ./containers/chrono-conda
-      dockerfile: ./chrono-conda.dockerfile
+      context: ./containers/pip-pychrono
+      dockerfile: ./pip-pychrono.dockerfile
       network: "host"
       args:
-        APT_DEPENDENCIES: "libirrlicht-dev vim ccache libeigen3-dev xorg xauth libxxf86vm-dev freeglut3-dev openbox libglfw3-dev"
-        CONDA_CHANNELS: "anaconda conda-forge"
+        USERNAME: "@{project}"
+        USERHOME: "/home/@{container_username}"
+        USERSHELL: "bash"
+        USERSHELLPATH: "/bin/bash"
+        USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
+        APT_DEPENDENCIES: "libirrlicht-dev libnvidia-gl-495"
+        CONDA_CHANNELS: "aryoung5 anaconda conda-forge"
         CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
-        PIP_DEPENDENCIES: ""
+        PIP_DEPENDENCIES: "numpy"
+    environment:
+      USER_UID: "@{uid}"
+      USER_GID: "@{gid}"
+      NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "all"
+    ports:
+      - "50000:50000"
+    working_dir: "/home/@{container_username}/@{project}/sim"
+    volumes: 
+      - "@{project_root}:/home/@{container_username}/@{project}"
+    tty: true
 networks:
   default:
     name: "@{project}"
