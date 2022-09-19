@@ -107,10 +107,3 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  && ninja && sudo ninja install
 RUN export PYTHONPATH=/home/art/chrono/build/bin
 
-# run the pychrono build
-#COPY entrypoint.sh /
-#CMD ["/entrypoint.sh"]
-#RUN /entrypoint.sh
-
-
-
