@@ -10,6 +10,7 @@ ARG USERHOME="/home/$USERNAME"
 ARG USERSHELL=bash
 ARG USERSHELLPATH="/bin/${USERSHELL}"
 ARG USERSHELLPROFILE="$USERHOME/.${USERSHELL}rc"
+ARG PYTHONINSTALLPATH="/home/art/chrono/build/bin"
 
 ARG CONTAINERNAME="chrono"
 
@@ -78,6 +79,7 @@ WORKDIR $USERHOME
 ENV HOME=$USERHOME
 ENV USERSHELLPATH=$USERSHELLPATH
 ENV USERSHELLPROFILE=$USERSHELLPROFILE
+ENV PYTHONPATH=$PYTHONINSTALLPATH
 
 CMD $USERSHELLPATH
 
@@ -105,5 +107,4 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  -DOptiX_INSTALL_DIR=/opt/optix75 \
  -DNUMPY_INCLUDE_DIR=/usr/lib/python3/dist-packages/numpy/core/include \
  && ninja && sudo ninja install
-RUN export PYTHONPATH=/home/art/chrono/build/bin
 
