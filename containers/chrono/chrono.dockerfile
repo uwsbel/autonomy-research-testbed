@@ -99,6 +99,7 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  -DENABLE_MODULE_PYTHON=ON \
  -DENABLE_MODULE_SENSOR=ON \
  -DENABLE_OPENMP=ON \
+ -DENABLE_MODULE_VEHICLE=ON \
  -DEigen3_DIR=/usr/lib/cmake/eigen3 \
  -DOptiX_INCLUDE=/opt/optix75/include \
  -DOptiX_INSTALL_DIR=/opt/optix75 \
