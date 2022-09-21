@@ -89,7 +89,7 @@ RUN chmod +x optix75.sh
 RUN mkdir /opt/optix75
 RUN ./optix75.sh --prefix=/opt/optix75 --skip-license
 RUN rm optix75.sh
-RUN git clone https://github.com/projectchrono/chrono.git -b feature/sensor
+RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
 RUN mkdir chrono/build
 RUN cd chrono/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
