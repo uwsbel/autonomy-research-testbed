@@ -84,7 +84,7 @@ ENV PYTHONPATH=$PYTHONINSTALLPATH
 CMD $USERSHELLPATH
 
 # Build the pychrono install
-RUN git clone https://github.com/projectchrono/chrono.git -b feature/sensor
+RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
 RUN mkdir chrono/build
 RUN cd chrono/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
