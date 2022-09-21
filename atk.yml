@@ -32,9 +32,9 @@ custom_cli_arguments:
   optix:
     argparse:
       required: true
-    chrono-conda:
+    chrono:
       volumes:
-        - "@{optix}:/opt/optix-7.2"
+        - "@{optix}:/opt/optix75"
   singularity:
     argparse:
       action: 'store_true'
