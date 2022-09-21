@@ -84,7 +84,7 @@ ENV PYTHONPATH=$PYTHONINSTALLPATH
 CMD $USERSHELLPATH
 
 # Build the pychrono install
-RUN wget https://uwmadison.box.com/shared/static/jw3wa5a219nngqzuljtc3ovcr8m5kj7q.sh -O optix75.sh
+RUN wget https://uwmadison.box.com/shared/static/97fkm979iuccls990ottx5g5bpva8pwe.sh -O optix75.sh
 RUN chmod +x optix75.sh
 RUN mkdir /opt/optix75
 RUN ./optix75.sh --prefix=/opt/optix75 --skip-license
