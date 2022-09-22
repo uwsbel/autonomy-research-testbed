@@ -182,8 +182,8 @@ def main():
     
     def AddRandomCones(count, filename, class_id=1):
         mmesh = chrono.ChTriangleMeshConnected()
-        mmesh.SetLoadWavefrontMesh(filename, False, True)  
-        mmesh.SetTransform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33(1)) 
+        mmesh.LoadWavefrontMesh(filename, False, True)  
+        mmesh.Transform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33D(1)) 
         for i in range(count):
             # Generate a random position
             x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
@@ -199,7 +199,7 @@ def main():
 
             mesh_body = chrono.ChBody()
             mesh_body.SetPos(pos)
-            mesh_body.SetRot(chrono.ChQuaternion(1, 0, 0, 0))
+            mesh_body.SetRot(chrono.ChQuaternionD(1, 0, 0, 0))
             mesh_body.AddAsset(trimesh_shape)
             mesh_body.SetBodyFixed(True)
             vehicle.GetSystem().Add(mesh_body)
@@ -346,8 +346,8 @@ def main():
     if cones_from_file:
         AddConesFromFile()
     else:
-        AddRandomCones(num_cones / 2, chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), 2)
-        AddRandomCones(num_cones / 2, chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), 1)
+        AddRandomCones(int(num_cones / 2), chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), 2)
+        AddRandomCones(int(num_cones / 2), chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), 1)
 
     # === create sensors ===
     manager = sens.ChSensorManager(vehicle.GetSystem())
