@@ -367,6 +367,17 @@ def main():
     camera.SetCollectionWindow(c_window)
     # camera.SetLag(.5)
 
+    lidar = sens.ChLidarSensor(
+                vehicle.GetChassisBody(), # body camera is attached to
+                frame_rate,                 # update rate in Hz
+                camera_pose,                # offset pose
+                width,                      # image width
+                height,                     # image height
+                fov,                        # FOV
+                2,
+                sens.RADIAL
+    )
+
     if vis:
         camera.PushFilter(sens.ChFilterVisualize(640, 360))
 
