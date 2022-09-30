@@ -404,6 +404,21 @@ def main():
         camera2.PushFilter(sens.ChFilterSave(sensor_data_dir + "cam2/"))
     manager.AddSensor(camera2)
 
+    
+    lidar = sens.ChLidarSensor(
+                vehicle.GetChassisBody(), # body camera is attached to
+                frame_rate,                 # update rate in Hz
+                camera_pose,                # offset pose
+                900,                      # image width
+                30,                     # image height
+                3.14,                        # FOV
+                0.3,
+                - 0.3,
+                100
+    )
+    lidar.SetName("Lidar")
+    manager.AddSensor(lidar)
+
 
     noise_model = sens.ChNoiseNone()
     imu_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
@@ -449,6 +464,9 @@ def main():
 
     cam_generator = ChCameraSensor_DataGeneratorFunctor("~/output/camera/front_facing_camera", camera)
     driver.AddDataGenerator(cam_generator, frame_rate)
+
+    # lidar_generator = ChLidarSensor_DataGeneratorFunctor("~/output/lidar", lidar)
+    # driver.AddDataGenerator(lidar_generator, frame_rate)
 
     acc_generator = ChAccelerometerSensor_DataGeneratorFunctor("~/output/accelerometer/data", acc)
     driver.AddDataGenerator(acc_generator, 100)
