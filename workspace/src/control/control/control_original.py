@@ -28,40 +28,18 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-
-#// =============================================================================
-#// Authors: Asher Elmquist, Harry Zhang
-#// =============================================================================
-
 import rclpy
 from rclpy.node import Node
 from art_msgs.msg import VehicleState
-from chrono_ros_msgs.msg import ChVehicle
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
 import os
-# os.system("python3 template_model.py")
-# os.system("python3 template_mpc.py")
-###---
-##newly added to do mpc project
-from casadi import *
-from casadi.tools import *
-import sys
-sys.path.append('/home/art/art/workspace/src/control/control')
-#from test_pid_vel_control import speed_control
-# from mpc_osqp import mpc_osqp_solver
-# from mpc_cvxpy import mpc_cvxpy_solver
-from mpc_cvxpy_v2 import mpc_cvxpy_solver_v2
-from mpc_osqp_v2 import mpc_osqp_solver_v2
-###---
-
-
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
-recording_state = np.array([])
+
 class ControlNode(Node):
     def __init__(self):
         super().__init__('control_node')
@@ -72,8 +50,9 @@ class ControlNode(Node):
         self.mode = "PID"  # "PID", "File"
         self.file = ""
         self.recorded_inputs = np.array([])
+
         # update frequency of this node
-        self.freq = 50.0
+        self.freq = 10.0
 
         self.t_start = self.get_clock().now().nanoseconds / 1e9
 
@@ -92,7 +71,7 @@ class ControlNode(Node):
         self.throttle_gain = self.get_parameter('throttle_gain').get_parameter_value().double_value
 
         self.declare_parameter("use_sim_msg", False)
-        use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
+        self.use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
 
         if(self.file == ""):
             self.mode = "PID"
@@ -101,13 +80,13 @@ class ControlNode(Node):
             self.recorded_inputs = np.loadtxt(file_path, delimiter=',')
 
         self.steering = 0.0
-        self.throttle = 0.0 #testing purpose
+        self.throttle = 0.0
         self.braking = 0.0
 
         # data that will be used by this class
-        self.state = ChVehicle()
+        self.state = ""
         self.path = Path()
-        if use_sim_msg:
+        if self.use_sim_msg:
             global VehicleInput
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
         else:
@@ -123,14 +102,13 @@ class ControlNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_path = self.create_subscription(Path, '~/input/path', self.path_callback, qos_profile)
-        #self.sub_state = self.create_subscription(ChVehicle, '~/input/vehicle_state', self.state_callback, qos_profile)
-        self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
-        #self.get_logger().info("Received '%s'" % msg)
+        # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
 
     def path_callback(self, msg):
@@ -148,87 +126,27 @@ class ControlNode(Node):
         if(self.mode == "File"):
             self.calc_inputs_from_file()
         elif(self.mode == "PID" and len(self.path.poses)>0):
-            pt = [self.path.poses[0].pose.position.x,self.path.poses[0].pose.position.y] #target
-            #pos = [self.state.position.x,self.state.position.y,self.state.orientation.z]
-            vel = [self.state.twist.linear.x,self.state.twist.linear.y]
+            pt = [self.path.poses[0].pose.position.x,self.path.poses[0].pose.position.y]
             
-            #recording_state = np.append(recording_state,self.state.pose.linear.x,self.state.pose.linear.y)
-            #---old pid code
-            #ratio = pt[1] / pt[0]
-            #self.steering = self.steering_gain * ratio
+            ratio = pt[1] / pt[0]
+            self.steering = self.steering_gain * ratio
             # self.get_logger().info('Target steering = %s' % self.steering)
-            #---ode pid code 
-            
-            #newly added mpc code---version1 do-mpc solver---
-            #model = template_model()
-            #xref = pt[0]
-            #yref = pt[1]
-            #mpc = template_mpc(model,xref,yref)
-            #x0 = 0
-            #0 = 0
-            #theta0 = 0
-            #xini = np.array([x0, y0, theta0])
-            #mpc.x0 = xini
-            #mpc.set_initial_guess()
-            #u0 = np.zeros([2,1])
-            #u0 = mpc.make_step(xini)
-            #steer_coeff = 1.25
-            #max_steering = 0.5236
-            #version 1 do-mpc solver ends here
 
-            #newly added mpc code---version2 cvxpy_mpc and osqp_mpc solver---
-            
-            solver_mode = 4 # mode 1 ---cvxpy;  mode 2 ---osqp # mode 3 ---cvxpy_v2; 
-
-            xref = pt[0]
-            yref = pt[1]
-            u0 = [self.throttle,self.steering]
-            #calculate velocity from subscribed messages
-            xvel = vel[0]
-            yvel = vel[1]
-            #vel = np.sqrt(xvel*xvel+yvel*yvel)-2.2
-            velo = np.sqrt(xvel*xvel+yvel*yvel)
-
-            if solver_mode == 1:
-                u_desire = mpc_cvxpy_solver(xref,yref)
-            if solver_mode == 2:
-                u_desire = mpc_osqp_solver(xref,yref)
-            if solver_mode ==3:
-                u0 = mpc_cvxpy_solver_v2(xref,yref,velo,u0)
-            if solver_mode == 4:
-                u0 = mpc_osqp_solver_v2(xref,yref,velo,u0)
-
-
-            steer_coeff = 1.4
-            #u_cur = speed_control(u_desire[0],vel)
-            self.throttle = u0[0]
-            #self.breaking = u0[1]
-            self.steering = u0[1]*steer_coeff
-            self.get_logger().info(' vel = %s' % velo)
-            #self.get_logger().info(' desired_u = %s' % u0)
-            #self.get_logger().info(' steering = %s' % self.steering)
-            #self.get_logger().info('throttle = %s' % self.throttle)
-            # if abs(self.steering) > steer_coeff*max_steering*0.8:
-            #     self.braking = 0.05
-            # if abs(self.steering) < steer_coeff*max_steering*0.8:
-            #     self.braking = 0.0
-            # old_range = 0.5236*2
-            # new_range = 2
-            # self.steering = ((self.steering+0.5236)*new_range/old_range)-1
-            #self.throttle = 0.0  ##for testing purpose
-            
-            
         #for circle
         #self.steering = -0.5
 
         #TODO: remove after debugging
         # self.steering = 0.0
-        #self.throttle = self.throttle_gain*0.55 #only doing lateral conmtrol for now
+        self.throttle = self.throttle_gain*0.55 #only doing lateral conmtrol for now
         # self.braking = 0.0
 
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
+
+        if not self.use_sim_msg:
+            msg.header.stamp = self.get_clock().now().to_msg()
+
         self.pub_vehicle_cmd.publish(msg)
         
 
@@ -250,9 +168,7 @@ def main(args=None):
 
     control.destroy_node()
     rclpy.shutdown()
-    recording_state.tofile('state_record.csv',sep=',',format = '%10.5f')
+
 
 if __name__ == '__main__':
     main()
-# else:
-#     recording_state.tofile('state_record.csv',sep=',',format = '%10.5f')
