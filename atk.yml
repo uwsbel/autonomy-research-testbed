@@ -29,12 +29,6 @@ custom_cli_arguments:
       action: 'store_true'
     all:
       network_mode: "host"
-  optix:
-    argparse:
-      required: true
-    chrono:
-      volumes:
-        - "@{optix}:/opt/optix75"
   singularity:
     argparse:
       action: 'store_true'
@@ -135,9 +129,7 @@ services:
         USERSHELL: "bash"
         USERSHELLPATH: "/bin/bash"
         USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
-        APT_DEPENDENCIES: "libirrlicht-dev libnvidia-gl-515 libeigen3-dev cmake cmake-curses-gui libglu1-mesa-dev freeglut3-dev mesa-common-dev wget swig libglfw3 libglfw3-dev x11proto-gl-dev glew-utils git libxxf86vm-dev libglew-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
-        CONDA_CHANNELS: "anaconda conda-forge"
-        CONDA_DEPENDENCIES: "python=3.8.12 pip cudatoolkit anaconda-client conda-build"
+        APT_DEPENDENCIES: "python3.8 python3.8-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev cmake cmake-curses-gui libglu1-mesa-dev freeglut3-dev mesa-common-dev wget swig libglfw3 libglfw3-dev x11proto-gl-dev glew-utils git libxxf86vm-dev libglew-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
         PIP_DEPENDENCIES: "numpy"
     environment:
       USER_UID: "@{uid}"
