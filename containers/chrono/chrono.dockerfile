@@ -29,35 +29,36 @@ RUN apt update && apt install -y wget $APT_DEPENDENCIES
 # Clean up to reduce image size
 RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
+
 USER $USERNAME
 RUN sudo chown -R $USERNAME:$USERNAME /opt
 
 # Install miniconda
-ENV CONDA_DIR /opt/conda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
-    	/bin/bash /tmp/miniconda.sh -b -p /opt/conda && \
-			rm -rf /tmp/miniconda.sh	
+#ENV CONDA_DIR /opt/conda
+#RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+#    	/bin/bash /tmp/miniconda.sh -b -p /opt/conda && \
+#			rm -rf /tmp/miniconda.sh	
 
 # Put conda in path so we can use conda activate
-ENV PATH=$CONDA_DIR/bin:$PATH
+#ENV PATH=$CONDA_DIR/bin:$PATH
 
 # Install chrono's packages
 ARG PIP_DEPENDENCIES
-ARG CONDA_DEPENDENCIES
-ARG CONDA_CHANNELS
-RUN if [ -n "$CONDA_DEPENDENCIES" ]; then \
-			for c in $CONDA_CHANNELS; do \
-				conda config --append channels $c;	\
-			done; \
-			unset CONDA_CHANNELS; \
-			conda install $CONDA_DEPENDENCIES; \
-    fi
+#ARG CONDA_DEPENDENCIES
+#ARG CONDA_CHANNELS
+#RUN if [ -n "$CONDA_DEPENDENCIES" ]; then \
+#			for c in $CONDA_CHANNELS; do \
+#				conda config --append channels $c;	\
+#			done; \
+#			unset CONDA_CHANNELS; \
+#			conda install $CONDA_DEPENDENCIES; \
+#    fi
 RUN if [ -n "$PIP_DEPENDENCIES" ]; then \
       pip install $PIP_DEPENDENCIES; \
     fi
 
 # Clean up conda
-RUN conda clean -a -y
+# RUN conda clean -a -y
 
 # Run any user scripts
 # Should be used to install additional packages or customize the shell
@@ -72,6 +73,8 @@ RUN conda clean -a -y
 RUN if [ "$USERSHELL" = "bash" ]; then \
 			echo 'export TERM=xterm-256color' >> $USERSHELLPROFILE; \ 
 			echo 'export PS1="\[\033[38;5;40m\]\h\[$(tput sgr0)\]:\[$(tput sgr0)\]\[\033[38;5;39m\]\w\[$(tput sgr0)\]\\$ \[$(tput sgr0)\]"' >> $USERSHELLPROFILE; \
+            echo 'alias python=/usr/bin/python3.8' >> $USERSHELLPROFILE; \
+            echo 'alias pip=/usr/bin/pip3' >> $USERSHELLPROFILE; \
 		fi
 
 # Set user work directory
@@ -81,11 +84,16 @@ ENV USERSHELLPATH=$USERSHELLPATH
 ENV USERSHELLPROFILE=$USERSHELLPROFILE
 ENV PYTHONPATH=$PYTHONINSTALLPATH
 
-CMD $USERSHELLPATH
-
 # Build the pychrono install
 RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
 RUN mkdir chrono/build
+
+# Move optix file into docker container
+COPY NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh ./optix75.sh
+RUN sudo chmod +x optix75.sh
+RUN sudo mkdir /opt/optix75
+RUN sudo /home/art/optix75.sh --prefix=/opt/optix75 --skip-license
+RUN rm optix75.sh
 RUN cd chrono/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
  -DBUILD_BENCHMARKING=OFF \
@@ -103,3 +111,7 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  -DNUMPY_INCLUDE_DIR=/usr/lib/python3/dist-packages/numpy/core/include \
  && ninja && sudo ninja install
 
+
+CMD $USERSHELLPATH
+
+#RUN /bootstrap.sh
