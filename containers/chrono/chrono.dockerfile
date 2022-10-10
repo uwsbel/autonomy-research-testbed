@@ -33,41 +33,13 @@ RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 USER $USERNAME
 RUN sudo chown -R $USERNAME:$USERNAME /opt
 
-# Install miniconda
-#ENV CONDA_DIR /opt/conda
-#RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
-#    	/bin/bash /tmp/miniconda.sh -b -p /opt/conda && \
-#			rm -rf /tmp/miniconda.sh	
-
-# Put conda in path so we can use conda activate
-#ENV PATH=$CONDA_DIR/bin:$PATH
-
 # Install chrono's packages
 ARG PIP_DEPENDENCIES
-#ARG CONDA_DEPENDENCIES
-#ARG CONDA_CHANNELS
-#RUN if [ -n "$CONDA_DEPENDENCIES" ]; then \
-#			for c in $CONDA_CHANNELS; do \
-#				conda config --append channels $c;	\
-#			done; \
-#			unset CONDA_CHANNELS; \
-#			conda install $CONDA_DEPENDENCIES; \
-#    fi
+
 RUN if [ -n "$PIP_DEPENDENCIES" ]; then \
       pip install $PIP_DEPENDENCIES; \
     fi
 
-# Clean up conda
-# RUN conda clean -a -y
-
-# Run any user scripts
-# Should be used to install additional packages or customize the shell
-# Files in scripts should be executable (chmod +x) or else they may not run
-# note I added this from the file below
-#ARG SCRIPTS_DIR="containers/${CONTAINERNAME}/scripts"
-#COPY $SCRIPTS_DIR tmp/scripts/
-#RUN apt-get update && for f in /tmp/scripts/*; do [ -x $f ] && [ -f $f ] && $f || continue; done
-# RUN rm -rf /tmp/scripts
 
 # Default bash config
 RUN if [ "$USERSHELL" = "bash" ]; then \
@@ -77,6 +49,14 @@ RUN if [ "$USERSHELL" = "bash" ]; then \
             echo 'alias pip=/usr/bin/pip3' >> $USERSHELLPROFILE; \
 		fi
 
+# Set user work directory
+WORKDIR $USERHOME
+ENV HOME=$USERHOME
+ENV USERSHELLPATH=$USERSHELLPATH
+ENV USERSHELLPROFILE=$USERSHELLPROFILE
+ENV PYTHONPATH=$PYTHONINSTALLPATH
+
+CMD $USERSHELLPATH
 
 # Build the pychrono install
 RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
@@ -85,8 +65,8 @@ RUN mkdir chrono/build
 # Move optix file into docker container
 COPY NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh ./optix75.sh
 RUN sudo chmod +x optix75.sh
-RUN sudo mkdir /opt/optix75
-RUN sudo /home/art/optix75.sh --prefix=/opt/optix75 --skip-license
+RUN mkdir /opt/optix75
+RUN /home/art/optix75.sh --prefix=/opt/optix75 --skip-license
 RUN rm optix75.sh
 RUN cd chrono/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
@@ -106,11 +86,3 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  && ninja && sudo ninja install
 
 
-# Set user work directory
-WORKDIR $USERHOME
-ENV HOME=$USERHOME
-ENV USERSHELLPATH=$USERSHELLPATH
-ENV USERSHELLPROFILE=$USERSHELLPROFILE
-ENV PYTHONPATH=$PYTHONINSTALLPATH
-
-CMD $USERSHELLPATH
