@@ -77,20 +77,9 @@ RUN if [ "$USERSHELL" = "bash" ]; then \
             echo 'alias pip=/usr/bin/pip3' >> $USERSHELLPROFILE; \
 		fi
 
-# Set user work directory
-WORKDIR $USERHOME
-ENV HOME=$USERHOME
-ENV USERSHELLPATH=$USERSHELLPATH
-ENV USERSHELLPROFILE=$USERSHELLPROFILE
-ENV PYTHONPATH=$PYTHONINSTALLPATH
 
 # Build the pychrono install
-RUN wget https://uwmadison.box.com/shared/static/jw3wa5a219nngqzuljtc3ovcr8m5kj7q.sh -O optix75.sh
-RUN chmod +x optix75.sh
-RUN mkdir /opt/optix75
-RUN ./optix75.sh --prefix=/opt/optix75 --skip-license
-RUN rm optix75.sh
-RUN git clone https://github.com/projectchrono/chrono.git -b feature/sensor
+RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
 RUN mkdir chrono/build
 
 # Move optix file into docker container
@@ -117,6 +106,11 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  && ninja && sudo ninja install
 
 
-CMD $USERSHELLPATH
+# Set user work directory
+WORKDIR $USERHOME
+ENV HOME=$USERHOME
+ENV USERSHELLPATH=$USERSHELLPATH
+ENV USERSHELLPROFILE=$USERSHELLPROFILE
+ENV PYTHONPATH=$PYTHONINSTALLPATH
 
-#RUN /bootstrap.sh
+CMD $USERSHELLPATH
