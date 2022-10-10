@@ -84,6 +84,11 @@ ENV PYTHONPATH=$PYTHONINSTALLPATH
 CMD $USERSHELLPATH
 
 # Build the pychrono install
+RUN wget https://uwmadison.box.com/shared/static/jw3wa5a219nngqzuljtc3ovcr8m5kj7q.sh -O optix75.sh
+RUN chmod +x optix75.sh
+RUN mkdir /opt/optix75
+RUN ./optix75.sh --prefix=/opt/optix75 --skip-license
+RUN rm optix75.sh
 RUN git clone https://github.com/projectchrono/chrono.git -b feature/sensor
 RUN mkdir chrono/build
 RUN cd chrono/build && cmake ../ -G Ninja \
