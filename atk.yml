@@ -129,8 +129,8 @@ services:
         USERSHELL: "bash"
         USERSHELLPATH: "/bin/bash"
         USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
-        APT_DEPENDENCIES: "python3.8 python3.8-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev cmake cmake-curses-gui libglu1-mesa-dev freeglut3-dev mesa-common-dev wget swig libglfw3 libglfw3-dev x11proto-gl-dev glew-utils git libxxf86vm-dev libglew-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
-        PIP_DEPENDENCIES: "numpy"
+        APT_DEPENDENCIES: "python3.8 python3.8-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev git cmake cmake-curses-gui libglu1-mesa-dev mesa-common-dev swig freeglut3-dev libglfw3 libglfw3-dev x11proto-gl-dev libxxf86vm-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
+        PIP_DEPENDENCIES: ""
     environment:
       USER_UID: "@{uid}"
       USER_GID: "@{gid}"
