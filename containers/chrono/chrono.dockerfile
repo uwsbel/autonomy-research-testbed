@@ -77,12 +77,6 @@ RUN if [ "$USERSHELL" = "bash" ]; then \
             echo 'alias pip=/usr/bin/pip3' >> $USERSHELLPROFILE; \
 		fi
 
-# Set user work directory
-WORKDIR $USERHOME
-ENV HOME=$USERHOME
-ENV USERSHELLPATH=$USERSHELLPATH
-ENV USERSHELLPROFILE=$USERSHELLPROFILE
-ENV PYTHONPATH=$PYTHONINSTALLPATH
 
 # Build the pychrono install
 RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
@@ -111,7 +105,11 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  -DNUMPY_INCLUDE_DIR=/usr/lib/python3/dist-packages/numpy/core/include \
  && ninja && sudo ninja install
 
+# Set user work directory
+WORKDIR $USERHOME
+ENV HOME=$USERHOME
+ENV USERSHELLPATH=$USERSHELLPATH
+ENV USERSHELLPROFILE=$USERSHELLPROFILE
+ENV PYTHONPATH=$PYTHONINSTALLPATH
 
 CMD $USERSHELLPATH
-
-#RUN /bootstrap.sh
