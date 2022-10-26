@@ -49,9 +49,37 @@ def generate_launch_description():
             )
         )
 
+
+
+    '''
+    Copied from the RovioNode.hpp file, does not reflect other files -- not complete
+    '''
+
+    #subscribers
+    AddLaunchArgument("input/imu", "/sensing/imu/raw")   # not sure if this is right need to find right info for imu
     AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument("output/objects", "/perception/objects")
+
+    # not sure if needed but: -- I think it is used for validation
+    AddLaunchArgument("input/Groundtruth", "/sensing/Groundtruth")
+    AddLaunchArgument("input/GroundtruthOdometry", "/sensing/GroundtruthOdometry")
+    AddLaunchArgument("input/velocity", "/sensing/veloctiy")
+
+    # AddLaunchArgument("input/vehicle_state", "/vehicle/state")
+
+    #publishers
+    AddLaunchArgument("output/Odometry", "/vio/Odometry")
+    AddLaunchArgument("output/Transform", "/vio/Transform")
+    AddLaunchArgument("output/PoseWithCovStamped", "/vio/PoseWithCovStamped")
+    AddLaunchArgument("output/pub_T_J_W_transform", "/vio/pub_T_J_W_transform")  # rename - not sure what this is
+    AddLaunchArgument("output/Pcl", "/vio/Pcl")
+    AddLaunchArgument("output/Patch", "/vio/Patch")
+    AddLaunchArgument("output/Markers", "/vio/Markers")
+    # ros::Publisher pubExtrinsics_[mtState::nCam_];  # not sure how to replace
+    AddLaunchArgument("output/ImuBias", "/vio/ImuBias")
+
+    # AddLaunchArgument("output/objects", "/perception/objects")
+
+
 
     AddLaunchArgument("use_sim_time", "False")
     AddLaunchArgument("model", "data/model_refined")
@@ -68,14 +96,30 @@ def generate_launch_description():
         executable='rovio_node',
         name='rovio_node',
         remappings=[
+            ("~/input/imu", LaunchConfiguration("input/imu")),
             ("~/input/image", LaunchConfiguration("input/image")),
-            ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
-            ("~/output/objects", LaunchConfiguration("output/objects"))
+            ("~/input/Groundtruth", LaunchConfiguration("input/Groundtruth")),
+            ("~/input/GroundtruthOdometry", LaunchConfiguration("input/GroundtruthOdometry")),
+            ("~/input/velocity", LaunchConfiguration("input/velocity")),
+            ("~/output/Odometry", LaunchConfiguration("output/Odometry")),
+            ("~/output/Transform", LaunchConfiguration("output/Transform")),
+
+            ("~/output/PoseWithCovStamped", LaunchConfiguration("output/PoseWithCovStamped")),
+            ("~/output/pub_T_J_W_transform", LaunchConfiguration("output/pub_T_J_W_transform")),
+            ("~/output/Pcl", LaunchConfiguration("output/Pcl")),
+            ("~/output/Patch", LaunchConfiguration("output/Patch")),
+            ("~/output/Markers", LaunchConfiguration("output/Markers")),
+            ("~/output/ImuBias", LaunchConfiguration("output/ImuBias"))
+
+            # missing one check above
+            
+            # ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
+            # ("~/output/objects", LaunchConfiguration("output/objects"))
         ],
         parameters=[
              {"use_sim_time": LaunchConfiguration("use_sim_time")},
              {"model":LaunchConfiguration("model")},
-             {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",)},
+             {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",)},    #might need to change this
              {"vis": LaunchConfiguration("vis")}
         ]
     )
