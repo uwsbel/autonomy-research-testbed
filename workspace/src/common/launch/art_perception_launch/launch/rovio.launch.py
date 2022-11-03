@@ -59,17 +59,17 @@ def generate_launch_description():
     AddLaunchArgument("input/imu", "/sensing/imu/raw")   # not sure if this is right need to find right info for imu
     AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
 
-    # not sure if needed but: -- I think it is used for validation
-    AddLaunchArgument("input/Groundtruth", "/sensing/Groundtruth")
-    AddLaunchArgument("input/GroundtruthOdometry", "/sensing/GroundtruthOdometry")
-    AddLaunchArgument("input/velocity", "/sensing/veloctiy")
+    # # not sure if needed but: -- I think it is used for validation
+    # AddLaunchArgument("input/Groundtruth", "/sensing/Groundtruth") # true position from simulation
+    # AddLaunchArgument("input/GroundtruthOdometry", "/sensing/GroundtruthOdometry") # 
+    # AddLaunchArgument("input/velocity", "/sensing/veloctiy") # true velocity
 
     # AddLaunchArgument("input/vehicle_state", "/vehicle/state")
 
     #publishers
-    AddLaunchArgument("output/Odometry", "/vio/Odometry")
-    AddLaunchArgument("output/Transform", "/vio/Transform")
-    AddLaunchArgument("output/PoseWithCovStamped", "/vio/PoseWithCovStamped")
+    AddLaunchArgument("output/Odometry", "/vio/Odometry") # pos and velocity
+    AddLaunchArgument("output/Transform", "/vio/Transform") # 
+    AddLaunchArgument("output/PoseWithCovStamped", "/vio/PoseWithCovStamped") #pos with guasian
     AddLaunchArgument("output/pub_T_J_W_transform", "/vio/pub_T_J_W_transform")  # rename - not sure what this is
     AddLaunchArgument("output/Pcl", "/vio/Pcl")
     AddLaunchArgument("output/Patch", "/vio/Patch")
@@ -98,9 +98,9 @@ def generate_launch_description():
         remappings=[
             ("~/input/imu", LaunchConfiguration("input/imu")),
             ("~/input/image", LaunchConfiguration("input/image")),
-            ("~/input/Groundtruth", LaunchConfiguration("input/Groundtruth")),
-            ("~/input/GroundtruthOdometry", LaunchConfiguration("input/GroundtruthOdometry")),
-            ("~/input/velocity", LaunchConfiguration("input/velocity")),
+            # ("~/input/Groundtruth", LaunchConfiguration("input/Groundtruth")),
+            # ("~/input/GroundtruthOdometry", LaunchConfiguration("input/GroundtruthOdometry")),
+            # ("~/input/velocity", LaunchConfiguration("input/velocity")),
             ("~/output/Odometry", LaunchConfiguration("output/Odometry")),
             ("~/output/Transform", LaunchConfiguration("output/Transform")),
 
@@ -112,7 +112,7 @@ def generate_launch_description():
             ("~/output/ImuBias", LaunchConfiguration("output/ImuBias"))
 
             # missing one check above
-            
+
             # ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
             # ("~/output/objects", LaunchConfiguration("output/objects"))
         ],
