@@ -123,7 +123,7 @@ def mpc_osqp_solver_v2(xref,yref,v_current,u_current):
 
 
         # Prediction horizon
-        N = 10
+        N = 20
 
         # Cast MPC problem to a QP: x = (x(0),x(1),...,x(N),u(0),...,u(N-1))
         # - quadratic objective

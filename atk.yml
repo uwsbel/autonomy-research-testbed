@@ -72,7 +72,9 @@ services:
   dev: &dev_service
     image: "atk/@{project}:dev"
     hostname: "@{project}-dev"
+    command: ""
     container_name: "@{project}-dev"
+    entrypoint: ""
     build: &dev_build
       context: "./"
       dockerfile: "./containers/dev/dev.dockerfile"
@@ -96,7 +98,9 @@ services:
     <<: *dev_service
     image: "atk/@{project}:nx"
     hostname: "@{project}-nx"
+    command: ""
     container_name: "@{project}-nx"
+    entrypoint: ""
     network_mode: "host"
     build:
       <<: *dev_build
@@ -106,7 +110,9 @@ services:
   vnc:
     image: "atk/@{project}:vnc"
     hostname: "@{project}-vnc"
+    command: ""
     container_name: "@{project}-vnc"
+    entrypoint: ""
     build:
       context: "./containers/vnc"
       dockerfile: "./vnc.dockerfile"
@@ -124,7 +130,9 @@ services:
   chrono:
     image: "atk/@{project}:chrono"
     hostname: "@{project}-chrono"
+    command: ""
     container_name: "@{project}-chrono"
+    entrypoint: ""
     build:
       context: ./containers/chrono
       dockerfile: ./chrono.dockerfile
@@ -153,7 +161,9 @@ services:
   pip-pychrono:
     image: "atk/@{project}:pip-pychrono"
     hostname: "@{project}-pip-pychrono"
+    command: ""
     container_name: "@{project}-pip-pychrono"
+    entrypoint: ""
     build:
       context: ./containers/pip-pychrono
       dockerfile: ./pip-pychrono.dockerfile

@@ -37,3 +37,6 @@ etc.hosts
 resolv.conf
 *.sif
 .atk-singularity.env
+
+# Ignore optix installing file
+/containers/chrono/NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh

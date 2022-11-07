@@ -34,6 +34,7 @@
 #// =============================================================================
 
 import rclpy
+import csv 
 from rclpy.node import Node
 from art_msgs.msg import VehicleState
 from chrono_ros_msgs.msg import ChVehicle
@@ -198,7 +199,7 @@ class ControlNode(Node):
             if solver_mode == 4:
                 u0 = mpc_osqp_solver_v2(xref,yref,velo,u0)
 
-
+    
             steer_coeff = 1.4
             #u_cur = speed_control(u_desire[0],vel)
             self.throttle = u0[0]
@@ -216,6 +217,13 @@ class ControlNode(Node):
             # new_range = 2
             # self.steering = ((self.steering+0.5236)*new_range/old_range)-1
             #self.throttle = 0.0  ##for testing purpose
+            ## record state of vehicle in each time step
+
+            with open ('state_e2_n20.csv','a', encoding='UTF8') as csvfile:
+                my_writer = csv.writer(csvfile)
+                #for row in pt:
+                my_writer.writerow([self.state.pose.position.x,self.state.pose.position.y])
+                csvfile.close()
             
             
         #for circle
@@ -225,6 +233,8 @@ class ControlNode(Node):
         # self.steering = 0.0
         #self.throttle = self.throttle_gain*0.55 #only doing lateral conmtrol for now
         # self.braking = 0.0
+        
+        
 
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
@@ -250,8 +260,7 @@ def main(args=None):
 
     control.destroy_node()
     rclpy.shutdown()
-    recording_state.tofile('state_record.csv',sep=',',format = '%10.5f')
-
+    
 if __name__ == '__main__':
     main()
 # else:
