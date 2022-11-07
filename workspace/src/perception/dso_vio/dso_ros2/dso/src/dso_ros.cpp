@@ -91,7 +91,7 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
 
   // std::string topic("image");
-  std::string topic("image");
+  std::string topic("/sensing/front_facing_camera/raw");
 
 	setting_desiredImmatureDensity = 1000;
 	setting_desiredPointDensity = 1200;
@@ -142,7 +142,7 @@ int main(int argc, char ** argv)
   };
 
   auto sub = node->create_subscription<sensor_msgs::msg::Image>(
-      topic, callback, rmw_qos_profile_default);
+      topic, callback, rmw_qos_profile_default);     // not sure if this right
 
   rclcpp::spin(node);
   rclcpp::shutdown();
