@@ -15,3 +15,6 @@
 	path = workspace/src/bluespace_ai_xsens_ros_mti_driver
 	url = git@github.com:bluespace-ai/bluespace_ai_xsens_ros_mti_driver
 	ignore = dirty
+[submodule "workspace/src/perception/open_vins"]
+	path = workspace/src/perception/open_vins
+	url = git@github.com:uwsbel/open_vins.git
