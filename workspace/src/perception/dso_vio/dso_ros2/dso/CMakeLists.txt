@@ -27,14 +27,15 @@ find_package(std_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Pangolin REQUIRED)
 
-# find_package(PCL 1.3 REQUIRED COMPONENTS common io)
-# include_directories(${PCL_INCLUDE_DIRS})
-# link_directories(${PCL_LIBRARY_DIRS})
-# add_definitions(${PCL_DEFINITIONS})
+find_package(PCL 1.3 REQUIRED COMPONENTS common io)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
-set(DSO_PATH "/home/srira/sbel/autonomy-research-testbed/workspace/src/perception/dso_vio/dso_library")
-find_library(DSO_LIBRARY dso_library ${DSO_PATH}/build/lib)
+set(DSO_PATH "/home/art/art/libraries/dso")
+find_library(DSO_LIBRARY dso ${DSO_PATH}/build/lib)
 
 add_executable(dso_ros src/dso_ros.cpp)
 target_include_directories(dso_ros PUBLIC
@@ -50,8 +51,9 @@ ament_target_dependencies(
   "OpenCV"
   "Boost"
   "Eigen3"
+  "Pangolin"
 )
-target_link_libraries(dso_ros ${DSO_LIBRARY})
+target_link_libraries(dso_ros ${DSO_LIBRARY} ${PCL_LIBRARIES})
 
 add_executable(camera src/camera.cpp)
 target_include_directories(camera PUBLIC

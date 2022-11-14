@@ -60,7 +60,7 @@ int main(int argc, char ** argv)
 
   auto pub = node->create_publisher<sensor_msgs::msg::Image>(
       topic, custom_camera_qos_profile);
-
+  
   bool is_flipped = false;
 
   auto callback =
