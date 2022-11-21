@@ -194,13 +194,13 @@ def main():
             trimesh_shape = chrono.ChTriangleMeshShape()
             trimesh_shape.SetMesh(mmesh)
             trimesh_shape.SetName(filename)
-            trimesh_shape.SetStatic(True)
+            trimesh_shape.SetMutable(False)
             trimesh_shape.SetScale(chrono.ChVectorD(1, 1, 1))
 
             mesh_body = chrono.ChBody()
             mesh_body.SetPos(pos)
             mesh_body.SetRot(chrono.ChQuaternionD(1, 0, 0, 0))
-            mesh_body.AddAsset(trimesh_shape)
+            mesh_body.AddVisualShape(trimesh_shape)
             mesh_body.SetBodyFixed(True)
             vehicle.GetSystem().Add(mesh_body)
 
@@ -242,12 +242,12 @@ def main():
                 green_cone_shape = chrono.ChTriangleMeshShape()
                 green_cone_shape.SetMesh(green_cone_mesh)
                 green_cone_shape.SetName("green_cone_shape")
-                green_cone_shape.SetStatic(True)
+                green_cone_shape.SetMutable(False)
                 green_cone_assets.append(green_cone_shape)
                 green_body = chrono.ChBody()
                 green_body.SetPos(pos_green)
                 green_body.SetRot(rot)
-                green_body.AddAsset(green_cone_shape)
+                green_body.AddVisualShape(green_cone_shape)
                 green_body.SetBodyFixed(True)
                 green_cones.append(green_body)
                 vehicle.GetSystem().Add(green_body)
@@ -255,12 +255,12 @@ def main():
                 red_cone_shape = chrono.ChTriangleMeshShape()
                 red_cone_shape.SetMesh(red_cone_mesh)
                 red_cone_shape.SetName("red_cone_shape")
-                red_cone_shape.SetStatic(True)
+                red_cone_shape.SetMutable(False)
                 red_cone_assets.append(red_cone_shape)
                 red_body = chrono.ChBody()
                 red_body.SetPos(pos_red)
                 red_body.SetRot(rot)
-                red_body.AddAsset(red_cone_shape)
+                red_body.AddVisualShape(red_cone_shape)
                 red_body.SetBodyFixed(True)
                 red_cones.append(red_body)
                 vehicle.GetSystem().Add(red_body)
@@ -269,7 +269,7 @@ def main():
             cone_id = 0
             for cone in red_cone_assets:
                 cone_id += 1
-                for mat in cone.material_list:
+                for mat in cone.GetMaterials():
                     mat.SetClassID(1)
                     mat.SetInstanceID(cone_id)
 
@@ -277,7 +277,7 @@ def main():
             cone_id = 0
             for cone in green_cone_assets:
                 cone_id += 1
-                for mat in cone.material_list:
+                for mat in cone.GetMaterials():
                     mat.SetClassID(2)
                     mat.SetInstanceID(cone_id)
 
@@ -334,10 +334,10 @@ def main():
     room_trimesh_shape = chrono.ChTriangleMeshShape()
     room_trimesh_shape.SetMesh(room_mmesh)
     room_trimesh_shape.SetName("ME3038")
-    room_trimesh_shape.SetStatic(True)
+    room_trimesh_shape.SetMutable(False)
     room_mesh_body = chrono.ChBody()
     room_mesh_body.SetPos(chrono.ChVectorD(0, 0, 0))
-    room_mesh_body.AddAsset(room_trimesh_shape)
+    room_mesh_body.AddVisualShape(room_trimesh_shape)
     room_mesh_body.SetBodyFixed(True)
 
     vehicle.GetSystem().Add(room_mesh_body)
@@ -351,7 +351,7 @@ def main():
 
     # === create sensors ===
     manager = sens.ChSensorManager(vehicle.GetSystem())
-    manager.scene.AddPointLight(chrono.ChVectorF(100, 100, 100), chrono.ChVectorF(1, 1, 1), 5000)
+    manager.scene.AddPointLight(chrono.ChVectorF(100, 100, 100), chrono.ChColor(1, 1, 1), 5000)
     
     b = sens.Background()
     b.color_horizon = chrono.ChVectorF(.6, .7, .8)
