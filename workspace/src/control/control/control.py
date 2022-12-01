@@ -55,7 +55,7 @@ sys.path.append('/home/art/art/workspace/src/control/control')
 # from mpc_osqp import mpc_osqp_solver
 # from mpc_cvxpy import mpc_cvxpy_solver
 from mpc_cvxpy_v2 import mpc_cvxpy_solver_v2
-from mpc_osqp_v2 import mpc_osqp_solver_v2
+from mpc_osqp_v3 import mpc_osqp_solver_v3
 ###---
 
 
@@ -197,7 +197,7 @@ class ControlNode(Node):
             if solver_mode ==3:
                 u0 = mpc_cvxpy_solver_v2(xref,yref,velo,u0)
             if solver_mode == 4:
-                u0 = mpc_osqp_solver_v2(xref,yref,velo,u0)
+                u0 = mpc_osqp_solver_v3(xref,yref,velo,u0)
 
     
             steer_coeff = 1.4
@@ -219,7 +219,7 @@ class ControlNode(Node):
             #self.throttle = 0.0  ##for testing purpose
             ## record state of vehicle in each time step
 
-            with open ('state_e2_n20.csv','a', encoding='UTF8') as csvfile:
+            with open ('state_w1_l08.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
                 my_writer.writerow([self.state.pose.position.x,self.state.pose.position.y])
