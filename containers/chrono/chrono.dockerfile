@@ -10,7 +10,7 @@ ARG USERHOME="/home/$USERNAME"
 ARG USERSHELL=bash
 ARG USERSHELLPATH="/bin/${USERSHELL}"
 ARG USERSHELLPROFILE="$USERHOME/.${USERSHELL}rc"
-ARG PYTHONINSTALLPATH="/home/art/chrono/build/bin"
+ARG PYTHONINSTALLPATH="$USERHOME/chrono/build/bin"
 
 ARG CONTAINERNAME="chrono"
 
@@ -63,10 +63,10 @@ RUN git clone https://github.com/projectchrono/chrono.git -b feature/ros_bridge
 RUN mkdir chrono/build
 
 # Move optix file into docker container
-COPY NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh ./optix75.sh
+COPY NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh $USERHOME/optix75.sh
 RUN sudo chmod +x optix75.sh
 RUN mkdir /opt/optix75
-RUN /home/art/optix75.sh --prefix=/opt/optix75 --skip-license
+RUN $USERHOME/optix75.sh --prefix=/opt/optix75 --skip-license
 RUN rm optix75.sh
 RUN cd chrono/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
