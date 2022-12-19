@@ -154,6 +154,7 @@ services:
       NVIDIA_DRIVER_CAPABILITIES: "all"
     ports:
       - "50000:50000"
+      #- "1209:1209"
     working_dir: "/home/@{container_username}/@{project}/sim"
     volumes: 
       - "@{project_root}:/home/@{container_username}/@{project}"

@@ -281,6 +281,10 @@ def main():
     vehicle.SetTireType(tire_model)
     vehicle.SetInitPosition(chrono.ChCoordsysD(initLoc, initRot))
     vehicle.SetTireStepSize(tire_step_size)
+    vehicle.SetMaxMotorVoltageRatio(0.16)
+    vehicle.SetStallTorque(0.3)
+    vehicle.SetTireRollingResistance(0.06)
+    vehicle.SetMotorResistanceCoefficients(0.02, 1e-4)
     vehicle.Initialize()
 
 
@@ -540,7 +544,7 @@ sensor_data_dir = "sensor_output/"
 num_cones = 100
 cones_from_file = True
 # cone_path_file = "autonomy-toolkit/paths/cone_path_01.csv"
-cone_path_file = "autonomy-toolkit/paths/easy_two.csv"
+cone_path_file = "autonomy-toolkit/paths/cone_path_iros_wider.csv"
 
 cone_offset_x = 0
 cone_offset_y = 0
@@ -563,9 +567,9 @@ green_cone_assets = list()
 cones = list()
 
 # Initial vehicle location
-init_loc_x = 2.0
-init_loc_y = -0.2
-init_angle_z = 2.3
+init_loc_x = 0.0
+init_loc_y = 2.2
+init_angle_z = 0.0
 
 initLoc = chrono.ChVectorD(init_loc_x, init_loc_y, 0.5)
 initRot = chrono.Q_from_AngZ(init_angle_z)

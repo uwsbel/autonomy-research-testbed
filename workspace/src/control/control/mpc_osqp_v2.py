@@ -41,7 +41,7 @@ import time
 
 def mpc_osqp_solver_v2(xref,yref,v_current,u_current):
 
-    nsim = 2
+    #nsim = 2
     x_0 = 0.0
     y_0 = 0.0
     theta0 = 0.0
@@ -71,7 +71,7 @@ def mpc_osqp_solver_v2(xref,yref,v_current,u_current):
         f_0_v = -10*tau_0*v/(9*omega_0*r_wheel*gamma)+tau_0/9
         f_1_v = -tau_0*v/(omega_0*r_wheel*gamma)+tau_0
         #reference/target point
-        xr = np.array([xref, yref, 0.,1.0])
+        xr = np.array([xref, yref, 0.,0.8])
 
         if v < (0.1*omega_0*r_wheel):
             # Discrete time model of a vehicle
@@ -123,7 +123,7 @@ def mpc_osqp_solver_v2(xref,yref,v_current,u_current):
 
 
         # Prediction horizon
-        N = 20
+        N = 10
 
         # Cast MPC problem to a QP: x = (x(0),x(1),...,x(N),u(0),...,u(N-1))
         # - quadratic objective
