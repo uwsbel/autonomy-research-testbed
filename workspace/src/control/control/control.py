@@ -128,11 +128,18 @@ class ControlNode(Node):
         self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
+        self.g_pos = [0.0,2.2]
+        self.crl_tspan = 1/10
+        self.vel = 0.0
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
         #self.get_logger().info("Received '%s'" % msg)
         self.state = msg
+        pos = [self.state.pose.position.x,self.state.pose.position.y]
+        vel_drvt = [(pos[0]-self.g_pos[0])/self.crl_tspan,(pos[1]-self.g_pos[1])/self.crl_tspan]
+        self.vel = np.sqrt(vel_drvt[0]*vel_drvt[0]+vel_drvt[1]*vel_drvt[1])
+        self.g_pos = pos
 
     def path_callback(self, msg):
         self.go = True
@@ -150,37 +157,11 @@ class ControlNode(Node):
             self.calc_inputs_from_file()
         elif(self.mode == "PID" and len(self.path.poses)>0):
             pt = [self.path.poses[0].pose.position.x,self.path.poses[0].pose.position.y] #target
-            #pos = [self.state.position.x,self.state.position.y,self.state.orientation.z]
+            
             vel = [self.state.twist.linear.x,self.state.twist.linear.y]
-            
-            #recording_state = np.append(recording_state,self.state.pose.linear.x,self.state.pose.linear.y)
-            #---old pid code
-            #ratio = pt[1] / pt[0]
-            #self.steering = self.steering_gain * ratio
-            # self.get_logger().info('Target steering = %s' % self.steering)
-            #---ode pid code 
-            
-            #newly added mpc code---version1 do-mpc solver---
-            #model = template_model()
-            #xref = pt[0]
-            #yref = pt[1]
-            #mpc = template_mpc(model,xref,yref)
-            #x0 = 0
-            #0 = 0
-            #theta0 = 0
-            #xini = np.array([x0, y0, theta0])
-            #mpc.x0 = xini
-            #mpc.set_initial_guess()
-            #u0 = np.zeros([2,1])
-            #u0 = mpc.make_step(xini)
-            #steer_coeff = 1.25
-            #max_steering = 0.5236
-            #version 1 do-mpc solver ends here
-
-            #newly added mpc code---version2 cvxpy_mpc and osqp_mpc solver---
+            self.get_logger().info(' gpos after loop = %s' % self.g_pos)
             
             solver_mode = 4 # mode 1 ---cvxpy;  mode 2 ---osqp # mode 3 ---cvxpy_v2; 
-
             xref = pt[0]
             yref = pt[1]
             u0 = [self.throttle,self.steering]
@@ -189,7 +170,7 @@ class ControlNode(Node):
             yvel = vel[1]
             #vel = np.sqrt(xvel*xvel+yvel*yvel)-2.2
             velo = np.sqrt(xvel*xvel+yvel*yvel)
-
+            velo = self.vel
             if solver_mode == 1:
                 u_desire = mpc_cvxpy_solver(xref,yref)
             if solver_mode == 2:
