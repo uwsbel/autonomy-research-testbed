@@ -59,7 +59,7 @@ ENV PYTHONPATH=$PYTHONINSTALLPATH
 CMD $USERSHELLPATH
 
 # Build the pychrono install
-RUN git clone https://github.com/projectchrono/chrono.git -b master
+RUN git clone https://github.com/projectchrono/chrono.git -b main
 RUN mkdir chrono/build
 
 # Move optix file into docker container
