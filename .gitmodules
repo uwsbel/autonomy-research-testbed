@@ -4,7 +4,6 @@
 [submodule "workspace/src/sensing/usb_cam"]
 	path = workspace/src/sensing/usb_cam
 	url = https://github.com/ros-drivers/usb_cam.git
-	ignore = dirty
 [submodule "workspace/src/simulation/chrono-ros-bridge"]
 	path = workspace/src/simulation/chrono-ros-bridge
 	url = https://github.com/uwsbel/chrono-ros-bridge
@@ -14,4 +13,3 @@
 [submodule "workspace/src/bluespace_ai_xsens_ros_mti_driver"]
 	path = workspace/src/bluespace_ai_xsens_ros_mti_driver
 	url = git@github.com:bluespace-ai/bluespace_ai_xsens_ros_mti_driver
-	ignore = dirty
