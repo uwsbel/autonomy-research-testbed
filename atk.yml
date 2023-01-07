@@ -1,4 +1,4 @@
-project: master-art
+project: art
 default_containers: 
   - dev
   - vnc
