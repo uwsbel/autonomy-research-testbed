@@ -77,7 +77,7 @@ services:
         PROJECT: "@{project}"
         USER_UID: "@{uid}"
         USER_GID: "@{gid}"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev"
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-galactic-usb-cam"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex"
         USER_GROUPS: "dialout video"
     environment:
@@ -122,7 +122,9 @@ services:
   chrono:
     image: "atk/@{project}:chrono"
     hostname: "@{project}-chrono"
+    command: ""
     container_name: "@{project}-chrono"
+    entrypoint: ""
     build:
       context: ./containers/chrono
       dockerfile: ./chrono.dockerfile
