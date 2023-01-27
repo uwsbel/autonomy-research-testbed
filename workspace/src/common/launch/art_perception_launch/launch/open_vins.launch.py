@@ -10,17 +10,11 @@ from ament_index_python import get_package_share_directory
 def generate_launch_description():
     launch_description = LaunchDescription()
 
-    # launch arguments
-    config_path = '/home/art/art/workspace/chrono_config/estimator_config.yaml'
-    config_path_arg = DeclareLaunchArgument(
-            'config_path',
-            default_value = config_path,
-    )
-    launch_description.add_action(config_path_arg)
-
     # Play a bag file
     play_bag = ExecuteProcess(
-        cmd = (['ros2', 'bag', 'play', 'camera_imu']),
+        # cmd = (['ros2', 'bag', 'play', 'V2_01_easy', '--topics', '/cam0/image_raw', '/imu0']),
+        # cmd = (['ros2', 'bag', 'play', 'camera_imu', '--remap', '/sensing/front_facing_camera/raw:=/cam0/image_raw', '--rate', '5', '-l']),
+        cmd = (['ros2', 'bag', 'play', 'camera_imu', '--rate', '2']),
         output = 'screen'
     )
     launch_description.add_action(play_bag)
@@ -36,7 +30,19 @@ def generate_launch_description():
     )
     launch_description.add_action(imu_publisher)
 
+    # Cam Publisher
+    cam_publisher = Node(
+        package='cam_publisher',
+        namespace='',
+        executable='cam_publisher_node',
+        name='cam_publisher_node',
+        remappings=[],
+        parameters=[]
+    )
+    launch_description.add_action(cam_publisher)
+
     # Open VINS
+    config_path = '/home/art-raj/art-raj/workspace/chrono_config/estimator_config.yaml'
     open_vins = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
