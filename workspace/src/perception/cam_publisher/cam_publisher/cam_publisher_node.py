@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
+from rosgraph_msgs.msg import Clock
 
 
 class CamPublisher(Node):
@@ -10,18 +11,27 @@ class CamPublisher(Node):
         super().__init__('cam_publisher')
 
         # create subscribers
-        self.subscriber = self.create_subscription(Image,'/sensing/front_facing_camera/raw',self.image_callback,10)
+        self.cam_sub = self.create_subscription(Image,'/sensing/front_facing_camera/raw',self.image_callback, 10)
+        self.clock_sub = self.create_subscription(Clock, '/clock', self.clock_callback, 10)
 
         # create publishers
-        self.publisher = self.create_publisher(Image, '/cam0/image_raw', 10)
+        self.pub = self.create_publisher(Image, '/cam0/image_raw', 10)
+
+        # latest image recieved
+        self.cam_msg = None
 
     def image_callback(self, msg):
-        # add header
-        msg.header.stamp = self.get_clock().now().to_msg()
+        # store msg
+        self.cam_msg = msg
 
-        # publish
-        self.publisher.publish(msg)
-        # self.get_logger().info('Publishing: "%s"' % msg)
+    def clock_callback(self, msg):
+        # set timestamp
+        if self.cam_msg != None:
+            self.cam_msg.header.stamp = msg.clock
+
+            # publish
+            self.pub.publish(self.cam_msg)
+            # self.get_logger().info('Publishing: "%s"' % msg)
 
 
 def main(args=None):
