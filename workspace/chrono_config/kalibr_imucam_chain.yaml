@@ -5,15 +5,15 @@ cam0:
   # first 3x3 is rotation vector computed from quaternion
   # 4th column is pos;1
   # 4th row is 0,0,0,1
-  T_imu_cam: 
-    - [ -0.9230769,  0.0000000,  0.3846154, 0.204]
-    - [0.0000000, -1.0000000,  0.0000000, 0]
-    - [0.3846154,  0.0000000,  0.9230769, 0.10018]
-    - [0.0, 0.0, 0.0, 1.0]
-  cam_overlaps: [1]
+  T_imu_cam:
+      - [0.9962, 0, 0.0872, 0.204]
+      - [0.0, 1.0, 0.0, 0.0]
+      - [-0.0872, 0, 0.9962, 0.10018]
+      - [0.0, 0.0, 0.0, 1.0]
+  # cam_overlaps: [0]
   camera_model: pinhole
-  distortion_model: fov
-  distortion_coeffs: [0, 0, 0, 0] # fov (radians) (80 deg)
-  intrinsics: [1.192072395, 1.192072395, 640, 360] #fu, fv, pu, pv
+  distortion_model: radtan
+  distortion_coeffs: [-0.413636, 0.162489, 0.000105899, 0.00419204] 
+  intrinsics: [1092.22, 1093.94, 599.75, 343.075] #fu, fv, pu, pv
   resolution: [1280, 720]
-  rostopic: /sensing/front_facing_camera/raw
+  rostopic: /cam0/image_raw
