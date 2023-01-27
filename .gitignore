@@ -30,6 +30,7 @@ _version.py
 *.db3
 *.bag
 ATK-*
+rosbags/
 
 # Ignore singularity specific files
 *singularity.temp
