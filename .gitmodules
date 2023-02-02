@@ -15,6 +15,3 @@
 	path = workspace/src/bluespace_ai_xsens_ros_mti_driver
 	url = git@github.com:bluespace-ai/bluespace_ai_xsens_ros_mti_driver
 	ignore = dirty
-[submodule "workspace/src/ublox_f9p"]
-	path = workspace/src/ublox_f9p
-	url = https://github.com/DigSafeMQP2020/ublox_f9p.git
