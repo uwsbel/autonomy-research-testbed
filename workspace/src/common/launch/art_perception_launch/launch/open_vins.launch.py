@@ -10,11 +10,14 @@ from ament_index_python import get_package_share_directory
 def generate_launch_description():
     launch_description = LaunchDescription()
 
+    # Declare launch arguments
+    launch_description.add_action(DeclareLaunchArgument('bag_file', default_value='rosbags/camera_imu'))
+    launch_description.add_action(DeclareLaunchArgument('sim_topics', default_value='false'))
+    launch_description.add_action(DeclareLaunchArgument('flip_image', default_value='false'))
+
     # Play a bag file
     play_bag = ExecuteProcess(
-        # cmd = (['ros2', 'bag', 'play', 'V2_01_easy', '--topics', '/cam0/image_raw', '/imu0']),
-        # cmd = (['ros2', 'bag', 'play', 'camera_imu', '--remap', '/sensing/front_facing_camera/raw:=/cam0/image_raw', '--rate', '5', '-l']),
-        cmd = (['ros2', 'bag', 'play', 'camera_imu', '--rate', '2']),
+        cmd = (['ros2', 'bag', 'play', LaunchConfiguration('bag_file')]),
         output = 'screen'
     )
     launch_description.add_action(play_bag)
@@ -25,8 +28,7 @@ def generate_launch_description():
         namespace='',
         executable='imu_publisher_node',
         name='imu_publisher_node',
-        remappings=[],
-        parameters=[]
+        parameters=[{'sim_topics': LaunchConfiguration('sim_topics')}]
     )
     launch_description.add_action(imu_publisher)
 
@@ -36,8 +38,8 @@ def generate_launch_description():
         namespace='',
         executable='cam_publisher_node',
         name='cam_publisher_node',
-        remappings=[],
-        parameters=[]
+        parameters=[{'sim_topics': LaunchConfiguration('sim_topics')},
+                    {'flip_image': LaunchConfiguration('flip_image')}]
     )
     launch_description.add_action(cam_publisher)
 
