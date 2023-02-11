@@ -54,15 +54,15 @@ sys.path.append('/home/art/art/workspace/src/control/control')
 #from test_pid_vel_control import speed_control
 # from mpc_osqp import mpc_osqp_solver
 # from mpc_cvxpy import mpc_cvxpy_solver
-from mpc_cvxpy_v2 import mpc_cvxpy_solver_v2
-from mpc_osqp_v3 import mpc_osqp_solver_v3
+#from mpc_cvxpy_v2 import mpc_cvxpy_solver_v2
+from mpc_wpts import mpc_wpts_solver
 ###---
 
 
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
-recording_state = np.array([])
+
 class ControlNode(Node):
     def __init__(self):
         super().__init__('control_node')
@@ -106,7 +106,9 @@ class ControlNode(Node):
         self.braking = 0.0
 
         # data that will be used by this class
-        self.state = ChVehicle()
+        self.state = VehicleState()
+        self.groud_truth = ChVehicle()
+        self.error_state = ChVehicle()
         self.path = Path()
         if use_sim_msg:
             global VehicleInput
@@ -124,22 +126,30 @@ class ControlNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_path = self.create_subscription(Path, '~/input/path', self.path_callback, qos_profile)
+        self.sub_err_state = self.create_subscription(ChVehicle, '/vehicle/error_state', self.err_state_callback, qos_profile)
         #self.sub_state = self.create_subscription(ChVehicle, '~/input/vehicle_state', self.state_callback, qos_profile)
-        self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
+        self.sub_ground_truth = self.create_subscription(ChVehicle, '/vehicle/state', self.ground_truth_callback, qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
-        self.g_pos = [0.0,2.2]
+        self.g_pos = [-3.15,-1.25]
         self.crl_tspan = 1/10
         self.vel = 0.0
+
+    # function to process data this class subscribes to
+    def ground_truth_callback(self, msg):
+        #self.get_logger().info("Received '%s'" % msg)
+        self.groud_truth = msg
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
         #self.get_logger().info("Received '%s'" % msg)
         self.state = msg
-        pos = [self.state.pose.position.x,self.state.pose.position.y]
-        vel_drvt = [(pos[0]-self.g_pos[0])/self.crl_tspan,(pos[1]-self.g_pos[1])/self.crl_tspan]
-        self.vel = np.sqrt(vel_drvt[0]*vel_drvt[0]+vel_drvt[1]*vel_drvt[1])
-        self.g_pos = pos
+        self.vel = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
+
+    def err_state_callback(self,msg):
+        self.error_state = msg
+        
 
     def path_callback(self, msg):
         self.go = True
@@ -156,71 +166,34 @@ class ControlNode(Node):
         if(self.mode == "File"):
             self.calc_inputs_from_file()
         elif(self.mode == "PID" and len(self.path.poses)>0):
-            pt = [self.path.poses[0].pose.position.x,self.path.poses[0].pose.position.y] #target
-            
-            vel = [self.state.twist.linear.x,self.state.twist.linear.y]
-            self.get_logger().info(' gpos after loop = %s' % self.g_pos)
-            
-            solver_mode = 4 # mode 1 ---cvxpy;  mode 2 ---osqp # mode 3 ---cvxpy_v2; 
-            xref = pt[0]
-            yref = pt[1]
-            u0 = [self.throttle,self.steering]
-            #calculate velocity from subscribed messages
-            xvel = vel[0]
-            yvel = vel[1]
-            #vel = np.sqrt(xvel*xvel+yvel*yvel)-2.2
-            velo = np.sqrt(xvel*xvel+yvel*yvel)
+
+
+            #read the error state:
+            e = [self.error_state.pose.position.x, 
+                 self.error_state.pose.position.y,
+                 self.error_state.pose.orientation.z,
+                 self.error_state.twist.linear.x]
+            self.get_logger().info(' recieved err state = %s ' % e)
+            #read velocity
             velo = self.vel
-            if solver_mode == 1:
-                u_desire = mpc_cvxpy_solver(xref,yref)
-            if solver_mode == 2:
-                u_desire = mpc_osqp_solver(xref,yref)
-            if solver_mode ==3:
-                u0 = mpc_cvxpy_solver_v2(xref,yref,velo,u0)
-            if solver_mode == 4:
-                u0 = mpc_osqp_solver_v3(xref,yref,velo,u0)
+            #feed in velocity, target point coordinates and current control inputs to the mpc solver
+            self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,1)
+            
+            steer_coeff = 1.3
+            self.steering = self.steering * steer_coeff
+            self.get_logger().info(' control = %s' % [self.throttle, self.steering])
 
-    
-            steer_coeff = 1.4
-            #u_cur = speed_control(u_desire[0],vel)
-            self.throttle = u0[0]
-            #self.breaking = u0[1]
-            self.steering = u0[1]*steer_coeff
-            self.get_logger().info(' vel = %s' % velo)
-            #self.get_logger().info(' desired_u = %s' % u0)
-            #self.get_logger().info(' steering = %s' % self.steering)
-            #self.get_logger().info('throttle = %s' % self.throttle)
-            # if abs(self.steering) > steer_coeff*max_steering*0.8:
-            #     self.braking = 0.05
-            # if abs(self.steering) < steer_coeff*max_steering*0.8:
-            #     self.braking = 0.0
-            # old_range = 0.5236*2
-            # new_range = 2
-            # self.steering = ((self.steering+0.5236)*new_range/old_range)-1
-            #self.throttle = 0.0  ##for testing purpose
-            ## record state of vehicle in each time step
-
-            with open ('state_w1_l08.csv','a', encoding='UTF8') as csvfile:
+            with open ('mpc_0211_efkmpc.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
-                my_writer.writerow([self.state.pose.position.x,self.state.pose.position.y])
+                my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,self.state.pose.position.x,self.state.pose.position.y,self.throttle,self.steering])
                 csvfile.close()
-            
-            
-        #for circle
-        #self.steering = -0.5
 
-        #TODO: remove after debugging
-        # self.steering = 0.0
-        #self.throttle = self.throttle_gain*0.55 #only doing lateral conmtrol for now
-        # self.braking = 0.0
         
-        
-
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
-        self.pub_vehicle_cmd.publish(msg)
+        self.pub_vehicle_cmd.publish(msg)          
         
 
     def calc_inputs_from_file(self):

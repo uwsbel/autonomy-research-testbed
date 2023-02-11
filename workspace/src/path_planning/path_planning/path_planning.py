@@ -30,6 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 import rclpy
 from rclpy.node import Node
+from chrono_ros_msgs.msg import ChVehicle
 from art_msgs.msg import VehicleState
 from art_perception_msgs.msg import ObjectArray, Object
 from sensor_msgs.msg import Image
@@ -45,6 +46,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.interpolate import interp1d,splev,splprep
+import sys
+import csv
+sys.path.append('/home/art/art/workspace/src/path_planning/path_planning')
 import os
 import json
 
@@ -67,6 +71,9 @@ class PathPlanningNode(Node):
         
         #data that will be used by this class
         self.state = VehicleState()
+        self.error_state = ChVehicle()
+        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Sin_Path.csv")
+        self.ref_traj = np.loadtxt(self.file,delimiter=",")
         self.path = Path()
         # self.objects = ObjectArray()
 
@@ -78,7 +85,7 @@ class PathPlanningNode(Node):
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
         self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
         if self.vis:
@@ -93,12 +100,32 @@ class PathPlanningNode(Node):
             
         #publishers
         self.pub_path = self.create_publisher(Path, '~/output/path', 10)
+        ## this is for publishing error state for waypoint-based control
+        self.pub_err_state = self.create_publisher(ChVehicle, '/vehicle/error_state', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
     #function to process data this class subscribes to
     def state_callback(self, msg):
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
+
+    def wpts_path_plan(self):
+        x_current = self.state.pose.position.x
+        y_current = self.state.pose.position.y
+        theta_current = self.state.pose.orientation.z
+        v_current = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
+        dist = np.zeros((1,len(self.ref_traj[:,1])))
+        for i in range(len(self.ref_traj[:,1])):
+            dist[0][i] = dist[0][i] = (x_current+np.sqrt(self.lookahead)-self.ref_traj[i][0])**2+(y_current+np.sqrt(self.lookahead)-self.ref_traj[i][1])**2
+        index = dist.argmin()
+        ref_state_current = list(self.ref_traj[index,:])
+        ref_state_current[2] = np.arctan(ref_state_current[2]) #convert dy/dx to heading angle
+        error_state = [ref_state_current[0]-x_current,ref_state_current[1]-y_current,ref_state_current[2]-theta_current, ref_state_current[3]-v_current]
+
+        return error_state
+
+        
+
 
     def objects_callback(self, msg):
         # self.get_logger().info("Received '%s'" % msg)
@@ -211,8 +238,7 @@ class PathPlanningNode(Node):
     def pub_callback(self):
         if(not self.go):
             return
-        msg = Path()
-            
+        msg = Path()  
         target_pt = self.plan_path()
 
         #calculate path from current cone locations
@@ -226,6 +252,14 @@ class PathPlanningNode(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.poses.append(pt)
         self.pub_path.publish(msg)
+        ## Add one more publishing info
+        err_state_msg = ChVehicle()
+        error_state = self.wpts_path_plan()
+        err_state_msg.pose.position.x = error_state[0]
+        err_state_msg.pose.position.y = error_state[1]
+        err_state_msg.pose.orientation.z = error_state[2]
+        err_state_msg.twist.linear.x = error_state[3]
+        self.pub_err_state.publish(err_state_msg)    
 
 def main(args=None):
     # print("=== Starting Path Planning Node ===")
