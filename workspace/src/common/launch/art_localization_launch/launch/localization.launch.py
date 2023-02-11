@@ -54,7 +54,7 @@ def generate_launch_description():
     AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
     AddLaunchArgument("input/gyro", "/chrono_ros_bridge/output/gyroscope/data")
     AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
-    
+    AddLaunchArgument("input/vehicleInput", "/control/vehicle_inputs")
     AddLaunchArgument("output/vehicle_state", "/vehicle_state")
     AddLaunchArgument("vis", "False")
 
@@ -77,6 +77,7 @@ def generate_launch_description():
                 ("~/input/gyro", LaunchConfiguration("input/gyro")),
                 ("~/input/accel", LaunchConfiguration("input/accel")),
                 ("~/output/vehicle_state", LaunchConfiguration("output/vehicle_state")),
+                ("~/input/vehicleInput", LaunchConfiguration("input/vehicleInput")),
         ],
         parameters=[
             {"use_sim_time": LaunchConfiguration("use_sim_time")},
