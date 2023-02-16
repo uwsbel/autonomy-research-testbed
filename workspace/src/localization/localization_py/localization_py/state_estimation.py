@@ -145,6 +145,8 @@ class StateEstimationNode(Node):
        lon = self.groundTruth.longitude
        alt = self.groundTruth.altitude
        #DONT PUSH WITH THIS BECAUSE MOST DEMOS DONT HAVE THE GT
+       #self.get_logger().info("ORIGIN SET????" + str(self.origin_set))
+
        if(not self.origin_set):
            self.origin_set = True
            self.graph.set_graph(lat,lon, alt)
@@ -207,10 +209,10 @@ class StateEstimationNode(Node):
         #    self.first_write = False
 
 
-        # with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
-        #    mywriter = csv.writer(csvfile)
-        #    mywriter.writerow([self.x, self.y, self.gtx, self.gty, self.state[0][0], self.state[1][0], self.D, self.throttle, self.steering])
-        #    csvfile.close()
+        with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
+           mywriter = csv.writer(csvfile)
+           mywriter.writerow([self.x, self.y, self.gtx, self.gty, self.state[0][0], self.state[1][0], self.D, self.throttle, self.steering])
+           csvfile.close()
 
        
         msg = VehicleState()

@@ -438,6 +438,12 @@ def main():
     gps.PushFilter(sens.ChFilterGPSAccess())
     manager.AddSensor(gps)
 
+    #Ground Truth
+    groundTruth = sens.ChGPSSensor(vehicle.GetChassisBody(), 100000, gps_offset_pose, gps_reference, noise_model)
+    groundTruth.SetName("groundTruth")
+    groundTruth.PushFilter(sens.ChFilterGPSAccess())
+    manager.AddSensor(groundTruth)
+
     # label the cones that were added to the scene with semantic information
     manager.ReconstructScenes()
     LabelConeAssets()
@@ -465,6 +471,9 @@ def main():
 
     gps_generator = ChGPSSensor_DataGeneratorFunctor("~/output/gps/data", gps)
     driver.AddDataGenerator(gps_generator, 10)
+
+    groundTruth_generator = ChGPSSensor_DataGeneratorFunctor("~/output/groundTruth/data", groundTruth)
+    driver.AddDataGenerator(groundTruth_generator, 100000)
 
     inputs_parser = ChDriverInputs_DataParserFunctor(driver)
     driver.AddDataParser(inputs_parser)

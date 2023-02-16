@@ -10,9 +10,9 @@ ARG USERHOME="/home/$USERNAME"
 ARG USERSHELL=bash
 ARG USERSHELLPATH="/bin/${USERSHELL}"
 ARG USERSHELLPROFILE="$USERHOME/.${USERSHELL}rc"
-ARG PYTHONINSTALLPATH="/home/art/chrono/build/bin"
+ARG PYTHONINSTALLPATH="/home/art/chrono-internal/build/bin"
 
-ARG CONTAINERNAME="chrono"
+ARG CONTAINERNAME="chrono-internal"
 
 # Check for updates
 RUN apt update && apt upgrade -y && apt install sudo -y
@@ -89,9 +89,10 @@ RUN chmod +x optix75.sh
 RUN mkdir /opt/optix75
 RUN ./optix75.sh --prefix=/opt/optix75 --skip-license
 RUN rm optix75.sh
-RUN git clone https://github.com/projectchrono/chrono.git 
-RUN mkdir chrono/build
-RUN cd chrono/build && cmake ../ -G Ninja \
+#RUN git clone https://github.com/projectchrono/chrono.git 
+RUN git clone https://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@github.com/uwsbel/chrono-internal.git -b sandbox/gps
+RUN mkdir chrono-internal/build
+RUN cd chrono-internal/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
  -DBUILD_BENCHMARKING=OFF \
  -DBUILD_DEMOS=OFF \
