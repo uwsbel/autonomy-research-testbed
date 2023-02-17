@@ -408,8 +408,8 @@ def main():
     noise_model = sens.ChNoiseNone()
     gps_reference = chrono.ChVectorD(-89.400, 43.070, 260.0)
     #gps_noise_model = sens.ChNoiseNone()
-    gps_noise_model = sens.ChNoiseNormal(chrono.ChVectorD(0, 0, 0), chrono.ChVectorD(0.6, 0.6, 0.6))
-    #gps_noise_model = sens.ChNoiseRandomWalks(0, 0.016289174978068626, 1, gps_reference)    
+    #gps_noise_model = sens.ChNoiseNormal(chrono.ChVectorD(0, 0, 0), chrono.ChVectorD(0.6, 0.6, 0.6))
+    gps_noise_model = sens.ChNoiseRandomWalks(0, 0.016289174978068626, 1, gps_reference)    
     imu_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
     gps_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
     #gps_reference = chrono.ChVectorD(-89.400, 43.070, 260.0)
@@ -470,7 +470,10 @@ def main():
     driver.AddDataGenerator(mag_generator, 100)
 
     gps_generator = ChGPSSensor_DataGeneratorFunctor("~/output/gps/data", gps)
-    driver.AddDataGenerator(gps_generator, 10)
+    driver.AddDataGenerator(gps_generator, 1)
+
+    groundTruth_generator = ChGPSSensor_DataGeneratorFunctor("~/output/groundTruth/data", groundTruth)
+    driver.AddDataGenerator(groundTruth_generator, 100000)
 
     groundTruth_generator = ChGPSSensor_DataGeneratorFunctor("~/output/groundTruth/data", groundTruth)
     driver.AddDataGenerator(groundTruth_generator, 100000)
@@ -593,7 +596,7 @@ cones = list()
 # Initial vehicle location
 init_loc_x = 0.1
 init_loc_y = 0.1
-init_angle_z = 0.8
+init_angle_z = 0.0
 
 initLoc = chrono.ChVectorD(init_loc_x, init_loc_y, 0.5)
 initRot = chrono.Q_from_AngZ(init_angle_z)
