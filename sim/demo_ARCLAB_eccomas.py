@@ -470,10 +470,7 @@ def main():
     driver.AddDataGenerator(mag_generator, 100)
 
     gps_generator = ChGPSSensor_DataGeneratorFunctor("~/output/gps/data", gps)
-    driver.AddDataGenerator(gps_generator, 1)
-
-    groundTruth_generator = ChGPSSensor_DataGeneratorFunctor("~/output/groundTruth/data", groundTruth)
-    driver.AddDataGenerator(groundTruth_generator, 100000)
+    driver.AddDataGenerator(gps_generator, 10)
 
     groundTruth_generator = ChGPSSensor_DataGeneratorFunctor("~/output/groundTruth/data", groundTruth)
     driver.AddDataGenerator(groundTruth_generator, 100000)
