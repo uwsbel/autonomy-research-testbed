@@ -43,6 +43,7 @@ from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
 import os
+import sys
 # os.system("python3 template_model.py")
 # os.system("python3 template_mpc.py")
 ###---
@@ -69,6 +70,8 @@ class ControlNode(Node):
 
         # DEFAULT SETTINGS
 
+        #from stefan
+        self.first_write = True
         # control node mode
         self.mode = "PID"  # "PID", "File"
         self.file = ""
@@ -178,12 +181,19 @@ class ControlNode(Node):
             velo = self.vel
             #feed in velocity, target point coordinates and current control inputs to the mpc solver
             self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,1)
+            #self.throttle = 0.0
+            #self.steering = 0.0
             
             steer_coeff = 1.3
             self.steering = self.steering * steer_coeff
             self.get_logger().info(' control = %s' % [self.throttle, self.steering])
 
-            with open ('mpc_0215_ekfmpc.csv','a', encoding='UTF8') as csvfile:
+            if(self.first_write):
+                os.remove("mpc_0211_efkmpc.csv")
+                self.first_write = False
+
+
+            with open ('mpc_0211_efkmpc.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
                 my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,self.state.pose.position.x,self.state.pose.position.y,self.throttle,self.steering])

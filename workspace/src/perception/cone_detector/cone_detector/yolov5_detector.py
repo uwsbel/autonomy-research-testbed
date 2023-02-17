@@ -91,7 +91,7 @@ class YOLODetectionNode(Node):
         self.camera_calibration_file = self.get_parameter('camera_calibration_file').get_parameter_value().string_value
 
         self.camera_params = json.load(open(os.path.join(package_share_directory,self.camera_calibration_file)))
-        self.get_logger().info("Cam params '%s'" % str(self.camera_params))
+        #self.get_logger().info("Cam params '%s'" % str(self.camera_params))
 
         # publishers and subscribers
         qos_profile = QoSProfile(depth=1)
@@ -144,7 +144,7 @@ class YOLODetectionNode(Node):
             if(self.engine == None):
                 raise RuntimeError("Engine is not initialized from file: "+os.path.join(onnx_file))
             
-            self.get_logger().info('Saving serialized engine for faster future loads.')
+            #self.get_logger().info('Saving serialized engine for faster future loads.')
             with open(engine_file, 'wb') as f:
                 f.write(self.engine.serialize())
 
@@ -164,7 +164,7 @@ class YOLODetectionNode(Node):
 
         self.device_output = torch.zeros(tuple(self.output_shape), device="cuda:0",dtype=torch.float16)
 
-        self.get_logger().info('Model initialized | visualizing = %s' % (str(self.vis)))
+        #self.get_logger().info('Model initialized | visualizing = %s' % (str(self.vis)))
 
         if(self.vis):
             matplotlib.use("TKAgg")
@@ -255,7 +255,7 @@ class YOLODetectionNode(Node):
         # t_msg = self.get_clock().now()
         t_msg = rclpy.time.Time.from_msg(self.image.header.stamp)
         collection_to_perception = (t.nanoseconds - t_msg.nanoseconds) / 1e9
-        self.get_logger().info('Prep= %s, Inference= %s, Col2Perc= %s, ID= %s' % ("{:.4f}".format(t1-t0),"{:.4f}".format(t2-t1),"{:.4f}".format(collection_to_perception),self.image.header.frame_id))
+        #self.get_logger().info('Prep= %s, Inference= %s, Col2Perc= %s, ID= %s' % ("{:.4f}".format(t1-t0),"{:.4f}".format(t2-t1),"{:.4f}".format(collection_to_perception),self.image.header.frame_id))
 
 
     def estimate_cone_distance(self, rectangle):
@@ -312,7 +312,8 @@ class YOLODetectionNode(Node):
         if(self.vis):
             [p.remove() for p in self.patches]
             self.patches.clear()
-            self.ax.texts.clear()
+            #TODO:
+            #self.ax.texts.clear()
 
         # self.get_logger().info('Detected %s cones' % len(self.boxes)) 
         

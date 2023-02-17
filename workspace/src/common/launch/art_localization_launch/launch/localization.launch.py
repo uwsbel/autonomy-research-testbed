@@ -49,8 +49,10 @@ def generate_launch_description():
             )
         )
 
+    AddLaunchArgument("input/gps","/fix")
+    #AddLaunchArgument("input/mag", "/imu/mag")
     AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
-    AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
+    #AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
     AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
     AddLaunchArgument("input/gyro", "/chrono_ros_bridge/output/gyroscope/data")
     AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
