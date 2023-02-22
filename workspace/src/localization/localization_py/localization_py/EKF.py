@@ -29,6 +29,11 @@ class EKF(object):
         x[3,0] = x[3,0]+ \
             self.dt*((self.r_wheel*self.gamma)/self.i_wheel)*(f-(x[3,0]*self.c_1)/(self.r_wheel*self.gamma)-self.c_0)
 
+        if(x[2,0]<-math.pi):
+            x[2,0] = x[2,0]+2*math.pi
+        if(x[2,0]>math.pi):
+            x[2,0] = x[2,0]-2*math.pi
+
         if(x[3,0]<0):
             x[3,0]= 0        
         return x
