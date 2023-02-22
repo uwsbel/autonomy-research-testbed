@@ -65,8 +65,6 @@ class StateEstimationNode(Node):
         #x, y, from measurements
         self.x = 0
         self.y = 0
-        self.hx = [0]
-        self.hy = [0]
 
         self.first_write = True
 
@@ -75,7 +73,15 @@ class StateEstimationNode(Node):
         #what we will be using for our state vector. (x, y, theta yaw, v vel)
         self.state = np.zeros((4,1))
         np.vstack(self.state)
-        self.hstate = [self.state]
+        #TODO: edit these to change the starting location...
+        self.init_x = 5
+        self.init_y = 5
+        self.init_theta = 2.0
+        self.state[0,0] = self.init_x
+        self.state[1,0] = self.init_y
+        self.state[2,0] = self.init_theta
+
+
 
         self.gps_ready = False
 
@@ -151,6 +157,8 @@ class StateEstimationNode(Node):
         x,y,z = self.graph.gps2cartesian(lat,lon,alt)
         if(self.orig_heading_set):
             self.gtx,self.gty, self.gtz =self.graph.rotate(x,y,z)
+            self.gtx = self.gtx+self.init_x
+            self.gty = self.gty+self.init_y
         
         
         
@@ -177,8 +185,7 @@ class StateEstimationNode(Node):
         if(not self.orig_heading_set):
             self.orig_heading_set = True
             self.orig_heading = self.D
-            self.graph.set_rotation(np.deg2rad(self.D-14))
-        self.get_logger().info("THE HEADING IS: " + str(self.D))
+            self.graph.set_rotation(np.deg2rad(self.D-14)-self.init_theta)
 
 
     def gps_callback(self,msg):
@@ -204,9 +211,12 @@ class StateEstimationNode(Node):
             x,y,z = self.graph.gps2cartesian(self.lat,self.lon,self.alt)
             if(self.orig_heading_set):
                 self.x,self.y, self.z =self.graph.rotate(x,y,z)
+                self.x +=self.init_x
+                self.y +=self.init_y
+        
         else:
-           self.x = 0
-           self.y = 0
+           self.x = self.init_x
+           self.y = self.init_y
            self.z = 0
 
 
@@ -223,7 +233,7 @@ class StateEstimationNode(Node):
            os.remove("data.csv")
            self.first_write = False
 
-
+        self.get_logger().info("THE HEADING IS: " + str(self.state[2][0]))
         with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
            mywriter = csv.writer(csvfile)
            mywriter.writerow([self.x, self.y, self.gtx, self.gty, self.state[0][0], self.state[1][0], self.D, self.throttle, self.steering])
@@ -352,7 +362,6 @@ if __name__ == '__main__':
 #         #what we will be using for our state vector. (x, y, theta yaw, v vel)
 #         self.state = np.zeros((4,1))
 #         np.vstack(self.state)
-#         self.hstate = [self.state]
 
 #         self.gps_ready = False
 
