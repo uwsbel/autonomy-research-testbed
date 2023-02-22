@@ -70,9 +70,10 @@ class PathPlanningNode(Node):
         self.lookahead = self.get_parameter('lookahead').get_parameter_value().double_value
         
         #data that will be used by this class
-        self.state = VehicleState()
+        #self.state = VehicleState()
+        self.state = ChVehicle()
         self.error_state = ChVehicle()
-        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Sin_Path.csv")
+        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Circle_Traj.csv")
         self.ref_traj = np.loadtxt(self.file,delimiter=",")
         self.path = Path()
         # self.objects = ObjectArray()
@@ -85,7 +86,8 @@ class PathPlanningNode(Node):
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
+        self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
+        #self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
         self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
         if self.vis:
@@ -93,8 +95,8 @@ class PathPlanningNode(Node):
             self.fig, self.ax = plt.subplots()
             plt.title("Path Planning")
             self.patches = []
-            self.ax.set_xlim((-1,11))
-            self.ax.set_ylim((-6,6))
+            self.ax.set_xlim((-5,5))
+            self.ax.set_ylim((1,-10))
             self.left_boundary = None
             self.right_boundary = None
             
@@ -112,15 +114,26 @@ class PathPlanningNode(Node):
     def wpts_path_plan(self):
         x_current = self.state.pose.position.x
         y_current = self.state.pose.position.y
-        theta_current = self.state.pose.orientation.z
+        #convert quarternion to Euler angle
+        x = self.state.pose.orientation.x
+        y = self.state.pose.orientation.y
+        z = self.state.pose.orientation.z
+        w = self.state.pose.orientation.w
+        theta_current = np.arctan2( 2*(w*z+x*y), 1-2*(y*y+z*z) )
         v_current = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
         dist = np.zeros((1,len(self.ref_traj[:,1])))
         for i in range(len(self.ref_traj[:,1])):
-            dist[0][i] = dist[0][i] = (x_current+np.sqrt(self.lookahead)-self.ref_traj[i][0])**2+(y_current+np.sqrt(self.lookahead)-self.ref_traj[i][1])**2
+            dist[0][i] = dist[0][i] = (x_current+np.cos(theta_current)*self.lookahead-self.ref_traj[i][0])**2+(y_current+np.sin(theta_current)*self.lookahead-self.ref_traj[i][1])**2
         index = dist.argmin()
         ref_state_current = list(self.ref_traj[index,:])
-        ref_state_current[2] = np.arctan(ref_state_current[2]) #convert dy/dx to heading angle
+        #ref_state_current[2] = np.arctan(ref_state_current[2]) #convert dy/dx to heading angle
         error_state = [ref_state_current[0]-x_current,ref_state_current[1]-y_current,ref_state_current[2]-theta_current, ref_state_current[3]-v_current]
+
+        with open ('planning_log.csv','a', encoding='UTF8') as csvfile:
+                my_writer = csv.writer(csvfile)
+                #for row in pt:
+                my_writer.writerow([x_current,y_current ,theta_current,ref_state_current[0],ref_state_current[1], ref_state_current[2] ,error_state[2]])
+                csvfile.close()
 
         return error_state
 
@@ -259,7 +272,7 @@ class PathPlanningNode(Node):
         err_state_msg.pose.position.y = error_state[1]
         err_state_msg.pose.orientation.z = error_state[2]
         err_state_msg.twist.linear.x = error_state[3]
-        self.pub_err_state.publish(err_state_msg)    
+        self.pub_err_state.publish(err_state_msg)  
 
 def main(args=None):
     # print("=== Starting Path Planning Node ===")
