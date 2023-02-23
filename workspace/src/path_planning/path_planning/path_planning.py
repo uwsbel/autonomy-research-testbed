@@ -73,21 +73,21 @@ class PathPlanningNode(Node):
         #self.state = VehicleState()
         self.state = ChVehicle()
         self.error_state = ChVehicle()
-        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Circle_Traj.csv")
+        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Circle_Traj_CW.csv")
         self.ref_traj = np.loadtxt(self.file,delimiter=",")
         self.path = Path()
         # self.objects = ObjectArray()
 
         self.green_cones = np.array([])
         self.red_cones = np.array([])
-
+        self.heading = 0.0
         self.go = False
 
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
-        #self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback_heading, qos_profile)
         self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
         if self.vis:
@@ -106,6 +106,10 @@ class PathPlanningNode(Node):
         self.pub_err_state = self.create_publisher(ChVehicle, '/vehicle/error_state', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
+    def state_callback_heading(self,msg):
+        self.state_heading = msg
+        self.state_heading = self.state_heading.pose.orientation.z
+
     #function to process data this class subscribes to
     def state_callback(self, msg):
         # self.get_logger().info("Received '%s'" % msg)
@@ -115,19 +119,63 @@ class PathPlanningNode(Node):
         x_current = self.state.pose.position.x
         y_current = self.state.pose.position.y
         #convert quarternion to Euler angle
+        # double sq0 = mq.e0() * mq.e0();
+        # double sq1 = mq.e1() * mq.e1();
+        # double sq2 = mq.e2() * mq.e2();
+        # double sq3 = mq.e3() * mq.e3();
+        # // roll
+        # euler.x() = atan2(2 * (mq.e2() * mq.e3() + mq.e0() * mq.e1()), sq3 - sq2 - sq1 + sq0);
+        # // pitch
+        # euler.y() = -asin(2 * (mq.e1() * mq.e3() - mq.e0() * mq.e2()));
+        # // yaw
+        # euler.z() = atan2(2 * (mq.e1() * mq.e2() + mq.e3() * mq.e0()), sq1 + sq0 - sq3 - sq2);
+
+
         x = self.state.pose.orientation.x
         y = self.state.pose.orientation.y
         z = self.state.pose.orientation.z
         w = self.state.pose.orientation.w
-        theta_current = np.arctan2( 2*(w*z+x*y), 1-2*(y*y+z*z) )
+        #theta_current = np.arctan2( 2*(x*w+z*y), x**2-w**2+y**2-z**2 )
+        theta_current = self.state_heading-0.24845347641462115
+        while theta_current<-np.pi:
+            theta_current = theta_current+2*np.pi
+        while theta_current>np.pi:
+            theta_current = theta_current - 2*np.pi
+
+        # if theta_current<0:
+        #     theta_current = theta_current+2*np.pi
         v_current = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
         dist = np.zeros((1,len(self.ref_traj[:,1])))
         for i in range(len(self.ref_traj[:,1])):
             dist[0][i] = dist[0][i] = (x_current+np.cos(theta_current)*self.lookahead-self.ref_traj[i][0])**2+(y_current+np.sin(theta_current)*self.lookahead-self.ref_traj[i][1])**2
         index = dist.argmin()
+        # if (index>400):
+        #     index = 10
         ref_state_current = list(self.ref_traj[index,:])
         #ref_state_current[2] = np.arctan(ref_state_current[2]) #convert dy/dx to heading angle
-        error_state = [ref_state_current[0]-x_current,ref_state_current[1]-y_current,ref_state_current[2]-theta_current, ref_state_current[3]-v_current]
+        err_theta = 0
+        ref = ref_state_current[2]
+        act = theta_current
+        if( (ref>0 and act>0) or (ref<=0 and act <=0)):
+            err_theta = ref-act
+        elif( ref<=0 and act > 0):
+            if(abs(ref-act)<abs(2*np.pi-ref-act)):
+                err_theta = -abs(act-ref)
+            else:
+                err_theta = -abs(2*np.pi - ref- act)
+        else:
+            if(abs(ref-act)<abs(2*np.pi-ref-act)):
+                err_theta = abs(act-ref)
+            else: 
+                err_theta = abs(2*np.pi-ref-act)
+
+
+        error_state = [ref_state_current[0]-x_current,ref_state_current[1]-y_current,err_theta, ref_state_current[3]-v_current]
+
+        # while error_state[2]<-np.pi:
+        #     error_state[2] = -error_state[2]-2*np.pi
+        # while error_state[2]>np.pi:
+        #     error_state[2] = -error_state[2] + 2*np.pi
 
         with open ('planning_log.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
