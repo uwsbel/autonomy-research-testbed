@@ -74,9 +74,9 @@ class StateEstimationNode(Node):
         self.state = np.zeros((4,1))
         np.vstack(self.state)
         #TODO: edit these to change the starting location...
-        self.init_x = 5
-        self.init_y = 5
-        self.init_theta = 2.0
+        self.init_x = 0
+        self.init_y = 0
+        self.init_theta = 0.0
         self.state[0,0] = self.init_x
         self.state[1,0] = self.init_y
         self.state[2,0] = self.init_theta
@@ -248,7 +248,8 @@ class StateEstimationNode(Node):
             #msg.pose.position.y = float(self.y)
             msg.pose.position.x = float(self.state[0][0])
             msg.pose.position.y = float(self.state[1][0])
-            msg.pose.orientation.z = float(self.state[2][0])
+            #msg.pose.orientation.z = float(self.state[2][0])
+            msg.pose.orientation.z = np.deg2rad(self.D)
             #TODO: make sure these are correct
             msg.twist.linear.x = float(self.state[3][0]*math.cos(self.state[2][0]))
             msg.twist.linear.y = float(self.state[3][0]*math.sin(self.state[2][0]))

@@ -180,20 +180,23 @@ class ControlNode(Node):
             #read velocity
             velo = self.vel
             #feed in velocity, target point coordinates and current control inputs to the mpc solver
+            ### use the mpc solver
             self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,1)
-            #self.throttle = 0.0
-            #self.steering = 0.0
+            
+
+            # self.throttle = 0.4
+            # self.steering = 0.3
             
             steer_coeff = 1.3
             self.steering = self.steering * steer_coeff
             self.get_logger().info(' control = %s' % [self.throttle, self.steering])
 
-            if(self.first_write):
-                os.remove("mpc_0211_efkmpc.csv")
-                self.first_write = False
+            # if(self.first_write):
+            #     os.remove("mpc_0211_efkmpc.csv")
+            #     self.first_write = False
 
 
-            with open ('mpc_0211_efkmpc.csv','a', encoding='UTF8') as csvfile:
+            with open ('mpc_square.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
                 my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,self.state.pose.position.x,self.state.pose.position.y,self.throttle,self.steering])

@@ -48,7 +48,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
     r_wheel = 0.08451952624
     i_wheel = 1e-3
     gamma = 1/3
-    tau_0 = 0.3
+    tau_0 = 0.09
     omega_0 = 161.185
     c1 = 1e-4
     l_car = 0.25
@@ -93,9 +93,9 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
         # xmin = np.array([-0.75,-0.75,-np.inf,-np.inf])
         # xmax = np.array([0.75, 0.75, np.inf,np.inf])
         # Objective function
-        Q = sparse.diags([5500., 5500., 400., 300.])
+        Q = sparse.diags([5500., 5500., 500., 300.])
         QN = Q
-        R = sparse.diags([10., 100.])
+        R = sparse.diags([10., 0.])
 
 
 
@@ -128,7 +128,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
         prob = osqp.OSQP()
 
         # Setup workspace
-        prob.setup(P, q, A, l, u, warm_start=True)
+        prob.setup(P, q, A, l, u, warm_start=True,max_iter=10000)
 
         # Simulate in closed loop
 
