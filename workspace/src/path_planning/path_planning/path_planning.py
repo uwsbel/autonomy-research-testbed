@@ -73,7 +73,7 @@ class PathPlanningNode(Node):
         #self.state = VehicleState()
         self.state = ChVehicle()
         self.error_state = ChVehicle()
-        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Square_Traj.csv")
+        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Circle_Traj_CW.csv")
         self.ref_traj = np.loadtxt(self.file,delimiter=",")
         self.path = Path()
         # self.objects = ObjectArray()
@@ -159,15 +159,15 @@ class PathPlanningNode(Node):
         if( (ref>0 and act>0) or (ref<=0 and act <=0)):
             err_theta = ref-act
         elif( ref<=0 and act > 0):
-            if(abs(ref-act)<abs(2*np.pi-ref-act)):
+            if(abs(ref-act)<abs(2*np.pi+ref-act)):
                 err_theta = -abs(act-ref)
             else:
-                err_theta = -abs(2*np.pi - ref- act)
+                err_theta = abs(2*np.pi + ref- act)
         else:
-            if(abs(ref-act)<abs(2*np.pi-ref-act)):
+            if(abs(ref-act)<abs(2*np.pi-ref+act)):
                 err_theta = abs(act-ref)
             else: 
-                err_theta = abs(2*np.pi-ref-act)
+                err_theta = -abs(2*np.pi-ref+act)
 
 
         error_state = [ref_state_current[0]-x_current,ref_state_current[1]-y_current,err_theta, ref_state_current[3]-v_current]

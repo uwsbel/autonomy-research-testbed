@@ -196,7 +196,7 @@ class ControlNode(Node):
             #     self.first_write = False
 
 
-            with open ('mpc_square.csv','a', encoding='UTF8') as csvfile:
+            with open ('mpc_circle.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
                 my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,self.state.pose.position.x,self.state.pose.position.y,self.throttle,self.steering])
