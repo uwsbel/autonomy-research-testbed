@@ -86,7 +86,7 @@ class PathPlanningNode(Node):
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
         self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback_heading, qos_profile)
         self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
@@ -170,7 +170,16 @@ class PathPlanningNode(Node):
                 err_theta = -abs(2*np.pi-ref+act)
 
 
-        error_state = [ref_state_current[0]-x_current,ref_state_current[1]-y_current,err_theta, ref_state_current[3]-v_current]
+        RotM = np.array([ 
+            [np.cos(-theta_current), -np.sin(-theta_current)],
+            [np.sin(-theta_current), np.cos(-theta_current)]
+        ])
+        errM = np.array([[ref_state_current[0]-x_current],[ref_state_current[1]-y_current]])
+
+        errRM = RotM@errM
+
+
+        error_state = [errRM[0][0],errRM[1][0],err_theta, ref_state_current[3]-v_current]
 
         # while error_state[2]<-np.pi:
         #     error_state[2] = -error_state[2]-2*np.pi
