@@ -71,7 +71,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
             [1.0,   vel*np.tan(delta)/l_car*delta_t,  -vel_ref*np.sin(e3)*delta_t,  0.],
             [-vel*np.tan(delta)/l_car*delta_t,   1.0,  vel_ref*np.cos(e3)*delta_t,  0.],
             [0.,   0.,  1.0,  0],
-            [0.,   0.,  0.,  1.0-(c1/i_wheel)*delta_t],
+            [0.,   0.,  0.,  1.0-(c1*omega_0+tau_0/(i_wheel*omega_0))*delta_t],
         ])
         #Ad = Ad * delta_t + sparse.eye(4)
 
@@ -79,7 +79,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
                 [0.,  vel*e2/(l_car*np.cos(delta)*np.cos(delta))*delta_t],
                 [0.,  -vel*e1/(l_car*np.cos(delta)*np.cos(delta))*delta_t],
                 [0.,  -vel/(l_car*np.cos(delta)*np.cos(delta))*delta_t],
-                [tau_0*(vel_ref-gamma*r_wheel*omega_0)/(i_wheel*omega_0)*delta_t,  0]
+                [-gamma*r_wheel*tau_0/i_wheel*delta_t,  0]
                 ])
 
         [nx, nu] = Bd.shape
@@ -95,7 +95,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
         # Objective function
         Q = sparse.diags([5500., 5500., 500., 300.])
         QN = Q
-        R = sparse.diags([10., 0.])
+        R = sparse.diags([10., 100.])
 
 
 
