@@ -76,7 +76,7 @@ class StateEstimationNode(Node):
         #TODO: edit these to change the starting location...
         self.init_x = 0
         self.init_y = 0
-        self.init_theta = 0.75
+        self.init_theta = 0.0
         self.init_v = 0.0
         self.state[0,0] = self.init_x
         self.state[1,0] = self.init_y

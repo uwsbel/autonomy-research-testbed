@@ -73,7 +73,7 @@ class PathPlanningNode(Node):
         #self.state = VehicleState()
         self.state = ChVehicle()
         self.error_state = ChVehicle()
-        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Circle_Traj_CW3.csv")
+        self.file = open("/home/art/art/workspace/src/path_planning/path_planning/Sin_Path.csv")
         self.ref_traj = np.loadtxt(self.file,delimiter=",")
         self.path = Path()
         # self.objects = ObjectArray()
@@ -86,8 +86,8 @@ class PathPlanningNode(Node):
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
-        self.sub_state_heading = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback_heading, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
+        self.sub_s = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback_heading, qos_profile)
         self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
         if self.vis:

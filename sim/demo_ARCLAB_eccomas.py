@@ -591,9 +591,9 @@ green_cone_assets = list()
 cones = list()
 
 # Initial vehicle location
-init_loc_x = 0.1
-init_loc_y = 0.1
-init_angle_z = 0.0
+init_loc_x = 0.0
+init_loc_y = 0.0
+init_angle_z = 0.75
 
 initLoc = chrono.ChVectorD(init_loc_x, init_loc_y, 0.5)
 initRot = chrono.Q_from_AngZ(init_angle_z)

@@ -23,7 +23,7 @@ def mpc_cvxpy_solver_v2(xref,yref,v_current,u_current):
     gamma = 1/3
     tau_0 = 1.0
     omega_0 = 1300*8.0*np.pi/30
-    l_car = 0.25
+    l_car = 0.5
     df_1_dv = -tau_0/(omega_0*r_wheel*gamma)
     df_0_dv = -10*tau_0 / (9*omega_0*r_wheel*gamma)
     nsim = 2

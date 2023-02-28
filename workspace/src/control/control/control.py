@@ -184,19 +184,19 @@ class ControlNode(Node):
             self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,3.0)
             
 
-            # self.throttle = 0.4
-            # self.steering = 0.3
+            # self.throttle = 0.3
+            # self.steering = 1.0
             
             steer_coeff = 0.8
             self.steering = self.steering * steer_coeff
             self.get_logger().info(' control = %s' % [self.throttle, self.steering])
 
-            # if(self.first_write):
-            #     os.remove("mpc_0211_efkmpc.csv")
-            #     self.first_write = False
+            if(self.first_write):
+                os.remove("mpc_circle.csv")
+                self.first_write = False
 
 
-            with open ('mpc_circle30.csv','a', encoding='UTF8') as csvfile:
+            with open ('mpc_circle.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
                 my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,self.state.pose.position.x,self.state.pose.position.y,self.throttle,self.steering])
