@@ -51,7 +51,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
     tau_0 = 0.09
     omega_0 = 161.185
     c1 = 1e-4
-    l_car = 0.25
+    l_car = 0.5
     nsim = 1
     delta_t = 0.1
     start_time = time.time()
