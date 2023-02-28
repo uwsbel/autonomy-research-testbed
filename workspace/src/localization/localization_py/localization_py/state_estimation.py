@@ -76,10 +76,12 @@ class StateEstimationNode(Node):
         #TODO: edit these to change the starting location...
         self.init_x = 0
         self.init_y = 0
-        self.init_theta = 0.0
+        self.init_theta = 0.75
+        self.init_v = 0.0
         self.state[0,0] = self.init_x
         self.state[1,0] = self.init_y
         self.state[2,0] = self.init_theta
+        self.state[3,0] = self.init_v
 
 
 
@@ -105,7 +107,7 @@ class StateEstimationNode(Node):
 
 
         #inputs to the vehicle
-        self.throttle = 0
+        self.throttle = 0.0
         self.steering = 0
 
         #time between imu updates, sec
@@ -223,7 +225,12 @@ class StateEstimationNode(Node):
 
     #callback to run a loop and publish data this class generates
     def pub_callback(self):
-        u = np.array([[self.throttle], [self.steering/4]])
+        # if(abs(self.steering)<0.8):
+        #     self.steering = self.steering/3.25
+        # else:
+        #     self.steering = (self.steering/abs(self.steering))*0.8/3.25
+
+        u = np.array([[self.throttle], [self.steering*0.6]])
         z = np.array([[self.x],[self.y], [np.deg2rad(self.D)]])
         self.EKFstep(u, z)
         

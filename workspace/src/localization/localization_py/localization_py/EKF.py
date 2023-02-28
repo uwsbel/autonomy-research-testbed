@@ -152,7 +152,7 @@ class EKF(object):
             return 0
         else:
             return -10*self.tau_0 / (9*self.omega_0*self.r_wheel*self.gamma)
-    def __init__(self, dt):
+    def __init__(self, dt):#, q1, q3, q4, r1, r3):
         self.dt = dt
         #vehicle parameters:
         self.c_1 = 1e-4
@@ -162,19 +162,42 @@ class EKF(object):
         self.i_wheel = 1e-3
         self.gamma = 1/3
         self.tau_0 = 0.09#1
-        self.omega_0 = 0.16*1300*7.4*0.1047198#1300*8.0*np.pi/30
+        self.omega_0 = 161.185
         self.df_1_dv = -self.tau_0/(self.omega_0*self.r_wheel*self.gamma)
 
+
+        # self.Q = np.diag([
+        #     q1,  # variance of location on x-axis
+        #     11,  # variance of location on y-axis
+        #     np.deg2rad(q3),  # variance of yaw angle
+        #     q4 # variance of velocity
+        # ]) ** 2  # predict state covariance
+        # # Observation x,y position covariance
+        # self.R = np.diag([r1, r1, r3]) ** 2
+        # self.P = np.eye(4)
         self.Q = np.diag([
-            0.01,  # variance of location on x-axis
-            0.01,  # variance of location on y-axis
+            0.3,  # variance of location on x-axis
+            0.3,  # variance of location on y-axis
             np.deg2rad(15),  # variance of yaw angle
             0.1 # variance of velocity
         ]) ** 2  # predict state covariance
         # Observation x,y position covariance
-        self.R = np.diag([3.0, 3.0, 1.0]) ** 2
+        self.R = np.diag([2, 2, 0.1]) ** 2
         self.P = np.eye(4)
 
+
+
+
+        #BEST SO FAR:
+        # self.Q = np.diag([
+        #     0.2,  # variance of location on x-axis
+        #     0.2,  # variance of location on y-axis
+        #     np.deg2rad(5),  # variance of yaw angle
+        #     0.1 # variance of velocity
+        # ]) ** 2  # predict state covariance
+        # # Observation x,y position covariance
+        # self.R = np.diag([2.0, 2.0, 1.0]) ** 2
+        # self.P = np.eye(4)
 
     
     def angle_diff(self,ref, act):
