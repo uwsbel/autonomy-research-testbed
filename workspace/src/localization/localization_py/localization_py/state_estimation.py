@@ -74,16 +74,18 @@ class StateEstimationNode(Node):
         self.state = np.zeros((4,1))
         np.vstack(self.state)
         #TODO: edit these to change the starting location...
+        self.heading_const = 14
+        self.hc = 0
+        
+        self.headstart_x = 0.3
         self.init_x = 0
         self.init_y = 0
-        self.init_theta = 0.0
+        self.init_theta = 0.75-np.deg2rad(self.hc)
         self.init_v = 0.0
         self.state[0,0] = self.init_x
         self.state[1,0] = self.init_y
         self.state[2,0] = self.init_theta
         self.state[3,0] = self.init_v
-
-
 
         self.gps_ready = False
 
@@ -159,7 +161,7 @@ class StateEstimationNode(Node):
         x,y,z = self.graph.gps2cartesian(lat,lon,alt)
         if(self.orig_heading_set):
             self.gtx,self.gty, self.gtz =self.graph.rotate(x,y,z)
-            self.gtx = self.gtx+self.init_x
+            self.gtx = self.gtx+self.init_x+self.headstart_x
             self.gty = self.gty+self.init_y
         
         
@@ -184,10 +186,12 @@ class StateEstimationNode(Node):
             self.D = self.D-360
         while(self.D<0):
             self.D = self.D+360
+        
         if(not self.orig_heading_set):
             self.orig_heading_set = True
-            self.orig_heading = self.D
-            self.graph.set_rotation(np.deg2rad(self.D-14)-self.init_theta)
+            self.orig_heading = self.D-self.heading_const-np.rad2deg(self.init_theta) #TODO: bug here.....
+            self.graph.set_rotation(np.deg2rad(self.D-self.heading_const) -self.init_theta)
+            self.state[2,0] = self.init_theta+np.deg2rad(-self.heading_const)
 
 
     def gps_callback(self,msg):
@@ -213,11 +217,11 @@ class StateEstimationNode(Node):
             x,y,z = self.graph.gps2cartesian(self.lat,self.lon,self.alt)
             if(self.orig_heading_set):
                 self.x,self.y, self.z =self.graph.rotate(x,y,z)
-                self.x +=self.init_x
+                self.x +=self.init_x+self.headstart_x
                 self.y +=self.init_y
         
         else:
-           self.x = self.init_x
+           self.x = self.init_x+self.headstart_x
            self.y = self.init_y
            self.z = 0
 
@@ -230,8 +234,8 @@ class StateEstimationNode(Node):
         # else:
         #     self.steering = (self.steering/abs(self.steering))*0.8/3.25
 
-        u = np.array([[self.throttle], [self.steering*0.6]])
-        z = np.array([[self.x],[self.y], [np.deg2rad(self.D)]])
+        u = np.array([[self.throttle], [self.steering/2.2]])
+        z = np.array([[self.x],[self.y], [np.deg2rad(self.D-self.heading_const-2*self.heading_const-self.hc)]])
         self.EKFstep(u, z)
         
 
