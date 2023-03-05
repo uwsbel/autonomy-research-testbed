@@ -42,8 +42,8 @@ class EKF(object):
         #x[3,0] = x[3,0]+ \
         #        self.dt*((self.r_wheel*self.gamma/self.i_wheel)*(u[0,0]*self.new_f(x[3,0])-(x[3,0]*self.c_1/(self.r_wheel*self.gamma))-self.c_0))
         
-        # if(x[3,0]<0):
-        #     x[3,0]= 0
+        # if(x[3,0]<-0.2):
+        #     x[3,0]= -0.2
         
         ###THIS IS TEST...DEF NOT CORRECT EQ###
         # throttle = u[0,0]
@@ -142,7 +142,7 @@ class EKF(object):
                 math.cos(theta), self.dt*math.sin(theta)],
             [0.0, 0.0, self.dt*1.0, self.dt*np.tan(delta)/self.l],
             [0.0, 0.0, 0.0, 
-            self.dt*(1+(self.r_wheel*self.gamma/(self.i_wheel))*(-(self.tau_0/(self.omega_0*self.r_wheel*self.gamma))-(self.c_1/(self.r_wheel*self.gamma))))]
+            self.dt*(1+(1/(self.i_wheel))*(-(self.tau_0/(self.omega_0))-(self.c_1)))]
          ])
 
         return F
@@ -176,13 +176,13 @@ class EKF(object):
         # self.R = np.diag([r1, r1, r3]) ** 2
         # self.P = np.eye(4)
         self.Q = np.diag([
-            0.3,  # variance of location on x-axis
-            0.3,  # variance of location on y-axis
-            np.deg2rad(15),  # variance of yaw angle
+            0.01,  # variance of location on x-axis
+            0.01,  # variance of location on y-axis
+            np.deg2rad(1),  # variance of yaw angle
             0.1 # variance of velocity
         ]) ** 2  # predict state covariance
         # Observation x,y position covariance
-        self.R = np.diag([2, 2, 0.1]) ** 2
+        self.R = np.diag([2, 2, 0.5]) ** 2
         self.P = np.eye(4)
 
 
