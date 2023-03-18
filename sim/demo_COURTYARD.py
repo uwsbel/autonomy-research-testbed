@@ -36,7 +36,6 @@ import os
 # Chrono Imports
 import pychrono as chrono
 import pychrono.vehicle as veh
-import pychrono.irrlicht as irr
 import pychrono.sensor as sens
 
 #// =============================================================================
@@ -227,13 +226,6 @@ def main():
 
     vehicle.GetSystem().Add(room_mesh_body)
 
-    # remove addition of cones
-    # if cones_from_file:
-    #    AddConesFromFile()
-    #else:
-    #    AddRandomCones(int(num_cones / 2), chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), 2)
-    #    AddRandomCones(int(num_cones / 2), chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), 1)
-
     # === create sensors ===
     manager = sens.ChSensorManager(vehicle.GetSystem())
     manager.scene.AddPointLight(chrono.ChVectorF(100, 100, 100), chrono.ChColor(1, 1, 1), 5000)
@@ -319,7 +311,7 @@ def main():
     gps.PushFilter(sens.ChFilterGPSAccess())
     manager.AddSensor(gps)
 
-    # label the cones that were added to the scene with semantic information
+    # rebuild scene; can add semantic information here and rebuild if needed
     manager.ReconstructScenes()
 
     driver = veh.ChExternalDriver(vehicle.GetVehicle(), 50000)
@@ -411,15 +403,6 @@ create_semantic_maps = False
 save_sensor_data = False
 sensor_data_dir = "sensor_output/"
 
-#num_cones = 100
-#cones_from_file = True
-#cone_path_file = "data/paths/cone_paths_0.csv"
-
-#cone_offset_x = 0
-#cone_offset_y = 0
-#cone_spread_x = 1.0
-#cone_spread_y = 1.0
-
 throttle_scaling = .5 * abs(1400.0 - 1500.0) / (1980.0 - 1500.0) # based on motor_driver.py limits for safety
 braking_scaling = abs(1600.0 - 1500.0) / (1980.0 - 1500.0)  # based on motor_driver.py limits for safety
 steering_scaling = 1.0  # abs(1725.0 - 1500.0) / (1980.0 - 1500.0);  // based on motor_driver.py limits for safety
@@ -430,12 +413,6 @@ throttle = 0.0
 braking = 0.0
 steering = 0.0
 
-red_cone_assets = list()
-green_cone_assets = list()
-
-
-red_cones = list()
-green_cones = list()
 
 # Initial vehicle location
 init_loc_x = -2.5
@@ -469,6 +446,9 @@ contact_method = chrono.ChContactMethod_NSC
 
 # Flag to activate irrlicht
 USE_IRRLICHT = False
+
+if not USE_IRRLICHT:
+    import pychrono.irrlicht as irr
 
 # Simulation step sizes
 step_size = 1e-3
