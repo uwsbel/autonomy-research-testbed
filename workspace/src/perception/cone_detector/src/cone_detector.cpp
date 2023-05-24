@@ -19,15 +19,27 @@ using namespace nvinfer1;
 
 
 
-using namespace std;
+// using namespace std;
 
 
 
 
 ConeDetector::ConeDetector(const rclcpp::NodeOptions& options) : rclcpp::Node("ConeDetector", options) {
 
+    this->state = "";
+    this->prediction = {};
+    this->prediction["boxes"] = torch::tensor({});
+    this->prediction["labels"] = torch::tensor({});
+    this->prediction["scores"] = torch::tensor({});
 
+    this->threshold = 0.001;
+    this->device = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
+    if (!torch::cuda::is_available())
+    {
+        RCLCPP_INFO(this->get_logger(), "CUDA support in Torch is not available. Either reconfigure with CUDA or fall back to a different perception node.");
+        exit(1);
+    }
 
     auto package_share_directory = ament_index_cpp::get_package_share_directory("cone_detector");
     
@@ -84,7 +96,7 @@ ConeDetector::ConeDetector(const rclcpp::NodeOptions& options) : rclcpp::Node("C
 
     if (stat(engine_file, &sb) == 0) {
         IRuntime* runtime = createInferRuntime(gLogger);
-        std::ifstream engineStream(engineFile, std::ios::binary);
+        std::ifstream engineStream(engine_file, std::ios::binary);
         engine = runtime->deserializeCudaEngine(engineStream);
 
         if (engine == nullptr)
@@ -124,7 +136,7 @@ ConeDetector::ConeDetector(const rclcpp::NodeOptions& options) : rclcpp::Node("C
             throw std::runtime_error("Engine is not initialized.");
         }
 
-        std::ofstream engineStream(engineFile, std::ios::binary);
+        std::ofstream engineStream(engine_file, std::ios::binary);
         engineStream.write(static_cast<char*>(engine->serialize()), engine->getSerializedSize());
     }
 
@@ -210,7 +222,7 @@ void ConeDetector::image_callback(const ImageMsgConstPtr& msg) {
 
 cv::Point3f ConeDetector::direction_to_pixel(const cv::Point2f& px) {
     float pt_x = -((px[0]+.5) / this->camera_width * 2 - 1);
-    float pt_y = -((px[1]+.5) / this->camera_hight * 2 - 1);
+    float pt_y = -((px[1]+.5) / this->camera_height * 2 - 1);
     pt_y *= this->camera_height / this->camera_width;
 
     float h_factor = this->camera_fov / M_PI * 2.0;
@@ -244,7 +256,7 @@ cv::Point3f ConeDetector::calculate_position_from_box(const cv::Rect& rectangle)
     return cv::Point3f(result.at<float>(0, 0), result.at<float>(1, 0), result.at<float>(2, 0));
 }
 
-void ConeDector::pub_callback() {
+void ConeDetector::pub_callback() {
     if (!this->go) {
         return;
     }
