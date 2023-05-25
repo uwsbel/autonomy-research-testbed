@@ -34,6 +34,10 @@ endforeach()
 ament_auto_find_build_dependencies(REQUIRED ${DEPENDENCIES})
 
 
+set(LIBRARIES
+  ${OpenCV_LIBRARIES}
+)
+
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/${PROJECT_NAME}.cpp
 )
