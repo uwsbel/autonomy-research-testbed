@@ -32,7 +32,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'cone_detector'
+package_name = 'cone_detector_old'
 
 setup(
     name=package_name,
