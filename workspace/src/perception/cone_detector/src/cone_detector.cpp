@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <opencv2/opencv.hpp>
 #include <NvInfer.h>
+#include <opencv2/opencv.hpp>
 using namespace nvinfer1;
 
 
@@ -174,7 +175,39 @@ ConeDetector::ConeDetector(const rclcpp::NodeOptions& options) : rclcpp::Node("C
 ConeDetector::~ConeDetector() {}
 
 // function to process data this node subscribes to
-//nms
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> ConeDetector::nms(torch::Tensor pred) {
+    // Multiply class predictions by scores
+    pred.slice(1, 5) *= pred.slice(1, 4, 5);
+
+    // Change anchor point to corner rather than center
+    torch::Tensor boxes = pred.slice(1, 0, 4);
+    boxes.slice(1, 0, 1) -= boxes.slice(1, 2, 3) / 2;
+    boxes.slice(1, 1, 2) -= boxes.slice(1, 3, 4) / 2;
+    boxes.slice(1, 2, 3) += boxes.slice(1, 0, 1);
+    boxes.slice(1, 3, 4) += boxes.slice(1, 1, 2);
+
+    // Get the confidence and class ID
+    torch::Tensor scores, class_id;
+    std::tie(scores, class_id) = pred.slice(1, 5).max(1, false);
+
+    torch::Tensor mask = scores > this->confidence_thresh;
+    boxes = boxes.masked_select(mask.unsqueeze(1).expand_as(boxes)).reshape({ -1, 4 });
+    class_id = class_id.masked_select(mask);
+    scores = scores.masked_select(mask);
+
+    // Apply torchvision's batched_nms
+    torch::Tensor res = torch::ops::batched_nms(boxes, scores, class_id, this->iou_thresh);
+
+    if (res.size(0) > this->max_detections) {
+        res = res.slice(0, 0, this->max_detections);
+    }
+
+    torch::Tensor selected_boxes = boxes.index_select(0, res);
+    torch::Tensor selected_scores = scores.index_select(0, res);
+    torch::Tensor selected_class_id = class_id.index_select(0, res);
+
+    return std::make_tuple(selected_boxes, selected_scores, selected_class_id);
+}
 
 void ConeDetector::state_callback(const VehicleStateMsgConstPtr& msg) {
     this->state_msg = msg;

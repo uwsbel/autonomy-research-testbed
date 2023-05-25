@@ -24,6 +24,7 @@ set(DEPENDENCIES
   sensor_msgs
   nav_msgs
   art_perception_msgs
+  OpenCV
 )
 
 foreach (dependency IN LISTS DEPENDENCIES)
@@ -38,9 +39,10 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 )
 target_include_directories(${PROJECT_NAME} PRIVATE 
   include
+  ${OpenCV_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES} ${OpenCV_LIBRARIES})
 
 rclcpp_components_register_nodes(${PROJECT_NAME} "ConeDetector")
 
