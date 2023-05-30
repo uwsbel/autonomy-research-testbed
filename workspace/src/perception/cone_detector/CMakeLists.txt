@@ -17,14 +17,9 @@ find_package(ament_cmake_ros REQUIRED)
 # TODO: add the other dependencies
 set(DEPENDENCIES
   rclcpp
+  geometry_msgs
   rclcpp_components
   message_filters
-  std_msgs
-  geometry_msgs
-  sensor_msgs
-  nav_msgs
-  art_perception_msgs
-  OpenCV
 )
 
 foreach (dependency IN LISTS DEPENDENCIES)
@@ -33,9 +28,10 @@ endforeach()
 
 ament_auto_find_build_dependencies(REQUIRED ${DEPENDENCIES})
 
-
 set(LIBRARIES
-  ${OpenCV_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${pcl_ros_LIBRARIES}
+  ${pcl_conversions_LIBRARIES}
 )
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
@@ -43,10 +39,12 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 )
 target_include_directories(${PROJECT_NAME} PRIVATE 
   include
-  ${OpenCV_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 rclcpp_components_register_nodes(${PROJECT_NAME} "ConeDetector")
 

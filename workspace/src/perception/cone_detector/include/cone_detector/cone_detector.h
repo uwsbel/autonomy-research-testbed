@@ -57,9 +57,9 @@ class ConeDetector : public rclcpp::Node {
         // -------------
 
         
-        std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> nms(torch::Tensor pred)
-        cv::Point3f direction_to_pixel(const cv::Point2f& px);
-        cv::Point3f calculate_position_from_box(const cv::Rect& rectangle);
+        // std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> nms(torch::Tensor pred)
+        // cv::Point3f direction_to_pixel(const cv::Point2f& px);
+        // cv::Point3f calculate_position_from_box(const cv::Rect& rectangle);
 
         // ---------------
         // Class Variables
