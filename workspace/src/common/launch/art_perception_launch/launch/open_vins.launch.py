@@ -44,13 +44,13 @@ def generate_launch_description():
     launch_description.add_action(cam_publisher)
 
     # Open VINS
-    config_path = '/home/art-raj/art-raj/workspace/chrono_config/estimator_config.yaml'
+    # config_path = '/home/art-raj/art-raj/workspace/chrono_config/estimator_config.yaml'
     open_vins = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('ov_msckf'),
                 'launch/subscribe.launch.py')),
-        launch_arguments={'config_path': config_path}.items()
+        launch_arguments={'config': 'art'}.items()
     )
     launch_description.add_action(open_vins)
 

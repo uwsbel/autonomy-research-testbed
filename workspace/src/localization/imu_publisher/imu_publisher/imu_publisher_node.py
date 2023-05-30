@@ -26,6 +26,7 @@ class IMUPublisher(Node):
             self.angular_velocity = None
             self.linear_acceleration = None
             self.orientation = None
+            self.clock = None
 
         # create publishers
         self.pub = self.create_publisher(Imu, '/imu0', 10)
@@ -37,17 +38,20 @@ class IMUPublisher(Node):
     def accelerometer_callback(self, msg):
         self.linear_acceleration = msg.linear_acceleration
         self.orientation = msg.orientation
-    
+        self.publish()
 
     def gyroscope_callback(self, msg):
         self.angular_velocity = msg.angular_velocity
-
+        self.publish()
 
     def clock_callback(self, msg):
-        if self.angular_velocity is not None and self.linear_acceleration is not None and self.orientation is not None:
+        self.clock = msg.clock
+
+    def publish(self):
+        if self.angular_velocity != None and self.linear_acceleration != None and self.orientation != None and self.clock != None:
             # build msg
             imu_msg = Imu()
-            imu_msg.header.stamp = msg.clock
+            imu_msg.header.stamp = self.clock
             imu_msg.orientation = self.orientation
             imu_msg.angular_velocity = self.angular_velocity
             imu_msg.linear_acceleration = self.linear_acceleration
@@ -55,7 +59,6 @@ class IMUPublisher(Node):
             # publish
             self.pub.publish(imu_msg)
             # self.get_logger().info('Publishing: "%s"' % msg)
-    
 
     def imu_callback(self, msg):
         self.pub.publish(msg)

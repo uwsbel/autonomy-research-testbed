@@ -220,12 +220,12 @@ def main():
         red_cone_mesh.LoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), False, True)
         red_cone_mesh.Transform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33D(1))
 
-        with open(chrono.GetChronoDataFile("autonomy-toolkit/paths/straight.csv")) as cone_file:
+        with open(chrono.GetChronoDataFile("autonomy-toolkit/paths/s_curve.csv")) as cone_file:
             while True:
                 line = cone_file.readline()
                 if not line:
                     break
-                x_inner, y_inner, x_outer, y_outer = map(float, line.split(' ')) 
+                x_inner, y_inner, x_outer, y_outer = map(float, line.split('\t')) 
 
                 pos_green_x = x_inner + cone_offset_x
                 pos_green_y = y_inner + cone_offset_y
@@ -577,7 +577,7 @@ red_cones = list()
 green_cones = list()
 
 # Initial vehicle location
-init_loc_x = -2
+init_loc_x = -2.5
 init_loc_y = 0
 init_angle_z = 0 #1.57
 

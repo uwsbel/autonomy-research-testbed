@@ -48,6 +48,7 @@ class CamPublisher(Node):
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             cv_image = cv2.flip(cv_image,0)
             new_msg = self.bridge.cv2_to_imgmsg(cv_image, "bgr8")
+            new_msg.header.stamp = msg.header.stamp
 
             # publish
             self.pub.publish(new_msg)
