@@ -166,12 +166,7 @@ void controlNode::pubCallback(void) {
     msg.throttle = clip(this->throttle, 0, 1);
     msg.braking = clip(this->braking, 0, 1);
 
-    /*
-        TODO: Remove if condition after adding "header" to chrono_msgs
-    */
-    if (this->useSimMsg == "True") {
-        msg.header.stamp = this->get_clock()->now();
-    }
+    msg.header.stamp = this->get_clock()->now();
 
     vehicleCmdPublisher_->publish(msg);
 }
