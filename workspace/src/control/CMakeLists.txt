@@ -38,4 +38,17 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+# Configure clang-format
+set(CLANG_FORMAT_EXECUTABLE_PATH /usr/bin/clang-format)
+
+# Define a custom target to format code using clang-format
+add_custom_target(format
+  COMMAND ${CLANG_FORMAT_EXECUTABLE_PATH} -style=file -i ${CMAKE_CURRENT_SOURCE_DIR}/src/control.cpp
+  COMMAND ${CLANG_FORMAT_EXECUTABLE_PATH} -style=file -i ${CMAKE_CURRENT_SOURCE_DIR}/include/control/control.h
+  COMMENT "Running clang-format"
+)
+
+# Hook the format target to the build process
+add_dependencies(control format)
+
 ament_package()

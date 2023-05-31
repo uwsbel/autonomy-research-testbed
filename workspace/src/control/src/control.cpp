@@ -1,24 +1,24 @@
 /******************************************************************************
  * BSD 3-Clause License
- * 
+ *
  * Copyright (c) 2022 University of Wisconsin - Madison
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -29,7 +29,7 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************************************************************/
+ ******************************************************************************/
 
 #include <iostream>
 #include <string>
@@ -41,10 +41,6 @@
 #include "control.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/qos.hpp"
-#include "nav_msgs/msg/path.hpp"
-#include "art_msgs/msg/vehicle_input.hpp"
-#include "art_msgs/msg/vehicle_state.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
 controlNode::controlNode() : rclcpp::Node("control") {
@@ -133,7 +129,7 @@ controlNode::controlNode() : rclcpp::Node("control") {
     */
     this->vehicleCmdPublisher_ = this->create_publisher<art_msgs::msg::VehicleInput>("~/output/vehicle_inputs", 10);
     this->timer_ = this->create_wall_timer(std::chrono::duration<double>(1 / this->nodeUpdateFrequency),
-                                            std::bind(&controlNode::pubCallback, this));
+                                           std::bind(&controlNode::pubCallback, this));
 }
 
 void controlNode::pathCallback(const nav_msgs::msg::Path msg) {
@@ -171,9 +167,9 @@ void controlNode::pubCallback(void) {
     msg.braking = clip(this->braking, 0, 1);
 
     /*
-        TODO: Remove if condition after adding "header" to choro_msgs
+        TODO: Remove if condition after adding "header" to chrono_msgs
     */
-    if(this->useSimMsg == "True") {
+    if (this->useSimMsg == "True") {
         msg.header.stamp = this->get_clock()->now();
     }
 
