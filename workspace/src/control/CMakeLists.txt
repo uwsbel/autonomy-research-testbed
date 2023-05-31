@@ -41,6 +41,12 @@ endif()
 # Configure clang-format
 set(CLANG_FORMAT_EXECUTABLE_PATH /usr/bin/clang-format)
 
+# Checking if clang-format exists
+if(NOT EXISTS "${CLANG_FORMAT_EXECUTABLE_PATH}")
+    message(FATAL_ERROR "clang-format executable not found at ${CLANG_FORMAT_EXECUTABLE_PATH}.
+    Please install clang-format or specify the correct path.")
+endif()
+
 # Define a custom target to format code using clang-format
 add_custom_target(format
   COMMAND ${CLANG_FORMAT_EXECUTABLE_PATH} -style=file -i ${CMAKE_CURRENT_SOURCE_DIR}/src/control.cpp
