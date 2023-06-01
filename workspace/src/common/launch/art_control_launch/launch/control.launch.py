@@ -57,7 +57,7 @@ def generate_launch_description():
     AddLaunchArgument("control_file", "data/smallest_radius_right.csv")
     AddLaunchArgument("steering_gain", "1.6")
     AddLaunchArgument("throttle_gain", "0.08")
-    AddLaunchArgument("use_sim_msg", "False")
+    AddLaunchArgument("use_sim_msg", '"False"')
     AddLaunchArgument("use_sim_time", "False")
 
     # -----
@@ -67,8 +67,8 @@ def generate_launch_description():
     node = Node(
             package='control',
             namespace='',
-            executable='pid',
-            name='pid',
+            executable='control',
+            name='control',
             remappings=[
                 ("~/input/path", LaunchConfiguration("input/path")),
                 ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),

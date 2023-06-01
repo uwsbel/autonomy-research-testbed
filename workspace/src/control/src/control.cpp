@@ -43,7 +43,7 @@
 #include "rclcpp/qos.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
-controlNode::controlNode() : rclcpp::Node("control") {
+control::control() : rclcpp::Node("control") {
     this->startTime = this->get_clock()->now().nanoseconds() / 1e9;
 
     /*
@@ -120,28 +120,28 @@ controlNode::controlNode() : rclcpp::Node("control") {
         Nav path & ART/Chrono Vehicle State subscribers
     */
     this->pathSubscriber_ = this->create_subscription<nav_msgs::msg::Path>(
-        "~/input/path", qos_profile, std::bind(&controlNode::pathCallback, this, std::placeholders::_1));
+        "~/input/path", qos_profile, std::bind(&control::pathCallback, this, std::placeholders::_1));
     this->stateSubscriber_ = this->create_subscription<art_msgs::msg::VehicleState>(
-        "~/input/vehicle_state", qos_profile, std::bind(&controlNode::stateCallback, this, std::placeholders::_1));
+        "~/input/vehicle_state", qos_profile, std::bind(&control::stateCallback, this, std::placeholders::_1));
 
     /*
         Publisher for this node
     */
     this->vehicleCmdPublisher_ = this->create_publisher<art_msgs::msg::VehicleInput>("~/output/vehicle_inputs", 10);
     this->timer_ = this->create_wall_timer(std::chrono::duration<double>(1 / this->nodeUpdateFrequency),
-                                           std::bind(&controlNode::pubCallback, this));
+                                           std::bind(&control::pubCallback, this));
 }
 
-void controlNode::pathCallback(const nav_msgs::msg::Path msg) {
+void control::pathCallback(const nav_msgs::msg::Path msg) {
     this->go = true;
     this->path = msg;
 }
 
-void controlNode::stateCallback(const art_msgs::msg::VehicleState msg) {
+void control::stateCallback(const art_msgs::msg::VehicleState msg) {
     this->state = msg;
 }
 
-void controlNode::pubCallback(void) {
+void control::pubCallback(void) {
     if (!this->go) {
         return;
     }
@@ -167,11 +167,11 @@ void controlNode::pubCallback(void) {
     msg.braking = clip(this->braking, 0, 1);
 
     msg.header.stamp = this->get_clock()->now();
-    
+
     vehicleCmdPublisher_->publish(msg);
 }
 
-void controlNode::calculateFromFile(void) {
+void control::calculateFromFile(void) {
     long int timeDiff = (get_clock()->now().nanoseconds() / 1e9) - startTime;
 
     this->throttle = interpolate(timeDiff, &recordedInputs, 1);
@@ -179,11 +179,11 @@ void controlNode::calculateFromFile(void) {
     this->steering = interpolate(timeDiff, &recordedInputs, 3);
 }
 
-double controlNode::clip(double input, double min, double max) {
+double control::clip(double input, double min, double max) {
     return std::max(min, std::min(max, input));
 }
 
-double controlNode::interpolate(long int input, const std::vector<float>* recordedInputs, uint8_t type) {
+double control::interpolate(long int input, const std::vector<float>* recordedInputs, uint8_t type) {
     long int n = recordedInputs->size();
     double result = 0;
     for (long int i = 0; i < n; i += 4) {
@@ -200,7 +200,7 @@ double controlNode::interpolate(long int input, const std::vector<float>* record
 
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<controlNode>());
+    rclcpp::spin(std::make_shared<control>());
     rclcpp::shutdown();
 
     return 0;

@@ -58,7 +58,7 @@ def generate_launch_description():
     AddLaunchArgument("output/vehicle_state", "/vehicle_state")
     AddLaunchArgument("vis", "False")
 
-    AddLaunchArgument("use_sim_msg", "False")
+    AddLaunchArgument("use_sim_msg", '"False"')
     AddLaunchArgument("use_sim_time", "False")
 
     # -----

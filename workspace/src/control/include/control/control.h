@@ -46,7 +46,7 @@
  * Publishes steering, throttle & breaking values
  * Subscribes to Navigation Path & ART/Chrono Vehicle State messages
  */
-class controlNode : public rclcpp::Node {
+class control : public rclcpp::Node {
     /*******************************
                 PRIVATE
     *******************************/
@@ -156,7 +156,7 @@ class controlNode : public rclcpp::Node {
                 PUBLIC
     *******************************/
   public:
-    explicit controlNode();
+    explicit control();
 };
 
 #endif

@@ -33,6 +33,7 @@ import os
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, EmitEvent
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.substitutions import TextSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
 from launch.events import Shutdown
@@ -61,7 +62,7 @@ def generate_launch_description():
     AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
     AddLaunchArgument("ip", "")
     AddLaunchArgument("hostname", "")
-    AddLaunchArgument("use_sim_time", "True")
+    AddLaunchArgument("use_sim_time", '"True"')
 
     # ------------
     # Launch Files
@@ -74,7 +75,7 @@ def generate_launch_description():
                 'launch/art_stack.launch.py')),
         launch_arguments=[
             ('use_sim_time', 'True'),
-            ('use_sim_msg', 'True'),
+            ("use_sim_msg", '"True"'),
         ]
     )
     launch_description.add_action(stack)
@@ -103,6 +104,16 @@ def generate_launch_description():
 		
     )
     launch_description.add_action(chrono_ros_bridge)
+
+    rosbridge_server = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory('rosbridge_server'),
+                "launch/rosbridge_websocket_launch.xml"
+            )
+        ])
+    )
+    launch_description.add_action(rosbridge_server)
 
     return launch_description
 
