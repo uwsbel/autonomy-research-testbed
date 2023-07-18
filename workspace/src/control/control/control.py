@@ -39,6 +39,7 @@ from rclpy.node import Node
 from art_msgs.msg import VehicleState
 from chrono_ros_msgs.msg import ChVehicle
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Twist
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
@@ -57,12 +58,12 @@ sys.path.append('/home/art/art/workspace/src/control/control')
 # from mpc_cvxpy import mpc_cvxpy_solver
 #from mpc_cvxpy_v2 import mpc_cvxpy_solver_v2
 from mpc_wpts import mpc_wpts_solver
-###---
-
-
+from pid import pidControl
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
+
+from keras.models import load_model
 
 class ControlNode(Node):
     def __init__(self):
@@ -77,7 +78,7 @@ class ControlNode(Node):
         self.file = ""
         self.recorded_inputs = np.array([])
         # update frequency of this node
-        self.freq = 50.0
+        self.freq = 10.0
 
         self.t_start = self.get_clock().now().nanoseconds / 1e9
 
@@ -98,6 +99,12 @@ class ControlNode(Node):
         self.declare_parameter("use_sim_msg", False)
         use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
 
+
+        ## read control inputs file
+        self.input_file = open("/home/art/art/workspace/src/control/control/r1.txt")
+        self.input_list = np.loadtxt(self.input_file, delimiter=" ")
+        self.index = 0
+        
         if(self.file == ""):
             self.mode = "PID"
         else:
@@ -105,7 +112,7 @@ class ControlNode(Node):
             self.recorded_inputs = np.loadtxt(file_path, delimiter=',')
 
         self.steering = 0.0
-        self.throttle = 0.0 #testing purpose
+        self.throttle = 0.7 #testing purpose
         self.braking = 0.0
 
         # data that will be used by this class
@@ -133,11 +140,16 @@ class ControlNode(Node):
         #self.sub_state = self.create_subscription(ChVehicle, '~/input/vehicle_state', self.state_callback, qos_profile)
         self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
         self.sub_ground_truth = self.create_subscription(ChVehicle, '/vehicle/state', self.ground_truth_callback, qos_profile)
+        self.sub_harryInput = self.create_subscription(Twist,'/cmd_vel',self.HarryInputs_callback,qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
         self.g_pos = [-3.15,-1.25]
         self.crl_tspan = 1/10
         self.vel = 0.0
+        self.heading = 0.0
+        
+        ##### For ML stuffs
+        self.model = load_model('/home/art/art/workspace/src/control/control/keras_ml_learnMC.h5')
 
     # function to process data this class subscribes to
     def ground_truth_callback(self, msg):
@@ -148,16 +160,27 @@ class ControlNode(Node):
     def state_callback(self, msg):
         #self.get_logger().info("Received '%s'" % msg)
         self.state = msg
+        self.heading =msg.pose.orientation.z-0.24845347641462115
+        while self.heading<-np.pi:
+            self.heading = self.heading+2*np.pi
+        while self.heading>np.pi:
+            self.heading = self.heading - 2*np.pi
         self.vel = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
 
     def err_state_callback(self,msg):
+        self.go = True
         self.error_state = msg
         
 
     def path_callback(self, msg):
-        self.go = True
+        #self.go = True
         # self.get_logger().info("Received '%s'" % msg)
         self.path = msg
+
+    def HarryInputs_callback(self,msg):
+        self.get_logger().info("received harry's inputs: %s" % msg)
+        self.throttle += msg.linear.x
+        self.steering += msg.angular.z
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
@@ -168,38 +191,66 @@ class ControlNode(Node):
 
         if(self.mode == "File"):
             self.calc_inputs_from_file()
-        elif(self.mode == "PID" and len(self.path.poses)>0):
+        elif(self.mode == "PID" and len(str(self.error_state.pose.position.x))>0):
 
 
-            #read the error state:
+            ##read the error state:
             e = [self.error_state.pose.position.x, 
                  self.error_state.pose.position.y,
                  self.error_state.pose.orientation.z,
                  self.error_state.twist.linear.x]
-            self.get_logger().info(' recieved err state = %s ' % e)
+            ref_vel = self.error_state.twist.linear.y
+            #self.get_logger().info(' recieved err state = %s ' % e)
+            if e[3]>0.3:
+                self.get_logger().info('-----------------FASTER!!!!!!!------------------')
+            elif e[3]<-0.2:
+                self.get_logger().info('-----------------SLOW DOWN!!!!!!!------------------')
+            else:
+                self.get_logger().info('-----------------GOOD!!!!!!!------------------')
+
+                
             #read velocity
             velo = self.vel
+
             #feed in velocity, target point coordinates and current control inputs to the mpc solver
-            ### use the mpc solver
-            self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,3.0)
-            
+            ## use the mpc solver
+            # self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,ref_vel)
 
-            # self.throttle = 0.3
-            # self.steering = 1.0
+            ## use pid controller
+            #self.throttle, self.steering = pidControl(e,[self.throttle,self.steering])
+
             
-            steer_coeff = 0.8
-            self.steering = self.steering * steer_coeff
+            # # #ML method
+            ###learning mpc
+            # self.throttle = sum([x * y for x, y in zip(e, [ 0.42747883,-0.10800391,0.06556592,1.2141007])])
+            # self.steering = sum([x * y for x, y in zip(e, [0.02855189,  1.21156572,  0.69078731, 0.09465685])])
+            # ##learning manual
+            # self.throttle = sum([x * y for x, y in zip(e, [0.90195976 ,-0.00169086 , 0.10097878 , 0.0058228 ])])
+            # self.steering = sum([x * y for x, y in zip(e, [ 0.09133028 , 0.3940351 ,  0.13070601, -0.12223042])])
+            ## apply black box driving
+            err = np.array(e).reshape(1,-1)
+            ctrl = self.model.predict(err)
+            self.throttle = ctrl[0,0]
+            self.steering = ctrl[0,1]
+            ### keyboard control
+
+
+            # self.throttle = 0.8
+            # self.steering = 0.3
+            # self.index += 1
+            # steer_coeff = 0.8
+            # self.steering = self.steering * steer_coeff
             self.get_logger().info(' control = %s' % [self.throttle, self.steering])
+            self.get_logger().info('time at = %s' % self.input_list[self.index,0])
+            # if(self.first_write):
+            #     os.remove("mpc_circle.csv")
+            #     self.first_write = False
 
-            if(self.first_write):
-                os.remove("mpc_circle.csv")
-                self.first_write = False
 
-
-            with open ('mpc_circle.csv','a', encoding='UTF8') as csvfile:
+            with open ('circle_sim_testing.csv','a', encoding='UTF8') as csvfile:
                 my_writer = csv.writer(csvfile)
                 #for row in pt:
-                my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,self.state.pose.position.x,self.state.pose.position.y,self.throttle,self.steering])
+                my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,e[0],e[1],e[2],e[3],self.throttle,self.steering])
                 csvfile.close()
 
         
@@ -217,7 +268,6 @@ class ControlNode(Node):
         self.steering = np.interp(t,self.recorded_inputs[:,0],self.recorded_inputs[:,3])
 
         # self.get_logger().info('Inputs %s' % self.recorded_inputs[0,:])
-
         # self.get_logger().info('Inputs from file: (t=%s, (%s,%s,%s)),' % (t,self.throttle,self.braking,self.steering))
 
 def main(args=None):
