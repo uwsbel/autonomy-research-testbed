@@ -72,6 +72,7 @@ RUN /bin/$USERSHELL -c "source /opt/ros/$ROS_DISTRO/setup.$USERSHELL"
 RUN if [ "$USERSHELL" = "bash" ]; then \
 			echo 'export TERM=xterm-256color' >> $USERSHELLPROFILE; \ 
 			echo 'export PS1="\[\033[38;5;40m\]\h\[$(tput sgr0)\]:\[$(tput sgr0)\]\[\033[38;5;39m\]\w\[$(tput sgr0)\]\\$ \[$(tput sgr0)\]"' >> $USERSHELLPROFILE; \
+			echo 'export KERAS_BACKEND="torch"' >> $USERSHELLPROFILE; \ 
 		fi
 
 # Set user and work directory
