@@ -129,10 +129,10 @@ class ControlNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_path = self.create_subscription(Path, '~/input/path', self.path_callback, qos_profile)
-        self.sub_err_state = self.create_subscription(ChVehicle, '/vehicle/error_state', self.err_state_callback, qos_profile)
+        self.sub_err_state = self.create_subscription(ChVehicle, '~/input/error_state', self.err_state_callback, qos_profile)
         #self.sub_state = self.create_subscription(ChVehicle, '~/input/vehicle_state', self.state_callback, qos_profile)
-        self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
-        self.sub_ground_truth = self.create_subscription(ChVehicle, '/vehicle/state', self.ground_truth_callback, qos_profile)
+        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        self.sub_ground_truth = self.create_subscription(ChVehicle, '~/input/true_state', self.ground_truth_callback, qos_profile)
         if(self.mode == 'MC'):
             self.sub_harryInput = self.create_subscription(Twist,'/cmd_vel',self.HarryInputs_callback,qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
@@ -232,11 +232,11 @@ class ControlNode(Node):
 
 
 
-            # with open ('circle_sim_testing.csv','a', encoding='UTF8') as csvfile:
-            #     my_writer = csv.writer(csvfile)
-            #     #for row in pt:
-            #     my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,e[0],e[1],e[2],e[3],self.throttle,self.steering])
-            #     csvfile.close()
+            with open ('circle_sim_testing.csv','a', encoding='UTF8') as csvfile:
+                my_writer = csv.writer(csvfile)
+                #for row in pt:
+                my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,e[0],e[1],e[2],e[3],self.throttle,self.steering])
+                csvfile.close()
 
         
         msg.steering = np.clip(self.steering, -1, 1)

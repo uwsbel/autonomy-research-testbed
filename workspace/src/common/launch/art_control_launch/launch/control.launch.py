@@ -50,8 +50,11 @@ def generate_launch_description():
         )
 
     AddLaunchArgument("input/path", "/path_planning/path")
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument("input/vehicle_state", "/vehicle_state")
     AddLaunchArgument("output/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument("input/error_state", "/vehicle/error_state")
+    AddLaunchArgument("input/true_state", "/vehicle/state")
+
 
     AddLaunchArgument("control_mode", "PID")
     AddLaunchArgument("control_file", "data/smallest_radius_right.csv")
@@ -72,7 +75,9 @@ def generate_launch_description():
             remappings=[
                 ("~/input/path", LaunchConfiguration("input/path")),
                 ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
-                ("~/output/vehicle_inputs", LaunchConfiguration("output/vehicle_inputs"))
+                ("~/output/vehicle_inputs", LaunchConfiguration("output/vehicle_inputs")),
+                ("~/input/error_state", LaunchConfiguration("input/error_state")),
+                ("~/input/true_state", LaunchConfiguration("input/true_state"))
             ],
             parameters=[
                 {"use_sim_time": LaunchConfiguration("use_sim_time")},
