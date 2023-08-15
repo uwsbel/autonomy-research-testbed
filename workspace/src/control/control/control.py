@@ -58,12 +58,12 @@ sys.path.append('/home/art/art/workspace/src/control/control')
 # from mpc_cvxpy import mpc_cvxpy_solver
 #from mpc_cvxpy_v2 import mpc_cvxpy_solver_v2
 from mpc_wpts import mpc_wpts_solver
-from pid import pidControl
+#from pid import pidControl
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
 
-from keras.models import load_model
+from keras_core.models import load_model
 
 class ControlNode(Node):
     def __init__(self):
@@ -71,11 +71,7 @@ class ControlNode(Node):
 
         # DEFAULT SETTINGS
 
-        #from stefan
-        self.first_write = True
-        # control node mode
-        self.mode = "PID"  # "PID", "File"
-        self.file = ""
+
         self.recorded_inputs = np.array([])
         # update frequency of this node
         self.freq = 10.0
@@ -86,7 +82,7 @@ class ControlNode(Node):
         package_share_directory = get_package_share_directory('control')
 
         # ROS PARAMETERS
-        self.declare_parameter('control_mode', 'PID')
+        self.declare_parameter('control_mode', 'PID')# "PID", "File", "MPC", "NN", "MC"
         self.mode = self.get_parameter('control_mode').get_parameter_value().string_value
         self.declare_parameter('control_file', "")
         self.file = self.get_parameter('control_file').get_parameter_value().string_value
@@ -101,16 +97,13 @@ class ControlNode(Node):
 
 
         ## read control inputs file
-        self.input_file = open("/home/art/art/workspace/src/control/control/r1.txt")
-        self.input_list = np.loadtxt(self.input_file, delimiter=" ")
-        self.index = 0
+        # self.input_file = open("/home/art/art/workspace/src/control/control/r1.txt")
+        # self.input_list = np.loadtxt(self.input_file, delimiter=" ")
         
-        if(self.file == ""):
-            self.mode = "PID"
-        else:
+        if(self.mode == "File"):
             file_path = os.path.join(package_share_directory, self.file)
             self.recorded_inputs = np.loadtxt(file_path, delimiter=',')
-
+     
         self.steering = 0.0
         self.throttle = 0.7 #testing purpose
         self.braking = 0.0
@@ -140,26 +133,25 @@ class ControlNode(Node):
         #self.sub_state = self.create_subscription(ChVehicle, '~/input/vehicle_state', self.state_callback, qos_profile)
         self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
         self.sub_ground_truth = self.create_subscription(ChVehicle, '/vehicle/state', self.ground_truth_callback, qos_profile)
-        self.sub_harryInput = self.create_subscription(Twist,'/cmd_vel',self.HarryInputs_callback,qos_profile)
+        if(self.mode == 'MC'):
+            self.sub_harryInput = self.create_subscription(Twist,'/cmd_vel',self.HarryInputs_callback,qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
-        self.g_pos = [-3.15,-1.25]
-        self.crl_tspan = 1/10
         self.vel = 0.0
         self.heading = 0.0
         
         ##### For ML stuffs
-        self.model = load_model('/home/art/art/workspace/src/control/control/keras_ml_learnMC.h5')
+        if(self.mode == "NN"):
+            self.model_mc = load_model('/home/art/art/workspace/src/control/control/keras_ml.keras')
 
     # function to process data this class subscribes to
     def ground_truth_callback(self, msg):
-        #self.get_logger().info("Received '%s'" % msg)
         self.groud_truth = msg
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
-        #self.get_logger().info("Received '%s'" % msg)
         self.state = msg
+        #TODO: We need to fix the -0.248
         self.heading =msg.pose.orientation.z-0.24845347641462115
         while self.heading<-np.pi:
             self.heading = self.heading+2*np.pi
@@ -173,8 +165,6 @@ class ControlNode(Node):
         
 
     def path_callback(self, msg):
-        #self.go = True
-        # self.get_logger().info("Received '%s'" % msg)
         self.path = msg
 
     def HarryInputs_callback(self,msg):
@@ -191,9 +181,7 @@ class ControlNode(Node):
 
         if(self.mode == "File"):
             self.calc_inputs_from_file()
-        elif(self.mode == "PID" and len(str(self.error_state.pose.position.x))>0):
-
-
+        elif(len(str(self.error_state.pose.position.x))>0):
             ##read the error state:
             e = [self.error_state.pose.position.x, 
                  self.error_state.pose.position.y,
@@ -201,23 +189,21 @@ class ControlNode(Node):
                  self.error_state.twist.linear.x]
             ref_vel = self.error_state.twist.linear.y
             #self.get_logger().info(' recieved err state = %s ' % e)
-            if e[3]>0.3:
-                self.get_logger().info('-----------------FASTER!!!!!!!------------------')
-            elif e[3]<-0.2:
-                self.get_logger().info('-----------------SLOW DOWN!!!!!!!------------------')
-            else:
-                self.get_logger().info('-----------------GOOD!!!!!!!------------------')
-
+            if(self.mode == 'MC'):
+                if e[3]>0.3:
+                    self.get_logger().info('-----------------FASTER!!!!!!!------------------')
+                elif e[3]<-0.2:
+                    self.get_logger().info('-----------------SLOW DOWN!!!!!!!------------------')
+                else:
+                    self.get_logger().info('-----------------GOOD!!!!!!!------------------')
+            
                 
             #read velocity
             velo = self.vel
-
             #feed in velocity, target point coordinates and current control inputs to the mpc solver
-            ## use the mpc solver
-            # self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,ref_vel)
-
-            ## use pid controller
-            #self.throttle, self.steering = pidControl(e,[self.throttle,self.steering])
+            # #MPC method
+            if(self.mode == 'MPC'):
+                self.throttle, self.steering = mpc_wpts_solver(e,[self.throttle,self.steering],velo,ref_vel)
 
             
             # # #ML method
@@ -225,33 +211,32 @@ class ControlNode(Node):
             # self.throttle = sum([x * y for x, y in zip(e, [ 0.42747883,-0.10800391,0.06556592,1.2141007])])
             # self.steering = sum([x * y for x, y in zip(e, [0.02855189,  1.21156572,  0.69078731, 0.09465685])])
             # ##learning manual
-            # self.throttle = sum([x * y for x, y in zip(e, [0.90195976 ,-0.00169086 , 0.10097878 , 0.0058228 ])])
-            # self.steering = sum([x * y for x, y in zip(e, [ 0.09133028 , 0.3940351 ,  0.13070601, -0.12223042])])
+            if(self.mode == 'PID'):
+                self.throttle = sum([x * y for x, y in zip(e, [0.90195976 ,-0.00169086 , 0.10097878 , 0.0058228 ])])
+                self.steering = sum([x * y for x, y in zip(e, [ 0.09133028 , 0.3940351 ,  0.13070601, -0.12223042])])
+            
+            
             ## apply black box driving
-            err = np.array(e).reshape(1,-1)
-            ctrl = self.model.predict(err)
-            self.throttle = ctrl[0,0]
-            self.steering = ctrl[0,1]
-            ### keyboard control
+            if(self.mode == 'NN'):
+                err = np.array(e).reshape(1,-1)
+                self.get_logger().info(str(err))
 
+                ctrl = self.model_mc.predict(err)
+                self.throttle = ctrl[0,0]
+                self.steering = ctrl[0,1]
 
-            # self.throttle = 0.8
+            if(not self.mode == 'MC'):
+                self.steering = self.steering * 1.6
+            # self.throttle = 1.0
             # self.steering = 0.3
-            # self.index += 1
-            # steer_coeff = 0.8
-            # self.steering = self.steering * steer_coeff
-            self.get_logger().info(' control = %s' % [self.throttle, self.steering])
-            self.get_logger().info('time at = %s' % self.input_list[self.index,0])
-            # if(self.first_write):
-            #     os.remove("mpc_circle.csv")
-            #     self.first_write = False
 
 
-            with open ('circle_sim_testing.csv','a', encoding='UTF8') as csvfile:
-                my_writer = csv.writer(csvfile)
-                #for row in pt:
-                my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,e[0],e[1],e[2],e[3],self.throttle,self.steering])
-                csvfile.close()
+
+            # with open ('circle_sim_testing.csv','a', encoding='UTF8') as csvfile:
+            #     my_writer = csv.writer(csvfile)
+            #     #for row in pt:
+            #     my_writer.writerow([self.groud_truth.pose.position.x,self.groud_truth.pose.position.y,e[0],e[1],e[2],e[3],self.throttle,self.steering])
+            #     csvfile.close()
 
         
         msg.steering = np.clip(self.steering, -1, 1)
@@ -261,14 +246,11 @@ class ControlNode(Node):
         
 
     def calc_inputs_from_file(self):
-        t = self.get_clock().now().nanoseconds / 1e9 - self.t_start
 
         self.throttle = np.interp(t,self.recorded_inputs[:,0],self.recorded_inputs[:,1])
         self.braking = np.interp(t,self.recorded_inputs[:,0],self.recorded_inputs[:,2])
         self.steering = np.interp(t,self.recorded_inputs[:,0],self.recorded_inputs[:,3])
 
-        # self.get_logger().info('Inputs %s' % self.recorded_inputs[0,:])
-        # self.get_logger().info('Inputs from file: (t=%s, (%s,%s,%s)),' % (t,self.throttle,self.braking,self.steering))
 
 def main(args=None):
     rclpy.init(args=args)
@@ -280,5 +262,3 @@ def main(args=None):
     
 if __name__ == '__main__':
     main()
-# else:
-#     recording_state.tofile('state_record.csv',sep=',',format = '%10.5f')
