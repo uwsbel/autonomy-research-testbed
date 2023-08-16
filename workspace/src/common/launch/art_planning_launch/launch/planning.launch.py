@@ -52,9 +52,10 @@ def generate_launch_description():
     AddLaunchArgument("input/objects", "/perception/objects")
     AddLaunchArgument("output/path", "/path_planning/path")
 
+    AddLaunchArgument("planning_input", "GT")
     AddLaunchArgument("use_sim_time", "False")
     AddLaunchArgument("vis", "False")
-    AddLaunchArgument("lookahead", ".75")
+    AddLaunchArgument("lookahead", "1.0")
 
     # -----
     # Nodes
@@ -73,7 +74,8 @@ def generate_launch_description():
             parameters=[
                 {"use_sim_time": LaunchConfiguration("use_sim_time")},
                 {"vis": LaunchConfiguration("vis")},
-                {"lookahead": LaunchConfiguration("lookahead")}
+                {"lookahead": LaunchConfiguration("lookahead")},
+                {"planning_input": LaunchConfiguration("planning_input")}
             ]
         )
     launch_description.add_action(node)

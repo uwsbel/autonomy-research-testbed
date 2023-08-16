@@ -66,7 +66,10 @@ class PathPlanningNode(Node):
         self.declare_parameter('vis', False)
         self.vis = self.get_parameter('vis').get_parameter_value().bool_value
 
-        self.declare_parameter('lookahead', 2.0)
+        self.declare_parameter('planning_input', 'GT')#Planning input can be either Ground Truth or State Estimation
+        self.planning_input = self.get_parameter('planning_input').get_parameter_value().string_value
+
+        self.declare_parameter('lookahead', 1.0)
         self.lookahead = self.get_parameter('lookahead').get_parameter_value().double_value
         
         #data that will be used by this class
@@ -87,9 +90,13 @@ class PathPlanningNode(Node):
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
+
+
         # if using EKF, then subscribe /vehicle_state, if using privilieged info, subscribe /vehicle/state
-        #self.sub_state = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback, qos_profile)
-        self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
+        if(self.planning_input == 'SE'):
+            self.sub_state = self.create_subscription(VehicleState, '~/vehicle_state', self.state_callback, qos_profile)
+        else:
+            self.sub_state = self.create_subscription(ChVehicle, '/vehicle/state', self.state_callback, qos_profile)
         self.sub_s = self.create_subscription(VehicleState, '/vehicle_state', self.state_callback_heading, qos_profile)
         #self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
@@ -134,20 +141,20 @@ class PathPlanningNode(Node):
         while theta_current>np.pi:
             theta_current = theta_current - 2*np.pi
 
-        # if theta_current<0:
-        #     theta_current = theta_current+2*np.pi
         v_current = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
-        self.get_logger().info("SPEED: "+str(v_current))
+
+        #self.get_logger().info("SPEED: "+str(v_current))
+
         dist = np.zeros((1,len(self.ref_traj[:,1])))
         for i in range(len(self.ref_traj[:,1])):
             dist[0][i] = dist[0][i] = (x_current+np.cos(theta_current)*self.lookahead-self.ref_traj[i][0])**2+(y_current+np.sin(theta_current)*self.lookahead-self.ref_traj[i][1])**2
         index = dist.argmin()
-        # if (index>400):
-        #     index = 10
+
         ref_state_current = list(self.ref_traj[index,:])
         err_theta = 0
         ref = ref_state_current[2]
         act = theta_current
+
         if( (ref>0 and act>0) or (ref<=0 and act <=0)):
             err_theta = ref-act
         elif( ref<=0 and act > 0):
@@ -166,23 +173,13 @@ class PathPlanningNode(Node):
             [np.cos(-theta_current), -np.sin(-theta_current)],
             [np.sin(-theta_current), np.cos(-theta_current)]
         ])
+
         errM = np.array([[ref_state_current[0]-x_current],[ref_state_current[1]-y_current]])
 
         errRM = RotM@errM
 
 
         error_state = [errRM[0][0],errRM[1][0],err_theta, ref_state_current[3]-v_current]
-
-        # while error_state[2]<-np.pi:
-        #     error_state[2] = -error_state[2]-2*np.pi
-        # while error_state[2]>np.pi:
-        #     error_state[2] = -error_state[2] + 2*np.pi
-
-        # with open ('planning_log.csv','a', encoding='UTF8') as csvfile:
-        #         my_writer = csv.writer(csvfile)
-        #         #for row in pt:
-        #         my_writer.writerow([x_current,y_current ,theta_current,ref_state_current[0],ref_state_current[1], ref_state_current[2] ,error_state[2]])
-        #         csvfile.close()
 
         return error_state, ref_state_current[3]
 
@@ -193,6 +190,7 @@ class PathPlanningNode(Node):
         
         err_state_msg = ChVehicle()
         error_state,ref_vel = self.wpts_path_plan()
+
         err_state_msg.pose.position.x = error_state[0]
         err_state_msg.pose.position.y = error_state[1]
         err_state_msg.pose.orientation.z = error_state[2]
