@@ -28,57 +28,55 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# external imports
+from pathlib import Path
+
+# ros imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
-from launch_ros.actions import Node
+
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument, AddComposableNode, GetPackageSharePath
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
-
-    AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument("output/objects", "/perception/objects")
-
-    AddLaunchArgument("use_sim_time", "False")
-    AddLaunchArgument("model", "data/model_refined")
-    AddLaunchArgument("camera_calibration_file", "data/calibration.json")
-    AddLaunchArgument("vis", "False")
+    AddLaunchArgument(ld, "~/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "~/output/time", "/clock")
+    AddLaunchArgument(ld, "~/output/vehicle", "/vehicle/state")
+    AddLaunchArgument(ld, "~/output/camera", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "ip", "")
+    AddLaunchArgument(ld, "hostname", "")
 
     # -----
     # Nodes
     # -----
 
-    node = Node(
-        package='cone_detector',
-        namespace='',
-        executable='object_recognition',
-        name='object_recognition',
+    AddComposableNode(
+        ld,
+        plugin="chrono::ros::ChROSBridge"
+        package='chrono_ros_bridge',
+        executable='chrono_ros_bridge_node',
+        name='chrono_ros_bridge',
         remappings=[
-            ("~/input/image", LaunchConfiguration("input/image")),
-            ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
-            ("~/output/objects", LaunchConfiguration("output/objects"))
+            ("~/input/driver_inputs", GetLaunchArgument("~/input/vehicle_inputs")),
+            ("~/output/time", GetLaunchArgument("~/output/time")),
+            ("~/output/vehicle", GetLaunchArgument("~/output/vehicle")),
+            ("~/output/camera/front_facing_camera", GetLaunchArgument("~/output/camera")),
         ],
         parameters=[
-             {"use_sim_time": LaunchConfiguration("use_sim_time")},
-             {"model":LaunchConfiguration("model")},
-             {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",)},
-             {"vis": LaunchConfiguration("vis")}
-        ]
+             {"ip": GetLaunchArgument("ip")},
+             {"hostname": GetLaunchArgument("hostname")},
+        ],
+        on_exit=EmitEvent(event=Shutdown()),
+		
     )
-    launch_description.add_action(node)
+    ld.add_action(chrono_ros_bridge)
 
-    return launch_description
+    return ld
+
