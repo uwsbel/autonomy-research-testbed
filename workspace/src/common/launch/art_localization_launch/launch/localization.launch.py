@@ -28,62 +28,49 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# ros imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
+
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "~/input/gps", "/sensing/gps/data")
+    AddLaunchArgument(ld, "~/input/magnetometer", "/sensing/magnetometer/data")
+    AddLaunchArgument(ld, "~/input/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(ld, "~/input/accelerometer", "/sensing/accelerometer/data")
+    AddLaunchArgument(ld, "~/output/vehicle_state", "/vehicle/state")
 
-    AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
-    AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
-    AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
-    AddLaunchArgument("input/gyro", "/chrono_ros_bridge/output/gyroscope/data")
-    AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
-    
-    AddLaunchArgument("output/vehicle_state", "/vehicle_state")
-    AddLaunchArgument("vis", "False")
-
-    AddLaunchArgument("use_sim_msg", "False")
-    AddLaunchArgument("use_sim_time", "False")
+    AddLaunchArgument(ld, "vis", "False")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package='localization_py',
-        namespace='',
+        package='localization',
         executable='state_estimation',
         name='state_estimation',
         remappings=[
-                ("~/input/gps", LaunchConfiguration("input/gps")),
-                ("~/input/groundTruth", LaunchConfiguration("input/groundTruth")),
-                ("~/input/mag", LaunchConfiguration("input/mag")),
-                ("~/input/gyro", LaunchConfiguration("input/gyro")),
-                ("~/input/accel", LaunchConfiguration("input/accel")),
-                ("~/output/vehicle_state", LaunchConfiguration("output/vehicle_state")),
+                ("~/input/gps", GetLaunchArgument("~/input/gps")),
+                ("~/input/magnetometer", GetLaunchArgument("~/input/magnetometer")),
+                ("~/input/gyroscope", GetLaunchArgument("~/input/gyroscope")),
+                ("~/input/accelerometer", GetLaunchArgument("~/input/accelerometer")),
+                ("~/output/vehicle_state", GetLaunchArgument("~/output/vehicle_state")),
         ],
         parameters=[
-            {"use_sim_time": LaunchConfiguration("use_sim_time")},
-            {"use_sim_msg": LaunchConfiguration("use_sim_msg")},
-            {"vis": LaunchConfiguration("vis")}
+            {"vis": GetLaunchArgument("vis")}
         ]
     )
-    launch_description.add_action(node)
+    ld.add_action(node)
 
-    return launch_description
+    return ld 

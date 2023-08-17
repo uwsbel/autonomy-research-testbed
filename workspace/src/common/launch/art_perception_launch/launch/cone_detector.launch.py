@@ -28,43 +28,50 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
 
+# ros imports
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
+from launch_ros.actions import Node
 
-# skipping CompressedDepth, doesn't appear to work properly
-# /image_raw/theora adds the greatest time increase to Col2Perc
-image_topics = ['/sensing/front_facing_camera/raw', '/image_raw/compressed', '/image_raw/compressedDepth', '/camera_info']
-imu_topics = ['/gnss', '/imu/acceleration', '/imu/angular_velocity', '/imu/data', '/imu/dq', '/imu/dv', '/imu/mag', '/imu/time_ref']
-vehicle_topics = ['/control/vehicle_inputs']
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
-all_topics = image_topics + imu_topics + vehicle_topics
 
-# This can be launched from the command
-#
-#    ros2 launch art_launch art_rosbag_launch.launch.py
-#
-# and will record all the ros topics which are needed for testing
 def generate_launch_description():
-    return LaunchDescription([
-        ExecuteProcess(
-            cmd = (['ros2', 'bag', 'record'] + all_topics),
-            output = 'screen'
-        )
-    ])
+    ld = LaunchDescription()
 
+    # ----------------
+    # Launch Arguments
+    # ----------------
 
+    AddLaunchArgument(ld, "~/input/image", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "~/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "~/output/objects", "/perception/objects")
 
+    AddLaunchArgument(ld, "node", "yolov5_detector", choices=("yolov5_detector", "object_recognition"))
+    AddLaunchArgument(ld, "model", "data/real.onnx")
+    AddLaunchArgument(ld, "camera_calibration_file", "data/calibration.json")
+    AddLaunchArgument(ld, "vis", "False")
 
+    # -----
+    # Nodes
+    # -----
 
+    node = Node(
+        package=GetLaunchArgument("node"),
+        executable='yolov5_detector',
+        name='yolov5_detector',
+        remappings=[
+            ("~/input/image", GetLaunchArgument("~/input/image")),
+            ("~/input/vehicle_state", GetLaunchArgument("~/input/vehicle_state")),
+            ("~/output/objects", GetLaunchArgument("~/output/objects"))
+        ],
+        parameters=[
+             {"model": GetLaunchArgument("model")},
+             {"camera_calibration_file": GetLaunchArgument("camera_calibration_file")},
+             {"vis": GetLaunchArgument("vis")}
+        ]
+    )
+    ld.add_action(node)
 
-
-
-
-
-
-
-
-
-
+    return ld 

@@ -28,33 +28,27 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# ros imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
+
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "~/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "~/input/objects", "/perception/objects")
+    AddLaunchArgument(ld, "~/output/path", "/path_planning/path")
 
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument("input/objects", "/perception/objects")
-    AddLaunchArgument("output/path", "/path_planning/path")
-
-    AddLaunchArgument("use_sim_time", "False")
-    AddLaunchArgument("vis", "False")
-    AddLaunchArgument("lookahead", ".75")
+    AddLaunchArgument(ld, "vis", "False")
+    AddLaunchArgument(ld, "lookahead", ".75")
 
     # -----
     # Nodes
@@ -62,20 +56,18 @@ def generate_launch_description():
 
     node = Node(
             package='path_planning',
-            namespace='',
             executable='path_planning',
             name='path_planning',
             remappings=[
-                ("~/input/objects", LaunchConfiguration("input/objects")),
-                ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
-                ("~/output/path", LaunchConfiguration("output/path"))
+                ("~/input/objects", GetLaunchArgument("~/input/objects")),
+                ("~/input/vehicle_state", GetLaunchArgument("~/input/vehicle_state")),
+                ("~/output/path", GetLaunchArgument("~/output/path"))
             ],
             parameters=[
-                {"use_sim_time": LaunchConfiguration("use_sim_time")},
-                {"vis": LaunchConfiguration("vis")},
-                {"lookahead": LaunchConfiguration("lookahead")}
+                {"vis": GetLaunchArgument("vis")},
+                {"lookahead": GetLaunchArgument("lookahead")}
             ]
         )
-    launch_description.add_action(node)
+    ld.add_action(node)
 
-    return launch_description
+    return ld 
