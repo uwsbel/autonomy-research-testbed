@@ -12,7 +12,11 @@ __all__ = [
     'AddComposableNode',
     'GetPackageSourceDirectory',
     'IncludeLaunchDescriptionWithCondition',
+<<<<<<< HEAD
     'GetPackageSharePath',
+=======
+    'GetPackageShareDirectory',
+>>>>>>> 711c157 (Added launch_utils)
     # Additional modules
     'conditions',
     'substitutions',
