@@ -28,54 +28,21 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
 
+# ros imports
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
-from ament_index_python import get_package_share_directory
+# internal imports
+from launch_utils import IncludeLaunchDescription
 
 
 def generate_launch_description():
+    ld = LaunchDescription()
 
-    launch_description = LaunchDescription()
+    # ---------------
+    # Launch Includes
+    # ---------------
 
-    # ------------
-    # Launch Files
-    # ------------
+    IncludeLaunchDescription(ld, "bluespace_ai_xsens_mti_driver", "xsens_mti_node")
 
-    stack = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_launch'),
-                'launch/art_stack.launch.py'))
-    )
-    launch_description.add_action(stack)
-
-    camera = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_sensing_launch'),
-                'launch/usb_cam.launch.py'))
-    )
-    launch_description.add_action(camera)
-
-    arduino = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_vehicle_launch'),
-                'launch/arduino_driver.launch.py'))
-    )
-    launch_description.add_action(arduino)
-
-    xsens = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('bluespace_ai_xsens_mti_driver'),
-                'launch/xsens_mti_node.launch.py'))
-    )
-    launch_description.add_action(xsens)
-
-
-    return launch_description
+    return ld
