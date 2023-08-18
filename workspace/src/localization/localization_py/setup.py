@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'localization'
+package_name = 'localization_py'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'state_estimation = localization.state_estimation:main'
+            'state_estimation = localization_py.state_estimation:main'
         ],
     },
 )
