@@ -29,15 +29,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 
-# external imports
-from pathlib import Path
-
 # ros imports
 from launch import LaunchDescription
+from launch_ros.actions import Node
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument, AddComposableNode, GetPackageSharePath
-
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -46,37 +43,32 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "~/input/vehicle_inputs", "/control/vehicle_inputs")
-    AddLaunchArgument(ld, "~/output/time", "/clock")
-    AddLaunchArgument(ld, "~/output/vehicle", "/vehicle/state")
-    AddLaunchArgument(ld, "~/output/camera", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument(ld, "ip", "")
-    AddLaunchArgument(ld, "hostname", "")
+    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_planning/input/objects", "/perception/objects")
+    AddLaunchArgument(ld, "art_planning/output/path", "/path_planning/path")
+
+    AddLaunchArgument(ld, "vis", "False")
+    AddLaunchArgument(ld, "lookahead", ".75")
 
     # -----
     # Nodes
     # -----
 
-    AddComposableNode(
-        ld,
-        plugin="chrono::ros::ChROSBridge"
-        package='chrono_ros_bridge',
-        executable='chrono_ros_bridge_node',
-        name='chrono_ros_bridge',
-        remappings=[
-            ("~/input/driver_inputs", GetLaunchArgument("~/input/vehicle_inputs")),
-            ("~/output/time", GetLaunchArgument("~/output/time")),
-            ("~/output/vehicle", GetLaunchArgument("~/output/vehicle")),
-            ("~/output/camera/front_facing_camera", GetLaunchArgument("~/output/camera")),
-        ],
-        parameters=[
-             {"ip": GetLaunchArgument("ip")},
-             {"hostname": GetLaunchArgument("hostname")},
-        ],
-        on_exit=EmitEvent(event=Shutdown()),
-		
-    )
-    ld.add_action(chrono_ros_bridge)
+    node = Node(
+            package='path_planning',
+            executable='path_planning',
+            name='path_planning',
+            remappings=[
+                ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
+                ("~/input/vehicle_state", GetLaunchArgument("art_planning/input/vehicle_state")),
+                ("~/output/path", GetLaunchArgument("art_planning/output/path"))
+            ],
+            parameters=[
+                {"vis": GetLaunchArgument("vis")},
+                {"lookahead": GetLaunchArgument("lookahead")},
+                {"use_sim_time": GetLaunchArgument("use_sim_time")}
+            ]
+        )
+    ld.add_action(node)
 
-    return ld
-
+    return ld 

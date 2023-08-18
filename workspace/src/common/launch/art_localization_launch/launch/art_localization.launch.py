@@ -44,11 +44,11 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "~/input/gps", "/sensing/gps/data")
-    AddLaunchArgument(ld, "~/input/magnetometer", "/sensing/magnetometer/data")
-    AddLaunchArgument(ld, "~/input/gyroscope", "/sensing/gyroscope/data")
-    AddLaunchArgument(ld, "~/input/accelerometer", "/sensing/accelerometer/data")
-    AddLaunchArgument(ld, "~/output/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
+    AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
+    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
+    AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/state")
 
     AddLaunchArgument(ld, "vis", "False")
 
@@ -61,14 +61,15 @@ def generate_launch_description():
         executable='state_estimation',
         name='state_estimation',
         remappings=[
-                ("~/input/gps", GetLaunchArgument("~/input/gps")),
-                ("~/input/magnetometer", GetLaunchArgument("~/input/magnetometer")),
-                ("~/input/gyroscope", GetLaunchArgument("~/input/gyroscope")),
-                ("~/input/accelerometer", GetLaunchArgument("~/input/accelerometer")),
-                ("~/output/vehicle_state", GetLaunchArgument("~/output/vehicle_state")),
+                ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
+                ("~/input/magnetometer", GetLaunchArgument("art_localization/input/magnetometer")),
+                ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
+                ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
+                ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
         ],
         parameters=[
-            {"vis": GetLaunchArgument("vis")}
+            {"vis": GetLaunchArgument("vis")},
+            {"use_sim_time": GetLaunchArgument("use_sim_time")}
         ]
     )
     ld.add_action(node)

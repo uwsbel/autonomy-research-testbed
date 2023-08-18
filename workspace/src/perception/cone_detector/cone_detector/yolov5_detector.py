@@ -97,7 +97,7 @@ class YOLODetectionNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_image = self.create_subscription(Image, '~/input/image', self.image_callback, qos_profile)
-        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        # self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
         self.pub_objects = self.create_publisher(ObjectArray, '~/output/objects', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
@@ -136,8 +136,6 @@ class YOLODetectionNode(Node):
                     error_str = ""
                     for error in range(parser.num_errors):
                         error_str+=str(parser.get_error(error))
-                        # print(parser.get_error(error))
-                    # exit(1)
                     raise RuntimeError(error_str)
             self.engine = builder.build_engine(network,config) 
             
@@ -312,7 +310,7 @@ class YOLODetectionNode(Node):
         if(self.vis):
             [p.remove() for p in self.patches]
             self.patches.clear()
-            self.ax.texts.clear()
+            [t.remove() for t in self.ax.texts]
 
         # self.get_logger().info('Detected %s cones' % len(self.boxes)) 
         
