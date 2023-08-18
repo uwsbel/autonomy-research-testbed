@@ -33,7 +33,7 @@
 from launch import LaunchDescription
 
 # internal imports
-from launch_utils import IncludeLaunchDescription
+from launch_utils import IncludeLaunchDescriptionWithCondition
 
 
 def generate_launch_description():
@@ -43,6 +43,6 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
-    IncludeLaunchDescription(ld, "bluespace_ai_xsens_mti_driver", "xsens_mti_node")
+    IncludeLaunchDescriptionWithCondition(ld, "bluespace_ai_xsens_mti_driver", "xsens_mti_node")
 
     return ld

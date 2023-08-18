@@ -12,9 +12,10 @@
   <exec_depend>art_perception_launch</exec_depend>
   <exec_depend>art_localization_launch</exec_depend>
   <exec_depend>art_control_launch</exec_depend>
+  <exec_depend>art_planning_launch</exec_depend>
   <exec_depend>art_sensing_launch</exec_depend>
-  <exec_depend>art_simulation_launch</exec_depend>
   <exec_depend>art_vehicle_launch</exec_depend>
+  <exec_depend>art_simulation_launch</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
 

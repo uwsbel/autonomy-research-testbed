@@ -29,12 +29,17 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 
+# external imports
+from pathlib import Path
+
 # ros imports
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.conditions import IfCondition
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument
+from launch_utils import AddLaunchArgument, GetLaunchArgument 
+
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -43,31 +48,37 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "~/input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument(ld, "~/input/objects", "/perception/objects")
-    AddLaunchArgument(ld, "~/output/path", "/path_planning/path")
+    AddLaunchArgument(ld, "art_simulation/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "art_simulation/output/time", "/clock")
+    AddLaunchArgument(ld, "art_simulation/output/vehicle", "/vehicle/state")
+    AddLaunchArgument(ld, "art_simulation/output/camera", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "ip", "")
+    AddLaunchArgument(ld, "hostname", "")
 
-    AddLaunchArgument(ld, "vis", "False")
-    AddLaunchArgument(ld, "lookahead", ".75")
+    # TODO: Make a better exit case
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-            package='path_planning',
-            executable='path_planning',
-            name='path_planning',
-            remappings=[
-                ("~/input/objects", GetLaunchArgument("~/input/objects")),
-                ("~/input/vehicle_state", GetLaunchArgument("~/input/vehicle_state")),
-                ("~/output/path", GetLaunchArgument("~/output/path"))
-            ],
-            parameters=[
-                {"vis": GetLaunchArgument("vis")},
-                {"lookahead": GetLaunchArgument("lookahead")}
-            ]
-        )
+        package='chrono_ros_bridge',
+        executable='chrono_ros_bridge_node',
+        name='chrono_ros_bridge',
+        remappings=[
+            ("~/input/driver_inputs", GetLaunchArgument("art_simulation/input/vehicle_inputs")),
+            ("~/output/time", GetLaunchArgument("art_simulation/output/time")),
+            ("~/output/vehicle", GetLaunchArgument("art_simulation/output/vehicle")),
+            ("~/output/camera/front_facing_camera", GetLaunchArgument("art_simulation/output/camera")),
+        ],
+        parameters=[
+             {"ip": GetLaunchArgument("ip")},
+             {"hostname": GetLaunchArgument("hostname")},
+             {"use_sim_time": GetLaunchArgument("use_sim_time")}
+        ],
+        condition=IfCondition(GetLaunchArgument("use_sim"))
+    )
     ld.add_action(node)
 
-    return ld 
+    return ld
+

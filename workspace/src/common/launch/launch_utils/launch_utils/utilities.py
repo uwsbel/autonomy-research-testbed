@@ -17,12 +17,12 @@ def SetLaunchArgument(ld: LaunchDescription, arg: "Any", value: "Any",  **kwargs
     ld.add_action(SetLaunchConfiguration(name=arg, value=value, **kwargs))
 
 
-def GetLaunchArgument(name: str) -> "LaunchConfiguration":
+def GetLaunchArgument(name: str, **kwargs) -> "LaunchConfiguration":
     """Helper method to get a launch configuration value"""
 
     from launch.substitutions import LaunchConfiguration
 
-    return LaunchConfiguration(name)
+    return LaunchConfiguration(name, **kwargs)
 
 
 def GetPackageSharePath(package: str, *args, **kwargs) -> "pathlib.Path":

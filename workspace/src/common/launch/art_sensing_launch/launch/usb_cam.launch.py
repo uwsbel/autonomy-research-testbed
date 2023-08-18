@@ -46,7 +46,7 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "~/output/image", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "usb_cam/output/image", "/sensing/front_facing_camera/raw")
 
     # -----
     # Nodes
@@ -54,13 +54,16 @@ def generate_launch_description():
 
     AddComposableNode(
        ld,
-       plugin="usb_cam::UsbCamNode" 
+       plugin="usb_cam::UsbCamNode",
        package="usb_cam",
        executable="usb_cam_node_exe",
        name="usb_cam",
-       parameters=[GetPackageSharePath("art_sensing_launch", "config", "usb_cam.params.yaml")],
+       parameters=[
+         GetPackageSharePath("art_sensing_launch", "config", "usb_cam.params.yaml"),
+         {"use_sim_time": GetLaunchArgument("use_sim_time")}
+      ],
        remappings=[
-        ("~/output/image_raw", GetLaunchArgument("~/output/image"))
+        ("~/output/image_raw", GetLaunchArgument("usb_cam/output/image"))
        ]
     )
 

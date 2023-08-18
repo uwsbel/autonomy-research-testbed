@@ -36,7 +36,7 @@ from launch.conditions import IfCondition
 from launch_ros.actions import ComposableNodeContainer
 
 # internal imports
-from launch_utils import IncludeLaunchDescriptionWithCondition, AddLaunchArgument, SetLaunchArgument
+from launch_utils import IncludeLaunchDescriptionWithCondition, GetLaunchArgument, AddLaunchArgument, SetLaunchArgument
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -46,10 +46,11 @@ def generate_launch_description():
     # ----------------
 
     AddLaunchArgument(ld, "use_sim", "False")
-    SetLaunchArgument(ld, "use_sim_time", "False", condition=GetLaunchArgument("use_sim"))
+    AddLaunchArgument(ld, "use_sim_time", "False")
+    SetLaunchArgument(ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
    
     AddLaunchArgument(ld, "container", "") 
-    container_name AddLaunchArgument(ld, "container_name", "art_container") 
+    container_name = AddLaunchArgument(ld, "container_name", "art_container") 
 
     # -------------
     # Composability
@@ -57,7 +58,7 @@ def generate_launch_description():
 
     # If composability is desired, all included launch descriptions should attach to this container and use intraprocess communication
 
-    use_composability = IfCondition(AddLaunchArgument(ld, "use_composability", "True"))
+    use_composability = IfCondition(AddLaunchArgument(ld, "use_composability", "False"))
 
     # If a container name is not provided,
     # set the name of the container launched above for image_proc nodes
@@ -83,12 +84,12 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
-    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "perception")
-    IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "localization")
-    IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "planning")
-    IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "control")
-    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "sensing")
-    IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "vehicle")
-    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "simulation")
+    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
+    IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "art_localization")
+    IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
+    IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
+    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
+    IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
+    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld 
