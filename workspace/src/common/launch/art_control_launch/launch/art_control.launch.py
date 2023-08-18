@@ -44,15 +44,14 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "~/input/path", "/path_planning/path")
-    AddLaunchArgument(ld, "~/input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument(ld, "~/output/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "art_control/input/path", "/path_planning/path")
+    AddLaunchArgument(ld, "art_control/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_control/output/vehicle_inputs", "/control/vehicle_inputs")
 
     AddLaunchArgument(ld, "control_mode", "PID")
     AddLaunchArgument(ld, "control_file", "data/smallest_radius_right.csv")
     AddLaunchArgument(ld, "steering_gain", "1.6")
     AddLaunchArgument(ld, "throttle_gain", "0.08")
-    AddLaunchArgument(ld, "use_sim_msg", "False")
     AddLaunchArgument(ld, "use_sim_time", "False")
 
     # -----
@@ -64,15 +63,17 @@ def generate_launch_description():
             executable='pid',
             name='pid',
             remappings=[
-                ("~/input/path", GetLaunchArgument("~/input/path")),
-                ("~/input/vehicle_state", GetLaunchArgument("~/nput/vehicle_state")),
-                ("~/output/vehicle_inputs", GetLaunchArgument("~/output/vehicle_inputs"))
+                ("~/input/path", GetLaunchArgument("art_control/input/path")),
+                ("~/input/vehicle_state", GetLaunchArgument("art_control/input/vehicle_state")),
+                ("~/output/vehicle_inputs", GetLaunchArgument("art_control/output/vehicle_inputs"))
             ],
             parameters=[
-                {"control_mode": GetLaunchArgument("control_mode",default="PID")},
-                {"control_file": GetLaunchArgument("control_file",default="data/smallest_radius_right.csv")},
-                {"steering_gain": GetLaunchArgument("steering_gain",default=1.6)},
-                {"throttle_gain": GetLaunchArgument("throttle_gain",default=0.08)},
+                {"input": GetLaunchArgument("art_control/input/path")},
+                {"control_mode": GetLaunchArgument("control_mode")},
+                {"control_file": GetLaunchArgument("control_file")},
+                {"steering_gain": GetLaunchArgument("steering_gain")},
+                {"throttle_gain": GetLaunchArgument("throttle_gain")},
+                {"use_sim_time": GetLaunchArgument("use_sim_time")}
             ]
         )
     ld.add_action(node)

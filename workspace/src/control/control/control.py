@@ -70,8 +70,7 @@ class ControlNode(Node):
         self.declare_parameter('throttle_gain', 1.0)
         self.throttle_gain = self.get_parameter('throttle_gain').get_parameter_value().double_value
 
-        self.declare_parameter("use_sim_msg", False)
-        self.use_sim_msg = self.get_parameter("use_sim_msg").get_parameter_value().bool_value
+        self.use_sim_msg = self.get_parameter("use_sim_time").get_parameter_value().bool_value
 
         if(self.file == ""):
             self.mode = "PID"
@@ -102,7 +101,7 @@ class ControlNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_path = self.create_subscription(Path, '~/input/path', self.path_callback, qos_profile)
-        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        # self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '~/output/vehicle_inputs', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
