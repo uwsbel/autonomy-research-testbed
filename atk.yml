@@ -75,9 +75,10 @@ services:
       network: "host"
       args: &dev_build_args
         PROJECT: "@{project}"
+        ROS_DISTRO: "humble"
         USER_UID: "@{uid}"
         USER_GID: "@{gid}"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-galactic-usb-cam ros-galactic-tf-transformations"
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-humble-usb-cam ros-humble-tf-transformations"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex transforms3d"
         USER_GROUPS: "dialout video"
     environment:
@@ -135,37 +136,8 @@ services:
         USERSHELL: "bash"
         USERSHELLPATH: "/bin/bash"
         USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
-        APT_DEPENDENCIES: "python3.8 python3.8-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev git cmake cmake-curses-gui libglu1-mesa-dev mesa-common-dev swig freeglut3-dev libglfw3 libglfw3-dev x11proto-gl-dev libxxf86vm-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
+        APT_DEPENDENCIES: "python3.10 python3.10-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev git cmake cmake-curses-gui libglu1-mesa-dev mesa-common-dev swig freeglut3-dev libglfw3 libglfw3-dev x11proto-gl-dev libxxf86vm-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
         PIP_DEPENDENCIES: ""
-    environment:
-      USER_UID: "@{uid}"
-      USER_GID: "@{gid}"
-      NVIDIA_VISIBLE_DEVICES: "all"
-      NVIDIA_DRIVER_CAPABILITIES: "all"
-    ports:
-      - "50000:50000"
-    working_dir: "/home/@{container_username}/@{project}/sim"
-    volumes: 
-      - "@{project_root}:/home/@{container_username}/@{project}"
-    tty: true
-  pip-pychrono:
-    image: "atk/@{project}:pip-pychrono"
-    hostname: "@{project}-pip-pychrono"
-    container_name: "@{project}-pip-pychrono"
-    build:
-      context: ./containers/pip-pychrono
-      dockerfile: ./pip-pychrono.dockerfile
-      network: "host"
-      args:
-        USERNAME: "@{project}"
-        USERHOME: "/home/@{container_username}"
-        USERSHELL: "bash"
-        USERSHELLPATH: "/bin/bash"
-        USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
-        APT_DEPENDENCIES: "libirrlicht-dev libnvidia-gl-495"
-        CONDA_CHANNELS: "aryoung5 anaconda conda-forge"
-        CONDA_DEPENDENCIES: "python=3.8.12 pip pychrono cudatoolkit anaconda-client conda-build"
-        PIP_DEPENDENCIES: "numpy"
     environment:
       USER_UID: "@{uid}"
       USER_GID: "@{gid}"
