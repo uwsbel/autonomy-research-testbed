@@ -55,10 +55,7 @@ class StateEstimationNode(Node):
         #x, y, from measurements
         self.x = 0
         self.y = 0
-        
-
-        self.first_write = True
-        
+                
         #what we will be using for our state vector. (x, y, theta yaw, v vel)
         self.state = np.zeros((4,1))
         np.vstack(self.state)
