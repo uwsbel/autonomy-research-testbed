@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-ARG ROS_DISTRO=galactic
+ARG ROS_DISTRO
 ARG IMAGE_BASE=ros
 ARG IMAGE_TAG=${ROS_DISTRO}
 
