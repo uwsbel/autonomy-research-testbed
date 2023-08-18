@@ -6,8 +6,6 @@ from sensor_msgs.msg import Imu, NavSatFix, MagneticField
 from chrono_ros_msgs.msg import ChVehicle
 from ament_index_python.packages import get_package_share_directory
 
-import matplotlib.pyplot as plt
-import matplotlib
 import math
 import numpy as np
 
@@ -29,22 +27,17 @@ class StateEstimationNode(Node):
         
 
         # ROS PARAMETERS
-        self.declare_parameter('vis', False)
-        self.vis = self.get_parameter('vis').get_parameter_value().bool_value
 
         self.declare_parameter('use_sim_msg', False)
         self.use_sim_msg = self.get_parameter('use_sim_msg').get_parameter_value().bool_value
-        self.declare_parameter('SE_mode', "GT")
+        self.declare_parameter('SE_mode', "GT") #FOR NOW, only mode is GT.
         self.SE_mode = self.get_parameter('SE_mode').get_parameter_value().string_value
 
 
         #update frequency of this node
         self.freq = 10.0
 
-        if(self.vis):
-            matplotlib.use("TKAgg")
-            self.fig = plt.figure()
-            self.fig.suptitle('Kalman Filter', fontsize = 20)
+
 
         self.gps = ""
         self.groundTruth = ""
