@@ -57,7 +57,7 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package='localization',
+        package='localization_py',
         executable='state_estimation',
         name='state_estimation',
         remappings=[
