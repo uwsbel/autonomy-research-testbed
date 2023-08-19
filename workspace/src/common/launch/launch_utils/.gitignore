@@ -1,0 +1,18 @@
+# general things to ignore
+build/
+dist/
+.DS_Store
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~
+.*.swp
+
+# due to using tox and pytest
+.tox
+.cache
+
+# Ignore the version file since it changes often
+_version.py
