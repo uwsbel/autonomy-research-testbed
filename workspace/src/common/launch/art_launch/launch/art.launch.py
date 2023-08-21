@@ -32,6 +32,7 @@
 # ros imports
 from launch import LaunchDescription
 from launch.actions import SetLaunchConfiguration
+from launch.substitutions import PythonExpression
 from launch.conditions import IfCondition
 from launch_ros.actions import ComposableNodeContainer
 
@@ -88,8 +89,10 @@ def generate_launch_description():
     IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "art_localization")
     IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
     IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
-    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
-    IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
-    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
+    if(not IfCondition(PythonExpression([(GetLaunchArgument("use_sim"))]))):
+        IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
+        IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
+    else:
+        IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld 

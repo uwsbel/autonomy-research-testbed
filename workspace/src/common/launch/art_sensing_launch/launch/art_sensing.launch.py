@@ -14,6 +14,7 @@ def generate_launch_description():
     # ---------------
 
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "usb_cam")
-    # IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "xsens")
+    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "xsens")
+    #TODO: add RTK GPS launch desc
 
     return ld 
