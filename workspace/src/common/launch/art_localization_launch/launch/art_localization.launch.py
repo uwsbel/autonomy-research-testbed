@@ -44,13 +44,18 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
-    AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
+    AddLaunchArgument(ld, "art_localization/input/gps", "/chrono_ros_bridge/output/gps/data")
+    #TODO: fix the above so that it is not going to CRB but rather to /sensing/gps
+    AddLaunchArgument(ld, "art_localization/input/magnetometer", "/chrono_ros_bridge/output/magnetometer/data")
+    #TODO: same as above
     AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
     AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
+    AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "art_localization/input/groundTruth", "/vehicle/state")
     AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/state")
 
-    AddLaunchArgument(ld, "vis", "False")
+    AddLaunchArgument(ld, "SE_mode", "GT")
+    AddLaunchArgument(ld, "use_sim_time", "False")
 
     # -----
     # Nodes
@@ -65,11 +70,13 @@ def generate_launch_description():
                 ("~/input/magnetometer", GetLaunchArgument("art_localization/input/magnetometer")),
                 ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
                 ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
+                ("~/input/vehicleInput", GetLaunchArgument("art_localization/input/vehicle_inputs")),
                 ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
+                ("~/input/groundTruth", GetLaunchArgument("art_localization/input/groundTruth")),
         ],
         parameters=[
-            {"vis": GetLaunchArgument("vis")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")}
+            {"SE_mode": GetLaunchArgument("SE_mode")},
+            {"use_sim_time": GetLaunchArgument("use_sim_time")},
         ]
     )
     ld.add_action(node)

@@ -29,33 +29,25 @@ class StateEstimationNode(Node):
         
 
         # ROS PARAMETERS
-        self.declare_parameter('vis', False)
-        self.vis = self.get_parameter('vis').get_parameter_value().bool_value
 
-        self.declare_parameter('use_sim_msg', False)
-        self.use_sim_msg = self.get_parameter('use_sim_msg').get_parameter_value().bool_value
         self.declare_parameter('SE_mode', "GT")
         self.SE_mode = self.get_parameter('SE_mode').get_parameter_value().string_value
-
-
-        #update frequency of this node
-        self.freq = 10.0
-
-        if(self.vis):
-            matplotlib.use("TKAgg")
-            self.fig = plt.figure()
-            self.fig.suptitle('Kalman Filter', fontsize = 20)
-
-        self.gps = ""
-        self.groundTruth = ""
-        self.mag = ""
-
-        if self.use_sim_msg:
+        sim = self.get_parameter("use_sim_time").get_parameter_value().bool_value
+        if(sim):
             global VehicleInput
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
         else:
             global VehicleInput
             from art_msgs.msg import VehicleInput
+
+
+        #update frequency of this node
+        self.freq = 10.0
+
+
+        self.gps = ""
+        self.groundTruth = ""
+        self.mag = ""
 
 
 
@@ -113,13 +105,13 @@ class StateEstimationNode(Node):
         #our graph object
         self.graph =  graph()
 
-        sim = True
         #subscribers
         self.sub_gps = self.create_subscription(NavSatFix, '~/input/gps', self.gps_callback, 1)
         if(sim):
             self.sub_groud_truth = self.create_subscription(ChVehicle, '~/input/groundTruth', self.ground_truth_callback, 1)
+            #TODO: We shouldnt have ChVehicle in here.
 
-        self.sub_mag = self.create_subscription(MagneticField, "~/input/mag", self.mag_callback, 1)
+        self.sub_mag = self.create_subscription(MagneticField, "~/input/magnetometer", self.mag_callback, 1)
         #self.sub_gyro = self.create_subscription(Imu, "~/input/gyro", self.gyro_callback, 10)
         #self.sub_accel = self.create_subscription(Imu, "~/input/accel", self.accel_callback, 100)
         self.sub_control = self.create_subscription(VehicleInput, "~/input/vehicleInput", self.inputs_callback, 1)
@@ -230,7 +222,6 @@ class StateEstimationNode(Node):
         u = np.array([[self.throttle], [self.steering/2.2]])
 
         z = np.array([[self.x],[self.y], [np.deg2rad(self.D-self.heading_const-2*self.heading_const-self.hc)]])
-                
         if(self.SE_mode == "EKF"):
             self.EKFstep(u, z)
         elif(self.SE_mode == "PF"):
