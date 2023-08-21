@@ -14,3 +14,19 @@ class graph(object):
         y = ((lat - self.lat) * math.pi / 180.0) * self.r
         z = alt - self.alt
         return x,y,z
+
+    def set_rotation(self, D):
+        self.R = np.array([
+            [math.cos(D), -math.sin(D)],
+            [math.sin(D), math.cos(D)]
+        ])
+        self.R = np.linalg.inv(self.R)
+    
+    def rotate(self, x, y, z):
+        position = np.array([
+            [x],
+            [y]
+        ])
+        position = self.R @ position
+
+        return position[0][0], position[1][0],z
