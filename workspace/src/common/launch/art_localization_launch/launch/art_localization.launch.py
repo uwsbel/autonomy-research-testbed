@@ -48,7 +48,7 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
     AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
     AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
-    AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
 
     AddLaunchArgument(ld, "vis", "False")
 
