@@ -31,6 +31,9 @@
 
 # ros imports
 from launch import LaunchDescription
+from launch.substitutions import PythonExpression
+from launch.conditions import IfCondition
+
 from launch_ros.actions import Node
 
 # internal imports
@@ -43,19 +46,28 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
-
-    AddLaunchArgument(ld, "art_localization/input/gps", "/chrono_ros_bridge/output/gps/data")
-    #TODO: fix the above so that it is not going to CRB but rather to /sensing/gps
-    AddLaunchArgument(ld, "art_localization/input/magnetometer", "/chrono_ros_bridge/output/magnetometer/data")
-    #TODO: same as above
-    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
-    AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
+            
     AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
-    AddLaunchArgument(ld, "art_localization/input/groundTruth", "/vehicle/state")
     AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/state")
+    #TODO: might want ot use multipleIfConditions here
+    if(IfCondition(PythonExpression([(GetLaunchArgument("use_sim"))]))):
+        AddLaunchArgument(ld, "art_localization/input/gps", "/chrono_ros_bridge/output/gps/data")
+        AddLaunchArgument(ld, "art_localization/input/magnetometer", "/chrono_ros_bridge/output/magnetometer/data")
+        AddLaunchArgument(ld, "art_localization/input/groundTruth", "/vehicle/state")
+        AddLaunchArgument(ld, "art_localization/input/gyroscope","/chrono_ros_bridge/output/gyroscope/data")
+        AddLaunchArgument(ld, "art_localization/input/accelerometer","/chrono_ros_bridge/output/accelerometer/data")
+    else:
+        AddLaunchArgument(ld,"art_localization/input/gps","/sensing/gps/data")
+        AddLaunchArgument(ld, "art_localization/input/magnetometer","/sensing/magnetometer/data")
+        #TODO: Ground truth from RTK
+        AddLaunchArgument(ld, "art_localization/input/groundTruth", "/vehicle/state")
+
+        AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+        AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
 
     AddLaunchArgument(ld, "SE_mode", "GT")
     AddLaunchArgument(ld, "use_sim_time", "False")
+    AddLaunchArgument(ld, "print_csv", "False")
 
     # -----
     # Nodes
@@ -77,6 +89,7 @@ def generate_launch_description():
         parameters=[
             {"SE_mode": GetLaunchArgument("SE_mode")},
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
+            {"print_csv": GetLaunchArgument("print_csv")}
         ]
     )
     ld.add_action(node)

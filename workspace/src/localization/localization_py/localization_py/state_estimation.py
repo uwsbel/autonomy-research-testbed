@@ -29,7 +29,8 @@ class StateEstimationNode(Node):
         
 
         # ROS PARAMETERS
-
+        self.declare_parameter('print_csv', False)
+        self.print_csv = self.get_parameter('print_csv').get_parameter_value().bool_value
         self.declare_parameter('SE_mode', "GT")
         self.SE_mode = self.get_parameter('SE_mode').get_parameter_value().string_value
         sim = self.get_parameter("use_sim_time").get_parameter_value().bool_value
@@ -226,11 +227,13 @@ class StateEstimationNode(Node):
             self.EKFstep(u, z)
         elif(self.SE_mode == "PF"):
             self.PFstep(u,z)
-        
-        # with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
-        #    mywriter = csv.writer(csvfile)
-        #    mywriter.writerow([self.gtx, self.gty, np.deg2rad(self.D), self.state[3,0], self.throttle, self.steering])
-        #    csvfile.close()
+        self.get_logger().info("print: "+ str(self.print_csv))
+
+        if(self.print_csv):
+            with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
+                mywriter = csv.writer(csvfile)
+                mywriter.writerow([self.gtx, self.gty, np.deg2rad(self.D), self.state[3,0], self.throttle, self.steering])
+                csvfile.close()
 
        
         msg = VehicleState()
