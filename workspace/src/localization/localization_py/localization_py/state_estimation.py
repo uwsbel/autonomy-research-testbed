@@ -1,10 +1,9 @@
 import csv
 import rclpy
 from rclpy.node import Node
-from art_msgs.msg import VehicleState
 from sensor_msgs.msg import Imu, NavSatFix, MagneticField
-from chrono_ros_msgs.msg import ChVehicle
 from ament_index_python.packages import get_package_share_directory
+from art_msgs.msg import VehicleState
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -36,10 +35,15 @@ class StateEstimationNode(Node):
         sim = self.get_parameter("use_sim_time").get_parameter_value().bool_value
         if(sim):
             global VehicleInput
+            global VehicleStateInput
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
+            from chrono_ros_msgs.msg import ChVehicle as VehicleStateInput
         else:
             global VehicleInput
+            global VehicleStateInput
             from art_msgs.msg import VehicleInput
+            from art_msgs.msg import VehicleState as VehicleStateInput
+
 
 
         #update frequency of this node
@@ -109,8 +113,8 @@ class StateEstimationNode(Node):
         #subscribers
         self.sub_gps = self.create_subscription(NavSatFix, '~/input/gps', self.gps_callback, 1)
         if(sim):
-            self.sub_groud_truth = self.create_subscription(ChVehicle, '~/input/groundTruth', self.ground_truth_callback, 1)
-            #TODO: We shouldnt have ChVehicle in here.
+            self.sub_groud_truth = self.create_subscription(VehicleStateInput, '~/input/groundTruth', self.ground_truth_callback, 1)
+            #TODO: make sure this works without ChVehicle in here.
 
         self.sub_mag = self.create_subscription(MagneticField, "~/input/magnetometer", self.mag_callback, 1)
         #self.sub_gyro = self.create_subscription(Imu, "~/input/gyro", self.gyro_callback, 10)
