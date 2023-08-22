@@ -16,5 +16,5 @@
 	url = git@github.com:bluespace-ai/bluespace_ai_xsens_ros_mti_driver
 	ignore = dirty
 [submodule "workspace/src/nmea_navsat_driver"]
-	path = workspace/src/nmea_navsat_driver
+	path = workspace/src/sensing/nmea_navsat_driver
 	url = https://github.com/ros-drivers/nmea_navsat_driver.git
