@@ -78,7 +78,7 @@ services:
         ROS_DISTRO: "humble"
         USER_UID: "@{uid}"
         USER_GID: "@{gid}"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-humble-usb-cam ros-humble-tf-transformations"
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-humble-usb-cam ros-humble-tf-transformations ros-humble-rqt*"
         PIP_REQUIREMENTS: "wa_simulator pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex transforms3d"
         USER_GROUPS: "dialout video"
     environment:
