@@ -100,9 +100,9 @@ class StateEstimationNode(Node):
         self.sub_gps = self.create_subscription(NavSatFix, '~/input/gps', self.gps_callback, 1)
         if(sim):
             self.sub_groundTruth = self.create_subscription(NavSatFix, '~/input/groundTruth', self.groundTruth_callback, 1)
-        self.sub_mag = self.create_subscription(MagneticField, "~/input/mag", self.mag_callback, 10)
-        self.sub_gyro = self.create_subscription(Imu, "~/input/gyro", self.gyro_callback, 10)
-        self.sub_accel = self.create_subscription(Imu, "~/input/accel", self.accel_callback, 10)
+        self.sub_mag = self.create_subscription(MagneticField, "~/input/magnetometer", self.mag_callback, 10)
+        self.sub_gyro = self.create_subscription(Imu, "~/input/gyroscope", self.gyro_callback, 10)
+        self.sub_accel = self.create_subscription(Imu, "~/input/accelerometer", self.accel_callback, 10)
 
         #publishers
         #TODO: change callback time.
