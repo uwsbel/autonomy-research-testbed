@@ -52,6 +52,10 @@ def generate_launch_description():
     AddLaunchArgument(ld, "container", "") 
     container_name = AddLaunchArgument(ld, "container_name", "art_container") 
 
+    SetLaunchArgument(ld, "disable_art_sensing", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
+    SetLaunchArgument(ld, "disable_art_vehicle", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
+    SetLaunchArgument(ld, "disable_art_simulation", "True", condition=UnlessCondition(GetLaunchArgument("use_sim")))
+
     # -------------
     # Composability
     # -------------
@@ -91,13 +95,5 @@ def generate_launch_description():
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
     IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
-
-    # ----------------
-    # Launch Utilities
-    # ----------------
-
-    SetLaunchArgument(ld, "disable_art_sensing", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
-    SetLaunchArgument(ld, "disable_art_vehicle", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
-    SetLaunchArgument(ld, "disable_art_simulation", "True", condition=UnlessCondition(GetLaunchArgument("use_sim")))
 
     return ld 
