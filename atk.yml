@@ -1,154 +1,98 @@
-project: art
-default_containers: 
-  - dev
-  - vnc
-custom_cli_arguments:
+x-project: art
+x-optionals:
   gpus:
-    argparse:
-      action: 'store_true'
-    all:
-      docker:
-        deploy:
-          resources:
-            reservations:
-              devices:
-                - driver: nvidia
-                  capabilities: [gpu]
-      singularity:
-        nv: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
   devices:
-    argparse:
-      action: 'store_true'
-    all:
-      devices:
-        - /dev/video0
-        - /dev/ttyACM0
-        - /dev/ttyUSB0
+    devices:
+      - "/dev/video0"
+      - "/dev/ttyACM0"
+      - "/dev/ttyUSB0"
   network_mode_host:
-    argparse:
-      action: 'store_true'
-    all:
-      network_mode: "host"
-  singularity:
-    argparse:
-      action: 'store_true'
-    all:
-      singularity:
-        sudo_override: False
-        network:
-          enable: true
-          allocate_ip: false
-          mode: "bridge"
-        start:
-          options:
-            - contain
-            - writable
-        build:
-          options:
-            - force
-            - sandbox
-external:
-  db:
-    files:
-      - name: "ATK-02-25-2022-04-30-30"
-        id: "1rmO5F8yrIP61W409IxPI-ETzInRyV3rR"
-        output: "@{project_root}/demos/bags/ATK-02-25-2022-04-30-30"
-      - name: "ATK-02-25-2022-03-19-00"
-        id: "1bHY8xFsCbtEuF2PTdwS7qdTPV0z479hZ"
-        output: "@{project_root}/demos/bags/ATK-02-25-2022-03-19-00"
-      - name: "pytorch-aarch64"
-        id: "1XEvtAMeOAJQx9kQoRhVNdZt07L4y1d-D"
-        output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.9.0-python3.8-aarch64"
-      - name: "torch-1.12cu11-aarch64"
-        id: "1eOpFBNbP4L8_Ort5nmDIxqEJQcbluNdA"
-        output: "@{project_root}/containers/nx/scripts/pytorch/torch-1.12cu11-aarch64"
+    network_mode: "host"
+  x11:
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+    environment:
+      DISPLAY: ${DISPLAY}
 services:
-  dev: &dev_service
-    image: "atk/@{project}:dev"
-    hostname: "@{project}-dev"
-    command: ""
-    container_name: "@{project}-dev"
-    entrypoint: ""
-    build: &dev_build
+  dev:
+    image: "atk/${ATK_PROJECT}:dev"
+    hostname: "${ATK_PROJECT}-dev"
+    container_name: "${ATK_PROJECT}-dev"
+    build:
       context: "./"
-      dockerfile: "./containers/dev/dev.dockerfile"
       network: "host"
-      args: &dev_build_args
-        PROJECT: "@{project}"
-        ROS_DISTRO: "humble"
-        USER_UID: "@{uid}"
-        USER_GID: "@{gid}"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-humble-usb-cam ros-humble-tf-transformations ros-humble-rqt-graph"
+      dockerfile: "./containers/dev/dev.dockerfile"
+      args:
+        PROJECT: ${ATK_PROJECT}
+        ROS_DISTRO: ${ROS_DISTRO}
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-tf-transformations ros-${ROS_DISTRO}-rqt-graph"
         PIP_REQUIREMENTS: "pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt transforms3d"
         USER_GROUPS: "dialout video"
+        SCRIPTS_DIR: "containers/dev/scripts"
+    volumes:
+      - "./:/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}"
     environment:
       DISPLAY: vnc:0.0
-      NVIDIA_VISIBLE_DEVICES: "all"
-      NVIDIA_DRIVER_CAPABILITIES: "all"
-    volumes: 
-     - "@{project_root}:/home/@{container_username}/@{project}"
+    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}/workspace"
     tty: true
-    working_dir: "/home/@{container_username}/@{project}/workspace"
-  nx:
-    <<: *dev_service
-    image: "atk/@{project}:nx"
-    hostname: "@{project}-nx"
-    container_name: "@{project}-nx"
-    network_mode: "host"
-    build:
-      <<: *dev_build
-      args:
-        <<: *dev_build_args
-        CONTAINERNAME: "nx"
   vnc:
-    image: "atk/@{project}:vnc"
-    hostname: "@{project}-vnc"
-    command: ""
-    container_name: "@{project}-vnc"
-    entrypoint: ""
+    image: "atk/${ATK_PROJECT}:vnc"
+    hostname: "${ATK_PROJECT}-vnc"
+    container_name: "${ATK_PROJECT}-vnc"
     build:
       context: "./containers/vnc"
       dockerfile: "./vnc.dockerfile"
       network: "host"
       args:
-        VNC_PASSWORD: "@{project}"
+        VNC_PASSWORD: "${ATK_PROJECT}"
         RUN_XTERM: "yes"
         RUN_FLUXBOX: "yes"
     environment:
       RUN_XTERM: no
       RUN_FLUXBOX: yes
     ports:
-      - "8080:8080"
-      - "5900:5900"
+      - "127.0.0.1:8080-8099:8080"
+      - "127.0.0.1:5900-5999:5900"
+  nx:
+    extends: dev
+    image: "atk/${ATK_PROJECT}:nx"
+    hostname: "${ATK_PROJECT}-nx"
+    container_name: "${ATK_PROJECT}-nx"
+    network_mode: "host"
+    build:
+      args:
+        SCRIPTS_DIR: "containers/nx/scripts"
   chrono:
-    image: "atk/@{project}:chrono"
-    hostname: "@{project}-chrono"
-    command: ""
-    container_name: "@{project}-chrono"
-    entrypoint: ""
+    image: "atk/${ATK_PROJECT}:chrono"
+    hostname: "${ATK_PROJECT}-chrono"
+    container_name: "${ATK_PROJECT}-chrono"
     build:
       context: ./containers/chrono
       dockerfile: ./chrono.dockerfile
       network: "host"
       args:
-        USERNAME: "@{project}"
-        USERHOME: "/home/@{container_username}"
-        USERSHELL: "bash"
-        USERSHELLPATH: "/bin/bash"
-        USERSHELLPROFILE: "/home/@{container_username}/.bashrc"
+        PROJECT: ${ATK_PROJECT}
+        CUDA_VERSION: "12.2.0"
+        UBUNTU_VERSION: "22.04"
+        USERNAME: "${ATK_PROJECT}"
         APT_DEPENDENCIES: "python3.10 python3.10-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev git cmake cmake-curses-gui libglu1-mesa-dev mesa-common-dev swig freeglut3-dev libglfw3 libglfw3-dev x11proto-gl-dev libxxf86vm-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
         PIP_DEPENDENCIES: ""
-    environment:
-      USER_UID: "@{uid}"
-      USER_GID: "@{gid}"
-      NVIDIA_VISIBLE_DEVICES: "all"
-      NVIDIA_DRIVER_CAPABILITIES: "all"
+        OPTIX_SCRIPT: NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh
     ports:
-      - "50000:50000"
-    working_dir: "/home/@{container_username}/@{project}/sim"
-    volumes: 
-      - "@{project_root}:/home/@{container_username}/@{project}"
+      - "50000-50100:50000"
+    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}/sim"
+    volumes:
+      - "./:/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}"
     tty: true
 networks:
   default:
-    name: "@{project}"
+    name: "${ATK_PROJECT}"
