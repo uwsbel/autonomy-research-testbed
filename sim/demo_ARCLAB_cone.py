@@ -385,7 +385,7 @@ def main():
     c_window = float(0)
     camera.SetCollectionWindow(c_window)
 
-    camera.PushFilter(sens.ChFilterVisualize(640, 360))
+    # camera.PushFilter(sens.ChFilterVisualize(640, 360))
 
     if save_sensor_data:
         camera.PushFilter(sens.ChFilterSave(sensor_data_dir + "cam1/"))
