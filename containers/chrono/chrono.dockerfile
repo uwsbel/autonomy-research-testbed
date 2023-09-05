@@ -27,8 +27,8 @@ RUN apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Install some python packages
 ARG PIP_REQUIREMENTS=""
-RUN if [ -n "${PIP_DEPENDENCIES}" ]; then \
-        pip install ${PIP_DEPENDENCIES}; \
+RUN if [ -n "${PIP_REQUIREMENTS}" ]; then \
+        pip install ${PIP_REQUIREMENTS}; \
     fi
 
 # Default bash config
@@ -60,7 +60,7 @@ ARG OPTIX_SCRIPT
 COPY ${OPTIX_SCRIPT} /tmp/optix.sh
 
 # Build chrono install
-RUN git clone https://github.com/projectchrono/chrono.git -b main ${USERHOME}/chrono && \\
+RUN git clone https://github.com/projectchrono/chrono.git -b main ${USERHOME}/chrono && \
         mkdir ${USERHOME}/chrono/build
 RUN chmod +x /tmp/optix.sh && \
         mkdir /opt/optix && \

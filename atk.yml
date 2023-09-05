@@ -1,4 +1,3 @@
-x-project: art
 x-optionals:
   gpus:
     deploy:
@@ -22,38 +21,39 @@ x-optionals:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
     environment:
       DISPLAY: ${DISPLAY}
+name: art
 services:
   dev:
-    image: "atk/${ATK_PROJECT}:dev"
-    hostname: "${ATK_PROJECT}-dev"
-    container_name: "${ATK_PROJECT}-dev"
+    image: "atk/${COMPOSE_PROJECT_NAME}:dev"
+    hostname: "${COMPOSE_PROJECT_NAME}-dev"
+    container_name: "${COMPOSE_PROJECT_NAME}-dev"
     build:
       context: "./"
       network: "host"
       dockerfile: "./containers/dev/dev.dockerfile"
       args:
-        PROJECT: ${ATK_PROJECT}
+        PROJECT: ${COMPOSE_PROJECT_NAME}
         ROS_DISTRO: ${ROS_DISTRO}
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-tf-transformations ros-${ROS_DISTRO}-rqt-graph"
         PIP_REQUIREMENTS: "pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt transforms3d"
         USER_GROUPS: "dialout video"
         SCRIPTS_DIR: "containers/dev/scripts"
     volumes:
-      - "./:/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}"
+      - "./:/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}"
     environment:
       DISPLAY: vnc:0.0
-    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}/workspace"
+    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}/workspace"
     tty: true
   vnc:
-    image: "atk/${ATK_PROJECT}:vnc"
-    hostname: "${ATK_PROJECT}-vnc"
-    container_name: "${ATK_PROJECT}-vnc"
+    image: "atk/${COMPOSE_PROJECT_NAME}:vnc"
+    hostname: "${COMPOSE_PROJECT_NAME}-vnc"
+    container_name: "${COMPOSE_PROJECT_NAME}-vnc"
     build:
       context: "./containers/vnc"
       dockerfile: "./vnc.dockerfile"
       network: "host"
       args:
-        VNC_PASSWORD: "${ATK_PROJECT}"
+        VNC_PASSWORD: "${COMPOSE_PROJECT_NAME}"
         RUN_XTERM: "yes"
         RUN_FLUXBOX: "yes"
     environment:
@@ -64,35 +64,34 @@ services:
       - "127.0.0.1:5900-5999:5900"
   nx:
     extends: dev
-    image: "atk/${ATK_PROJECT}:nx"
-    hostname: "${ATK_PROJECT}-nx"
-    container_name: "${ATK_PROJECT}-nx"
+    image: "atk/${COMPOSE_PROJECT_NAME}:nx"
+    hostname: "${COMPOSE_PROJECT_NAME}-nx"
+    container_name: "${COMPOSE_PROJECT_NAME}-nx"
     network_mode: "host"
     build:
       args:
         SCRIPTS_DIR: "containers/nx/scripts"
   chrono:
-    image: "atk/${ATK_PROJECT}:chrono"
-    hostname: "${ATK_PROJECT}-chrono"
-    container_name: "${ATK_PROJECT}-chrono"
+    image: "atk/${COMPOSE_PROJECT_NAME}:chrono"
+    hostname: "${COMPOSE_PROJECT_NAME}-chrono"
+    container_name: "${COMPOSE_PROJECT_NAME}-chrono"
     build:
       context: ./containers/chrono
       dockerfile: ./chrono.dockerfile
       network: "host"
       args:
-        PROJECT: ${ATK_PROJECT}
+        PROJECT: ${COMPOSE_PROJECT_NAME}
         CUDA_VERSION: "12.2.0"
         UBUNTU_VERSION: "22.04"
-        USERNAME: "${ATK_PROJECT}"
         APT_DEPENDENCIES: "python3.10 python3.10-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev git cmake cmake-curses-gui libglu1-mesa-dev mesa-common-dev swig freeglut3-dev libglfw3 libglfw3-dev x11proto-gl-dev libxxf86vm-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
         PIP_DEPENDENCIES: ""
         OPTIX_SCRIPT: NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh
     ports:
       - "50000-50100:50000"
-    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}/sim"
+    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}/sim"
     volumes:
-      - "./:/home/${ATK_CONTAINER_USERNAME}/${ATK_PROJECT}"
+      - "./:/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}"
     tty: true
 networks:
   default:
-    name: "${ATK_PROJECT}"
+    name: "${COMPOSE_PROJECT_NAME}"
