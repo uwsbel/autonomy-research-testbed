@@ -50,7 +50,7 @@ class control : public rclcpp::Node {
     /*******************************
                 PRIVATE
     *******************************/
-
+  private:
     uint nodeUpdateFrequency;
     double steering;
     double throttle;
