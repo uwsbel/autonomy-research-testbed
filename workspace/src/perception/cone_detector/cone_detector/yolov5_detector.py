@@ -312,7 +312,7 @@ class YOLODetectionNode(Node):
         if(self.vis):
             [p.remove() for p in self.patches]
             self.patches.clear()
-            self.ax.clear()
+            self.ax.texts.clear()
 
         # self.get_logger().info('Detected %s cones' % len(self.boxes)) 
         
