@@ -62,7 +62,7 @@ def generate_launch_description():
     AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
     AddLaunchArgument("ip", "")
     AddLaunchArgument("hostname", "")
-    AddLaunchArgument("use_sim_time", '"True"')
+    AddLaunchArgument("use_sim_time", "True")
 
     # ------------
     # Launch Files
@@ -75,7 +75,7 @@ def generate_launch_description():
                 'launch/art_stack.launch.py')),
         launch_arguments=[
             ('use_sim_time', 'True'),
-            ("use_sim_msg", '"True"'),
+            ('use_sim_msg', 'True'),
         ]
     )
     launch_description.add_action(stack)
