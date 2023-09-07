@@ -28,81 +28,57 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
 
+# external imports
+from pathlib import Path
+
+# ros imports
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, EmitEvent
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import TextSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
-from launch.events import Shutdown
+from launch.conditions import IfCondition
 
-from ament_index_python import get_package_share_directory
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument 
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "art_simulation/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "art_simulation/output/time", "/clock")
+    AddLaunchArgument(ld, "art_simulation/output/vehicle", "/vehicle/state")
+    AddLaunchArgument(ld, "art_simulation/output/camera", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "ip", "")
+    AddLaunchArgument(ld, "hostname", "")
 
-    AddLaunchArgument("input/vehicle_inputs", "/control/vehicle_inputs")
-    AddLaunchArgument("output/time", "/clock")
-    AddLaunchArgument("output/vehicle", "/vehicle/state")
-    AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("ip", "")
-    AddLaunchArgument("hostname", "")
-    AddLaunchArgument("use_sim_time", "True")
-
-    # ------------
-    # Launch Files
-    # ------------
-
-    stack = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_launch'),
-                'launch/art_stack.launch.py')),
-        launch_arguments=[
-            ('use_sim_time', 'True'),
-            ('use_sim_msg', 'True'),
-        ]
-    )
-    launch_description.add_action(stack)
+    # TODO: Make a better exit case
 
     # -----
     # Nodes
     # -----
 
-    chrono_ros_bridge = Node(
+    node = Node(
         package='chrono_ros_bridge',
-        namespace='',
         executable='chrono_ros_bridge_node',
         name='chrono_ros_bridge',
         remappings=[
-            ("~/input/driver_inputs", LaunchConfiguration("input/vehicle_inputs")),
-            ("~/output/time", LaunchConfiguration("output/time")),
-            ("~/output/vehicle", LaunchConfiguration("output/vehicle")),
-            ("~/output/camera/front_facing_camera", LaunchConfiguration("output/camera")),
+            ("~/input/driver_inputs", GetLaunchArgument("art_simulation/input/vehicle_inputs")),
+            ("~/output/time", GetLaunchArgument("art_simulation/output/time")),
+            ("~/output/vehicle", GetLaunchArgument("art_simulation/output/vehicle")),
+            ("~/output/camera/front_facing_camera", GetLaunchArgument("art_simulation/output/camera")),
         ],
         parameters=[
-             {"use_sim_time": LaunchConfiguration("use_sim_time")},
-             {"ip": LaunchConfiguration("ip")},
-             {"hostname": LaunchConfiguration("hostname")},
+             {"ip": GetLaunchArgument("ip")},
+             {"hostname": GetLaunchArgument("hostname")},
+             {"use_sim_time": GetLaunchArgument("use_sim_time")}
         ],
-        on_exit=EmitEvent(event=Shutdown()),
-		
+        condition=IfCondition(GetLaunchArgument("use_sim"))
     )
-    launch_description.add_action(chrono_ros_bridge)
+    ld.add_action(node)
 
-    return launch_description
+    return ld
 

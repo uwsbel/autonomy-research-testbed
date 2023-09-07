@@ -28,57 +28,50 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# ros imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
+
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
+    AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
+    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
+    AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
 
-    AddLaunchArgument("input/image", "/sensing/front_facing_camera/raw")
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument("output/objects", "/perception/objects")
-
-    AddLaunchArgument("use_sim_time", "False")
-    AddLaunchArgument("model", "data/model_refined")
-    AddLaunchArgument("camera_calibration_file", "data/calibration.json")
-    AddLaunchArgument("vis", "False")
+    AddLaunchArgument(ld, "vis", "False")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package='cone_detector',
-        namespace='',
-        executable='object_recognition',
-        name='object_recognition',
+        package='localization_py',
+        executable='state_estimation',
+        name='state_estimation',
         remappings=[
-            ("~/input/image", LaunchConfiguration("input/image")),
-            ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
-            ("~/output/objects", LaunchConfiguration("output/objects"))
+                ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
+                ("~/input/magnetometer", GetLaunchArgument("art_localization/input/magnetometer")),
+                ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
+                ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
+                ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
         ],
         parameters=[
-             {"use_sim_time": LaunchConfiguration("use_sim_time")},
-             {"model":LaunchConfiguration("model")},
-             {"camera_calibration_file":LaunchConfiguration("camera_calibration_file",)},
-             {"vis": LaunchConfiguration("vis")}
+            {"vis": GetLaunchArgument("vis")},
+            {"use_sim_time": GetLaunchArgument("use_sim_time")}
         ]
     )
-    launch_description.add_action(node)
+    ld.add_action(node)
 
-    return launch_description
+    return ld 

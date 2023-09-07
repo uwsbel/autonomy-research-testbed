@@ -28,54 +28,54 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# ros imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
+
+
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "art_control/input/path", "/path_planning/path")
+    AddLaunchArgument(ld, "art_control/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_control/output/vehicle_inputs", "/control/vehicle_inputs")
 
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument("input/objects", "/perception/objects")
-    AddLaunchArgument("output/path", "/path_planning/path")
-
-    AddLaunchArgument("use_sim_time", "False")
-    AddLaunchArgument("vis", "False")
-    AddLaunchArgument("lookahead", ".75")
+    AddLaunchArgument(ld, "control_mode", "PID")
+    AddLaunchArgument(ld, "control_file", "data/smallest_radius_right.csv")
+    AddLaunchArgument(ld, "steering_gain", "1.6")
+    AddLaunchArgument(ld, "throttle_gain", "0.08")
+    AddLaunchArgument(ld, "use_sim_time", "False")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-            package='path_planning',
-            namespace='',
-            executable='path_planning',
-            name='path_planning',
+            package='control',
+            executable='pid',
+            name='pid',
             remappings=[
-                ("~/input/objects", LaunchConfiguration("input/objects")),
-                ("~/input/vehicle_state", LaunchConfiguration("input/vehicle_state")),
-                ("~/output/path", LaunchConfiguration("output/path"))
+                ("~/input/path", GetLaunchArgument("art_control/input/path")),
+                ("~/input/vehicle_state", GetLaunchArgument("art_control/input/vehicle_state")),
+                ("~/output/vehicle_inputs", GetLaunchArgument("art_control/output/vehicle_inputs"))
             ],
             parameters=[
-                {"use_sim_time": LaunchConfiguration("use_sim_time")},
-                {"vis": LaunchConfiguration("vis")},
-                {"lookahead": LaunchConfiguration("lookahead")}
+                {"input": GetLaunchArgument("art_control/input/path")},
+                {"control_mode": GetLaunchArgument("control_mode")},
+                {"control_file": GetLaunchArgument("control_file")},
+                {"steering_gain": GetLaunchArgument("steering_gain")},
+                {"throttle_gain": GetLaunchArgument("throttle_gain")},
+                {"use_sim_time": GetLaunchArgument("use_sim_time")}
             ]
         )
-    launch_description.add_action(node)
+    ld.add_action(node)
 
-    return launch_description
+    return ld 

@@ -29,60 +29,42 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 
+# external imports
+from pathlib import Path
 
-import argparse
+# ros imports
 from launch import LaunchDescription
-from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, TextSubstitution
 
-
-import os
-import sys
-
-from ament_index_python.packages import get_package_share_directory
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument, AddComposableNode, GetPackageSharePath
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "usb_cam/output/image", "/sensing/front_facing_camera/raw")
 
-    AddLaunchArgument("output/camera", "/sensing/front_facing_camera/raw")
+    # -----
+    # Nodes
+    # -----
 
-    parser = argparse.ArgumentParser(description='usb_cam demo')
-    parser.add_argument('-n', '--node-name', dest='node_name', type=str,
-                        help='name for device', default='usb_cam')
-
-    args, unknown = parser.parse_known_args(sys.argv[4:])
-
-
-    usb_cam_dir = get_package_share_directory('art_launch')
-
-    # get path to params file
-    params_path = os.path.join(
-        usb_cam_dir,
-        'config',
-        'params.yaml'
+    AddComposableNode(
+       ld,
+       plugin="usb_cam::UsbCamNode",
+       package="usb_cam",
+       executable="usb_cam_node_exe",
+       name="usb_cam",
+       parameters=[
+         GetPackageSharePath("art_sensing_launch", "config", "usb_cam.params.yaml"),
+         {"use_sim_time": GetLaunchArgument("use_sim_time")}
+      ],
+       remappings=[
+        ("~/output/image_raw", GetLaunchArgument("usb_cam/output/image"))
+       ]
     )
 
-    node_name = args.node_name
-
-    launch_description.add_action(Node(
-        package='usb_cam', executable='usb_cam_node_exe', output='screen',
-        name=node_name,
-        remappings=[("/image_raw", LaunchConfiguration("output/camera"))],
-        # namespace=ns,
-        parameters=[params_path]
-        ))
-    return launch_description
+    return ld
