@@ -28,43 +28,21 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
-import os
 
+# ros imports
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
 
-# skipping CompressedDepth, doesn't appear to work properly
-# /image_raw/theora adds the greatest time increase to Col2Perc
-image_topics = ['/sensing/front_facing_camera/raw', '/image_raw/compressed', '/image_raw/compressedDepth', '/camera_info']
-imu_topics = ['/gnss', '/imu/acceleration', '/imu/angular_velocity', '/imu/data', '/imu/dq', '/imu/dv', '/imu/mag', '/imu/time_ref']
-vehicle_topics = ['/control/vehicle_inputs']
+# internal imports
+from launch_utils import IncludeLaunchDescriptionWithCondition
 
-all_topics = image_topics + imu_topics + vehicle_topics
 
-# This can be launched from the command
-#
-#    ros2 launch art_launch art_rosbag_launch.launch.py
-#
-# and will record all the ros topics which are needed for testing
 def generate_launch_description():
-    return LaunchDescription([
-        ExecuteProcess(
-            cmd = (['ros2', 'bag', 'record'] + all_topics),
-            output = 'screen'
-        )
-    ])
+    ld = LaunchDescription()
 
+    # ---------------
+    # Launch Includes
+    # ---------------
 
+    IncludeLaunchDescriptionWithCondition(ld, "bluespace_ai_xsens_mti_driver", "xsens_mti_node")
 
-
-
-
-
-
-
-
-
-
-
-
-
+    return ld

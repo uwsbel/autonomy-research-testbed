@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <exec_depend>usb_cam</exec_depend>
+  <exec_depend>bluespace_ai_xsens_mti_driver</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
 

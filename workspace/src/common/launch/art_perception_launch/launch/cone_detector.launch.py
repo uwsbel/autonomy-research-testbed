@@ -28,62 +28,51 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+
+# ros imports
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
+
+# internal imports
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
+    ld = LaunchDescription()
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    def AddLaunchArgument(arg, default):
-        launch_description.add_action(
-            DeclareLaunchArgument(
-                arg,
-                default_value=TextSubstitution(text=default)
-            )
-        )
+    AddLaunchArgument(ld, "cone_detector/input/image", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(ld, "cone_detector/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "cone_detector/output/objects", "/perception/objects")
 
-    AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
-    AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
-    AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
-    AddLaunchArgument("input/gyro", "/chrono_ros_bridge/output/gyroscope/data")
-    AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
-    
-    AddLaunchArgument("output/vehicle_state", "/vehicle_state")
-    AddLaunchArgument("vis", "False")
-
-    AddLaunchArgument("use_sim_msg", "False")
-    AddLaunchArgument("use_sim_time", "False")
+    node = AddLaunchArgument(ld, "node", "yolov5_detector", choices=("yolov5_detector", "object_recognition"))
+    AddLaunchArgument(ld, "model", "data/real.onnx")
+    AddLaunchArgument(ld, "camera_calibration_file", "data/calibration.json")
+    AddLaunchArgument(ld, "vis", "False")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package='localization_py',
-        namespace='',
-        executable='state_estimation',
-        name='state_estimation',
+        package="cone_detector",
+        executable=node,
+        name=node,
         remappings=[
-                ("~/input/gps", LaunchConfiguration("input/gps")),
-                ("~/input/groundTruth", LaunchConfiguration("input/groundTruth")),
-                ("~/input/mag", LaunchConfiguration("input/mag")),
-                ("~/input/gyro", LaunchConfiguration("input/gyro")),
-                ("~/input/accel", LaunchConfiguration("input/accel")),
-                ("~/output/vehicle_state", LaunchConfiguration("output/vehicle_state")),
+            ("~/input/image", GetLaunchArgument("cone_detector/input/image")),
+            ("~/input/vehicle_state", GetLaunchArgument("cone_detector/input/vehicle_state")),
+            ("~/output/objects", GetLaunchArgument("cone_detector/output/objects"))
         ],
         parameters=[
-            {"use_sim_time": LaunchConfiguration("use_sim_time")},
-            {"use_sim_msg": LaunchConfiguration("use_sim_msg")},
-            {"vis": LaunchConfiguration("vis")}
+             {"model": GetLaunchArgument("model")},
+             {"camera_calibration_file": GetLaunchArgument("camera_calibration_file")},
+             {"vis": GetLaunchArgument("vis")},
+             {"use_sim_time": GetLaunchArgument("use_sim_time")}
         ]
     )
-    launch_description.add_action(node)
+    ld.add_action(node)
 
-    return launch_description
+    return ld 

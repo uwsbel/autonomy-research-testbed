@@ -78,7 +78,7 @@ class PathPlanningNode(Node):
         #subscribers
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
-        self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
+        # self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
         self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
         if self.vis:
