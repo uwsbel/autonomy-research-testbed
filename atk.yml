@@ -39,10 +39,10 @@ services:
         USER_GROUPS: "dialout video"
         SCRIPTS_DIR: "containers/dev/scripts"
     volumes:
-      - "./:/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}"
+      - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     environment:
       DISPLAY: vnc:0.0
-    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}/workspace"
+    working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
     tty: true
   vnc:
     image: "atk/${COMPOSE_PROJECT_NAME}:vnc"
@@ -88,9 +88,9 @@ services:
         OPTIX_SCRIPT: NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh
     ports:
       - "50000-50100:50000"
-    working_dir: "/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}/sim"
+    working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/sim"
     volumes:
-      - "./:/home/${ATK_CONTAINER_USERNAME}/${COMPOSE_PROJECT_NAME}"
+      - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     tty: true
 networks:
   default:
