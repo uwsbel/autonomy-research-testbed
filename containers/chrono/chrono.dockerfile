@@ -63,11 +63,11 @@ RUN git clone https://github.com/projectchrono/chrono.git -b main
 RUN mkdir chrono/build
 
 # Move optix file into docker container
-COPY NVIDIA-OptiX-SDK-7.5.0-linux64-x86_64.sh $USERHOME/optix75.sh
-RUN sudo chmod +x optix75.sh
-RUN mkdir /opt/optix75
-RUN $USERHOME/optix75.sh --prefix=/opt/optix75 --skip-license
-RUN rm optix75.sh
+COPY NVIDIA-OptiX-SDK-7.7.0-linux64-x86_64.sh $USERHOME/optix77.sh
+RUN sudo chmod +x optix77.sh
+RUN mkdir /opt/optix77
+RUN $USERHOME/optix77.sh --prefix=/opt/optix77 --skip-license
+RUN rm optix77.sh
 RUN cd chrono/build && cmake ../ -G Ninja \
  -DCMAKE_BUILD_TYPE=Release \
  -DBUILD_BENCHMARKING=OFF \
@@ -80,8 +80,8 @@ RUN cd chrono/build && cmake ../ -G Ninja \
  -DENABLE_OPENMP=ON \
  -DENABLE_MODULE_VEHICLE=ON \
  -DEigen3_DIR=/usr/lib/cmake/eigen3 \
- -DOptiX_INCLUDE=/opt/optix75/include \
- -DOptiX_INSTALL_DIR=/opt/optix75 \
+ -DOptiX_INCLUDE=/opt/optix77/include \
+ -DOptiX_INSTALL_DIR=/opt/optix77 \
  -DNUMPY_INCLUDE_DIR=/usr/lib/python3/dist-packages/numpy/core/include \
  && ninja && sudo ninja install
 
