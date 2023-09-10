@@ -48,9 +48,12 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
     AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
     AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
+    AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
     AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
+    AddLaunchArgument(ld, "input/groundTruth", "/vehicle/state")
 
-    AddLaunchArgument(ld, "vis", "False")
+    AddLaunchArgument(ld, "use_sim_time", "False")
+    AddLaunchArgument(ld, "SE_mode", "GT")
 
     # -----
     # Nodes
@@ -66,10 +69,12 @@ def generate_launch_description():
                 ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
                 ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
                 ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
+                ("~/input/vehicle_inputs", GetLaunchArgument("art_localization/input/vehicle_inputs")),
+                ("~/input/groundTruth", GetLaunchArgument("input/groundTruth")),
         ],
         parameters=[
-            {"vis": GetLaunchArgument("vis")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")}
+            {"use_sim_time": GetLaunchArgument("use_sim_time")},
+            {"SE_mode": GetLaunchArgument("SE_mode")}
         ]
     )
     ld.add_action(node)

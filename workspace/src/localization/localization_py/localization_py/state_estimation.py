@@ -29,22 +29,14 @@ class StateEstimationNode(Node):
         
 
         # ROS PARAMETERS
-        self.declare_parameter('vis', False)
-        self.vis = self.get_parameter('vis').get_parameter_value().bool_value
+        self.use_sim_msg = self.get_parameter("use_sim_time").get_parameter_value().bool_value
 
-        self.declare_parameter('use_sim_msg', False)
-        self.use_sim_msg = self.get_parameter('use_sim_msg').get_parameter_value().bool_value
         self.declare_parameter('SE_mode', "GT")
         self.SE_mode = self.get_parameter('SE_mode').get_parameter_value().string_value
 
 
         #update frequency of this node
         self.freq = 10.0
-
-        if(self.vis):
-            matplotlib.use("TKAgg")
-            self.fig = plt.figure()
-            self.fig.suptitle('Kalman Filter', fontsize = 20)
 
         self.gps = ""
         self.groundTruth = ""
@@ -63,15 +55,10 @@ class StateEstimationNode(Node):
         self.x = 0
         self.y = 0
         
-
-        self.first_write = True
-        
         #what we will be using for our state vector. (x, y, theta yaw, v vel)
         self.state = np.zeros((4,1))
         np.vstack(self.state)
-        #TODO: edit these to change the starting location...
-        self.heading_const = 0#np.rad2deg(0.20822205)
-        self.hc = 0
+
         
         self.init_x = 0.0
         self.init_y = 0.0
@@ -84,18 +71,17 @@ class StateEstimationNode(Node):
 
         self.gps_ready = False
 
-        #true X, True Y, velocity, History of each
+        #true X, True Y, velocity, z, heading(degrees)
+        self.gtvy = 0
         self.gty = 0
         self.gtvx = 0
         self.gtx = 0
-        self.gtvy = 0
         self.gtz = 0
+        self.D = 0
 
         #origin, and whether or not the origin has been set yet.
         self.origin_set = False
-
         self.orig_heading_set = False
-        self.D = 0
 
 
         #inputs to the vehicle
@@ -105,24 +91,24 @@ class StateEstimationNode(Node):
         #time between imu updates, sec
         self.dt_gps = 0.1
         
+        #filter
         if(self.SE_mode == "EKF"):
             self.ekf = EKF(self.dt_gps)
         elif(self.SE_mode == "PF"):
             self.pf = PF(self.dt_gps)
 
-        #our graph object
+        #our graph object, for reference frame
         self.graph =  graph()
 
-        sim = True
         #subscribers
         self.sub_gps = self.create_subscription(NavSatFix, '~/input/gps', self.gps_callback, 1)
-        if(sim):
+        if(self.use_sim_msg):
             self.sub_groud_truth = self.create_subscription(ChVehicle, '~/input/groundTruth', self.ground_truth_callback, 1)
 
-        self.sub_mag = self.create_subscription(MagneticField, "~/input/mag", self.mag_callback, 1)
+        self.sub_mag = self.create_subscription(MagneticField, "~/input/magnetometer", self.mag_callback, 1)
         #self.sub_gyro = self.create_subscription(Imu, "~/input/gyro", self.gyro_callback, 10)
         #self.sub_accel = self.create_subscription(Imu, "~/input/accel", self.accel_callback, 100)
-        self.sub_control = self.create_subscription(VehicleInput, "~/input/vehicleInput", self.inputs_callback, 1)
+        self.sub_control = self.create_subscription(VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1)
         #publishers
         self.pub_objects = self.create_publisher(VehicleState, '/vehicle_state', 1)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
@@ -136,6 +122,9 @@ class StateEstimationNode(Node):
 
     def accel_callback(self, msg):
         self.accel = msg
+
+    def gyro_callback(self, msg):
+        self.gyro = msg
         
 
 
@@ -148,25 +137,6 @@ class StateEstimationNode(Node):
         y = msg.pose.orientation.y
         z = msg.pose.orientation.z
         w = msg.pose.orientation.w
-        #TODO: atm groundtruth cannot rotate the original direction
-        #self.D = np.rad2deg(np.arctan2(2 * (y * z + w * x), y*y + x*x - w*w - z*z))
-
-    def gyro_callback(self, msg):
-        self.gyro = msg
-    # def groundTruth_callback(self,msg):
-    #     self.groundTruth = msg
-    #     lat = self.groundTruth.latitude
-    #     lon = self.groundTruth.longitude
-    #     alt = self.groundTruth.altitude
-    #     if(not self.origin_set):
-    #        self.origin_set = True
-    #        self.graph.set_graph(lat,lon, alt)
-    #     x,y,z = self.graph.gps2cartesian(lat,lon,alt)
-    #     if(self.orig_heading_set):
-    #         self.gtx,self.gty, self.gtz =self.graph.rotate(x,y,z)
-    #         self.gtx = self.gtx+self.init_x
-    #         self.gty = self.gty+self.init_y
-        
         
         
 
@@ -175,7 +145,6 @@ class StateEstimationNode(Node):
         mag_x = self.mag.magnetic_field.x
         mag_y = self.mag.magnetic_field.y
         mag_z = self.mag.magnetic_field.z
-        #TODO: is the 0.4 needed??
         xGauss = mag_x*0.48828125
         yGauss = mag_y*0.4882815
         if(xGauss==0):
@@ -192,14 +161,15 @@ class StateEstimationNode(Node):
         
         if(not self.orig_heading_set):
             self.orig_heading_set = True
-            self.graph.set_rotation(np.deg2rad(self.D-self.heading_const) -self.init_theta)
-            self.state[2,0] = self.init_theta+np.deg2rad(-self.heading_const)
+            self.graph.set_rotation(np.deg2rad(self.D) -self.init_theta)
+            self.state[2,0] = self.init_theta
 
 
     def gps_callback(self,msg):
         self.gps = msg
         self.gps_ready = True
         if(math.isnan(self.gps.latitude)):
+            #arbitrary values for when we don't get any data (in reality)
             self.lat = -10
             self.lon = -10
             self.alt = -10
@@ -211,17 +181,12 @@ class StateEstimationNode(Node):
         if(not self.origin_set):
            self.origin_set = True
            self.graph.set_graph(self.lat,self.lon, self.alt)
-        if(self.origin_set):
-            x,y,z = self.graph.gps2cartesian(self.lat,self.lon,self.alt)
-            if(self.orig_heading_set):
-                self.x,self.y, self.z =self.graph.rotate(x,y,z)
-                self.x +=self.init_x
-                self.y +=self.init_y
         
-        else:
-           self.x = self.init_x
-           self.y = self.init_y
-           self.z = 0
+        x,y,z = self.graph.gps2cartesian(self.lat,self.lon,self.alt)
+        if(self.orig_heading_set):
+            self.x,self.y, self.z =self.graph.rotate(x,y,z)
+            self.x +=self.init_x
+            self.y +=self.init_y
 
 
 
@@ -229,7 +194,7 @@ class StateEstimationNode(Node):
     def pub_callback(self):
         u = np.array([[self.throttle], [self.steering/2.2]])
 
-        z = np.array([[self.x],[self.y], [np.deg2rad(self.D-self.heading_const-2*self.heading_const-self.hc)]])
+        z = np.array([[self.x],[self.y], [np.deg2rad(self.D)]])
                 
         if(self.SE_mode == "EKF"):
             self.EKFstep(u, z)
