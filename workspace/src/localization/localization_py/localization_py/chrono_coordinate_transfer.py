@@ -1,6 +1,12 @@
 import numpy as np
 import math
-class graph(object):
+class graph:
+    '''
+    This class is a copy of the CHRONO LTP gps2cartesian coordinate transfer.
+    Additional features for rotating the LTP, and setting the rotation are added.
+
+    Chrono documentation: https://api.projectchrono.org/namespacechrono_1_1sensor.html#a69c276ee1766b50936ed940d39a2555d
+    '''
     def __init__(self):
         self.r = self.r = 6378100
 

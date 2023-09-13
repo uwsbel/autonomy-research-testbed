@@ -1,14 +1,21 @@
 import numpy as np
 import math
+import yaml
 
 
-class EKF(object):
-    #Want to replace this motion model with Harry's from MPC solver...
+class EKF:
+    ''' 
+    A basic Extended Kalman Filter implementation. This currently uses the 4DOF motion model.
+    
+    Motion Model inputs: Vehicle control inputs (throttle, steering)
 
+    Observation Model inputs: Sensor measurements (GPS, Magnetometer)
+    '''
 
-    #as per Harry's computations...
-    def new_motion_model(self, x, u):
-
+    def motion_model(self, x, u):
+        ''' 
+        The 4DOF dynamics model for the vehicle
+        '''
         x[0,0] = x[0,0]+math.cos(x[2,0])*self.dt*x[3,0]
         x[1,0] = x[1,0]+math.sin(x[2,0])*self.dt*x[3,0]
         x[2,0] = x[2,0]+self.dt*x[3,0]*math.tan(u[1,0])/self.l
@@ -19,28 +26,10 @@ class EKF(object):
 
         return x
 
-    def new_f(self, v):
-        ret = 0.08
-        if(v!=0):
-            self.omega_0 = (abs(v)*36)#/self.i_wheel
-            if(v>0.5):
-                ret = 1/(20*v)#-(self.tau_0*v/(self.omega_0*self.r_wheel*self.gamma))+self.tau_0
-        #print(ret)
-        if(ret<0):
-            return 0
-        return ret
-
-    def f_1_v(self, v):
-        return self.tau_0-v*self.tau_0/(self.omega_0*self.r_wheel*self.gamma)
-
-    def f_0_v(self, v):
-        if(v <= 0.1*self.omega_0*self.r_wheel):
-            return 0
-        else:
-            return self.tau_0/9-10*self.tau_0*v/(9*self.omega_0*self.gamma*self.r_wheel)
-    #Need to write this F
-
-    def new_calc_F(self, v, theta, delta, throttle):
+    def calc_F(self, v, theta, delta, throttle):
+        '''
+        The State Transition Matrix
+        '''
 
         F = np.array([
             [self.dt*1.0, 0.0, - self.dt*v *
@@ -54,60 +43,35 @@ class EKF(object):
 
         return F
 
-    def df_0_dv(self, v):
-        if(v <= 0.1*self.omega_0*self.r_wheel):
-            return 0
-        else:
-            return -10*self.tau_0 / (9*self.omega_0*self.r_wheel*self.gamma)
-    def __init__(self, dt):#, q1, q3, q4, r1, r3):
+    def __init__(self, dt):
+        with open('/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml', 'r') as yaml_file:
+            config = yaml.safe_load(yaml_file)
         self.dt = dt
         #vehicle parameters:
-        self.c_1 = 1e-4
-        self.c_0 = 0.02#0.039
-        self.l = 0.5
-        self.r_wheel = 0.08451952624
-        self.i_wheel = 1e-3
-        self.gamma = 1/3
-        self.tau_0 = 0.3#0.09
-        self.omega_0 = 30#161.185
+        self.c_1 = config['c_1']
+        self.c_0 = config['c_0']
+        self.l = config['l']
+        self.r_wheel = config['r_wheel']
+        self.i_wheel = config['i_wheel']
+        self.gamma = config['gamma']
+        self.tau_0 = config['tau_0']
+        self.omega_0 = config['omega_0']
         self.df_1_dv = -self.tau_0/(self.omega_0*self.r_wheel*self.gamma)
 
-
-        # self.Q = np.diag([
-        #     q1,  # variance of location on x-axis
-        #     11,  # variance of location on y-axis
-        #     np.deg2rad(q3),  # variance of yaw angle
-        #     q4 # variance of velocity
-        # ]) ** 2  # predict state covariance
-        # # Observation x,y position covariance
-       # self.R = npediag([r1, r1, r3]) ** 2
-        # self.P = np.eye(4)
         self.Q = np.diag([
-            0.1,  # variance of location on x-axis
-            0.1,  # variance of location on y-axis
-            np.deg2rad(3),  # variance of yaw angle
-            0.1 # variance of velocity
+            config['Q1'],  # variance of location on x-axis
+            config['Q1'],  # variance of location on y-axis
+            np.deg2rad(config['Q3']),  # variance of yaw angle
+            config['Q4'] # variance of velocity
         ]) ** 2  # predict state covariance
         # Observation x,y position covariance
-        self.R = np.diag([0.0, 0.0, 0.3]) ** 2
+        self.R = np.diag([config['R1'], config['R1'], config['R3']]) ** 2
         self.P = np.eye(4)
 
-
-
-
-        #BEST SO FAR:
-        # self.Q = np.diag([
-        #     0.2,  # variance of location on x-axis
-        #     0.2,  # variance of location on y-axis
-        #     np.deg2rad(5),  # variance of yaw angle
-        #     0.1 # variance of velocity
-        # ]) ** 2  # predict state covariance
-        # # Observation x,y position covariance
-        # self.R = np.diag([2.0, 2.0, 1.0]) ** 2
-        # self.P = np.eye(4)
-
-
     def angle_diff(self,ref, act):
+        '''
+        Modular subtraction for computing ange differences
+        '''
         if( (ref>0 and act>0) or (ref<=0 and act <=0)):
             err_theta = ref-act
         elif( ref<=0 and act > 0):
@@ -123,22 +87,28 @@ class EKF(object):
         return err_theta
 
     def predict(self, x, u):
+        '''
+        The prediction phase of the EKF
+        '''
         step_size = 1
         self.dt = self.dt/step_size
         for i in range(0,step_size):
-            x = self.new_motion_model(x, u)
+            x = self.motion_model(x, u)
 
         if(x[2,0]>np.pi):
             x[2,0] = x[2,0]-2*np.pi
         if(x[2,0]<-np.pi):
             x[2,0] = x[2,0]+2*np.pi
         self.dt = self.dt*step_size
-        F = self.new_calc_F(x[3][0], x[2][0], u[1][0], u[0][0])
+        F = self.calc_F(x[3][0], x[2][0], u[1][0], u[0][0])
 
         self.P = F @ self.P @ F.T + self.Q
         return x
 
     def correct(self, x, z):
+        '''
+        The correction phase of the EKF
+        '''
         #observation model
         H = np.array([
             [1, 0, 0, 0],
@@ -146,8 +116,6 @@ class EKF(object):
             [0, 0, 1, 0]
         ])
         zPred = H@x
-        #print("z is: "+ str(z))
-        #print("and zpred is: " + str(zPred))\
         while(z[2,0]>np.pi):
             z[2,0] = z[2,0]-2*np.pi
         while(z[2,0]<-np.pi):
@@ -155,19 +123,13 @@ class EKF(object):
 
         y = z-zPred
         y[2,0] = self.angle_diff(z[2,0], zPred[2,0])
-        #print("and y is: "+ str(y))
         if(y[2,0]>np.pi):
             y[2,0] = y[2,0]-2*np.pi
         if(y[2,0]<-np.pi):
             y[2,0] = y[2,0]+2*np.pi
         S = H@self.P@H.T + self.R
         K = self.P @ H.T @ np.linalg.inv(S)
-        #print("K@Y is: "+ str(K@y))
         x = x+K@y
-        # while(x[2,0]>np.pi):
-        #     x[2,0] = x[2,0]-2*np.pi
-        # while(x[2,0]<-np.pi):
-        #     x[2,0] = x[2,0]+2*np.pi
         self.P = (np.eye(len(x))-K@H) @ self.P
         return x
 

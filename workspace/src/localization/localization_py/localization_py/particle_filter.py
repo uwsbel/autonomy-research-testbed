@@ -3,10 +3,35 @@ import math
 import matplotlib.pyplot as plt
 import random
 from scipy.stats import wasserstein_distance
+import yaml
 
-class particleFilter(object):
+class particle_filter:
+    ''' 
+    A basic Particle Filter implementation. This currently uses the 4DOF motion model.
+    
+    Motion Model inputs: Vehicle control inputs (throttle, steering)
 
+    Observation Model inputs: Sensor measurements (GPS, Magnetometer)
+
+    Noise model assumptions: Assumes Gaussian Noise for assigning particle probabilities.
+
+    Reference: https://sbel.wisc.edu/wp-content/uploads/sites/569/2023/07/TR-2023-05.pdf
+    '''
     def __init__(self, dt):
+        #Motion Model parameters
+        with open('/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml', 'r') as yaml_file:
+            config = yaml.safe_load(yaml_file)
+        self.dt = dt
+        #vehicle parameters:
+        self.c_1 = config['c_1']
+        self.c_0 = config['c_0']
+        self.l = config['l']
+        self.r_wheel = config['r_wheel']
+        self.i_wheel = config['i_wheel']
+        self.gamma = config['gamma']
+        self.tau_0 = config['tau_0']
+        self.omega_0 = config['omega_0']
+
         self.show_animation = True
         self.dt = dt
         self.pmin = 30
@@ -39,6 +64,9 @@ class particleFilter(object):
 
     
     def update(self, u, obs):
+        '''
+        The function that gets called from outside the particle filter object. An observation and control input are both provided here.
+        '''
         self.timestep = self.timestep+1
         #first, update the motion model
         for i in range(0, self.num_particles):
@@ -58,6 +86,9 @@ class particleFilter(object):
         return state
     
     def update_dist(self,obs):
+        '''
+        Updates each particles error distribution from the observation. This is used for comparison to our expected noise distribution
+        '''
         for i in range(0, self.num_particles):
             distance = math.sqrt((self.particles[i][0,0]-obs[0,0])**2+(self.particles[i][1,0]-obs[1,0])**2)
             self.particle_distr_dist[i].append(distance)
@@ -67,6 +98,9 @@ class particleFilter(object):
                 self.particle_distr_head[i].pop(0)
 
     def resample(self):
+        '''
+        Resample the particles for the next generation.
+        '''
         cumulative_weights = [sum(self.particle_weights[:i+1]) for i in range(self.num_particles)]
         sampled_points = []
         for _ in range(self.num_particles):
@@ -106,35 +140,29 @@ class particleFilter(object):
 
 
     def assign_weights(self, obs):
+        '''
+        Weight assignment function for each particle, based on wasserstein distance.
+        '''
         for i in range(0,self.num_particles):
             self.particle_weights[i] = 0.9/wasserstein_distance(self.particle_distr_dist[i], self.dist_distr)+0.1/wasserstein_distance(self.particle_distr_head[i], self.head_distr)
         self.normalizeWeights()
 
     def normalizeWeights(self):
+        '''
+        Normalize all weights for particles
+        '''
         total = 0
         for i in range(0,self.num_particles):
             total = total+self.particle_weights[i]
         for i in range(0,self.num_particles):
             self.particle_weights[i] = self.particle_weights[i]/total
 
-    def computeLiklihood(self, distance, sigma):
-        z = abs(distance)/sigma
-        return 1-0.5*(1+math.erf(z/math.sqrt(2)))
-
     def motion_model(self, x, u):
-        l = 0.5
-        tau_0 = 0.3#0.09
-        omega_0 = 30#161.185
-        r_wheel = 0.08451952624
-        gamma = 1/3
-        c_0 = 0.02#0.039
-        c_1 = 1e-4
-        i_wheel = 1e-3
         x[0,0] = x[0,0] + math.cos(x[2,0])*self.dt*x[3,0]
         x[1,0] = x[1,0]+math.sin(x[2,0])*self.dt*x[3,0]
-        x[2,0] = x[2,0]+self.dt*x[3,0]*math.tan(u[1,0])/l
-        f = tau_0*u[0,0]-tau_0*x[3,0]/(omega_0*r_wheel*gamma)
-        x[3,0] = x[3,0]+ self.dt*((r_wheel*gamma)/i_wheel)*(f-(x[3,0]*c_1)/(r_wheel*gamma)-c_0)
+        x[2,0] = x[2,0]+self.dt*x[3,0]*math.tan(u[1,0])/self.l
+        f = self.tau_0*u[0,0]-self.tau_0*x[3,0]/(self.omega_0*self.r_wheel*self.gamma)
+        x[3,0] = x[3,0]+ self.dt*((self.r_wheel*self.gamma)/self.i_wheel)*(f-(x[3,0]*self.c_1)/(self.r_wheel*self.gamma)-self.c_0)
         return x
     
     
