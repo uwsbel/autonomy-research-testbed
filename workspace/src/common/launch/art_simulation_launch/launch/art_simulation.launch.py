@@ -105,15 +105,5 @@ def generate_launch_description():
     )
     launch_description.add_action(chrono_ros_bridge)
 
-    rosbridge_server = IncludeLaunchDescription(
-        AnyLaunchDescriptionSource([
-            os.path.join(
-                get_package_share_directory('rosbridge_server'),
-                "launch/rosbridge_websocket_launch.xml"
-            )
-        ])
-    )
-    launch_description.add_action(rosbridge_server)
-
     return launch_description
 
