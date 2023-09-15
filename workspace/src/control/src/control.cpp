@@ -108,10 +108,7 @@ control::control() : rclcpp::Node("control") {
     /*
         Waits for first path if using PID, otherwise runs right away
     */
-    if (this->mode == "File")
-        this->go = true;
-    else
-        this->go = false;
+    this->go = this->mode == "File";
 
     rclcpp::QoS qos_profile(1);
     qos_profile.history(rclcpp::HistoryPolicy::KeepLast);
