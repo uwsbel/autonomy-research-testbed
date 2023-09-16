@@ -11,7 +11,6 @@ import matplotlib
 import math
 import numpy as np
 
-
 import sys
 import os
 
@@ -31,8 +30,8 @@ class StateEstimationNode(Node):
         # ROS PARAMETERS
         self.use_sim_msg = self.get_parameter("use_sim_time").get_parameter_value().bool_value
 
-        self.declare_parameter('SE_mode', "GT")
-        self.SE_mode = self.get_parameter('SE_mode').get_parameter_value().string_value
+        self.declare_parameter('estimation_alg', "ground_truth")
+        self.estimation_alg = self.get_parameter('estimation_alg').get_parameter_value().string_value
 
 
         #update frequency of this node
@@ -41,7 +40,7 @@ class StateEstimationNode(Node):
         self.gps = ""
         self.groundTruth = ""
         self.mag = ""
-
+        # NOTE: Remove this when we transition to CHRONO::ROS. This is bad practice, but the best solution for now
         if self.use_sim_msg:
             global VehicleInput
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
@@ -92,9 +91,9 @@ class StateEstimationNode(Node):
         self.dt_gps = 0.1
         
         #filter
-        if(self.SE_mode == "EKF"):
+        if(self.estimation_alg == "extended_kalman_filter"):
             self.ekf = EKF(self.dt_gps)
-        elif(self.SE_mode == "PF"):
+        elif(self.estimation_alg == "particle_filter"):
             self.pf = PF(self.dt_gps)
 
         #our graph object, for reference frame
@@ -196,9 +195,9 @@ class StateEstimationNode(Node):
 
         z = np.array([[self.x],[self.y], [np.deg2rad(self.D)]])
                 
-        if(self.SE_mode == "EKF"):
+        if(self.estimation_alg == "extended_kalman_filter"):
             self.EKFstep(u, z)
-        elif(self.SE_mode == "PF"):
+        elif(self.estimation_alg == "particle_filter"):
             self.PFstep(u,z)
         
         # with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
@@ -209,7 +208,7 @@ class StateEstimationNode(Node):
        
         msg = VehicleState()
         #pos and velocity are in meters, from the origin, [x, y, z]
-        if(self.SE_mode == "GT"):
+        if(self.estimation_alg == "ground_truth"):
             msg.pose.position.x = float(self.gtx)
             msg.pose.position.y = float(self.gty)
             msg.pose.orientation.z = np.deg2rad(self.D)

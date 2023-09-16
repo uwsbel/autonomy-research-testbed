@@ -53,7 +53,8 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
 
     AddLaunchArgument(ld, "use_sim_time", "False")
-    AddLaunchArgument(ld, "SE_mode", "GT")
+
+    AddLaunchArgument(ld, "estimation_alg", "ground_truth", choices=("ground_truth", "extended_kalman_filter", "particle_filter"))
 
     # -----
     # Nodes
@@ -74,7 +75,7 @@ def generate_launch_description():
         ],
         parameters=[
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
-            {"SE_mode": GetLaunchArgument("SE_mode")}
+            {"estimation_alg": GetLaunchArgument("estimation_alg")}
         ]
     )
     ld.add_action(node)
