@@ -44,21 +44,21 @@
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
 control::control() : rclcpp::Node("control") {
-    this->startTime = this->get_clock()->now().nanoseconds() / 1e9;
+    m_startTime = this->get_clock()->now().nanoseconds() / 1e9;
 
     /*
         Update frequency of this node
     */
-    this->nodeUpdateFrequency = 10.0;
+    m_nodeUpdateFrequency = 10.0;
 
     /*
         Default settings
     */
-    this->mode = "PID";
-    this->file = "";
-    this->steering = 0.0;
-    this->throttle = 0.0;
-    this->braking = 0.0;
+    m_mode = "PID";
+    m_file = "";
+    m_steering = 0.0;
+    m_throttle = 0.0;
+    m_braking = 0.0;
 
     std::string package_share_directory = ament_index_cpp::get_package_share_directory("control");
 
@@ -72,16 +72,16 @@ control::control() : rclcpp::Node("control") {
     this->declare_parameter("throttle_gain", 1.0);
     this->declare_parameter("use_sim_msg", "False");
 
-    this->mode = this->get_parameter("control_mode").as_string();
-    this->file = this->get_parameter("control_file").as_string();
-    this->steeringGain = this->get_parameter("steering_gain").as_double();
-    this->throttleGain = this->get_parameter("throttle_gain").as_double();
-    this->useSimMsg = this->get_parameter("use_sim_msg").as_string();
+    m_mode = this->get_parameter("control_mode").as_string();
+    m_file = this->get_parameter("control_file").as_string();
+    m_steeringGain = this->get_parameter("steering_gain").as_double();
+    m_throttleGain = this->get_parameter("throttle_gain").as_double();
+    m_useSimMsg = this->get_parameter("use_sim_msg").as_string();
 
-    if (this->file == "") {
-        this->mode = "PID";
+    if (m_file == "") {
+        m_mode = "PID";
     } else {
-        std::string filePath = package_share_directory + '/' + this->file;
+        std::string filePath = package_share_directory + '/' + m_file;
 
         std::ifstream inputFile(filePath);
 
@@ -103,12 +103,12 @@ control::control() : rclcpp::Node("control") {
         }
     }
 
-    this->path = nav_msgs::msg::Path();
+    m_path = nav_msgs::msg::Path();
 
     /*
         Waits for first path if using PID, otherwise runs right away
     */
-    this->go = (this->mode == "File");
+    m_go = (m_mode == "File");
 
     rclcpp::QoS qos_profile(1);
     qos_profile.history(rclcpp::HistoryPolicy::KeepLast);
@@ -116,52 +116,52 @@ control::control() : rclcpp::Node("control") {
     /*
         Nav path & ART/Chrono Vehicle State subscribers
     */
-    this->pathSubscriber_ = this->create_subscription<nav_msgs::msg::Path>(
+    this->m_pathSubscriber = this->create_subscription<nav_msgs::msg::Path>(
         "~/input/path", qos_profile, std::bind(&control::pathCallback, this, std::placeholders::_1));
-    this->stateSubscriber_ = this->create_subscription<art_msgs::msg::VehicleState>(
+    this->m_stateSubscriber = this->create_subscription<art_msgs::msg::VehicleState>(
         "~/input/vehicle_state", qos_profile, std::bind(&control::stateCallback, this, std::placeholders::_1));
 
     /*
         Publisher for this node
     */
-    this->vehicleCmdPublisher_ = this->create_publisher<art_msgs::msg::VehicleInput>("~/output/vehicle_inputs", 10);
-    this->timer_ = this->create_wall_timer(std::chrono::duration<double>(1 / this->nodeUpdateFrequency),
+    this->m_vehicleCmdPublisher = this->create_publisher<art_msgs::msg::VehicleInput>("~/output/vehicle_inputs", 10);
+    this->m_timer = this->create_wall_timer(std::chrono::duration<double>(1 / m_nodeUpdateFrequency),
                                            std::bind(&control::pubCallback, this));
 }
 
 void control::pathCallback(const nav_msgs::msg::Path msg) {
-    this->go = true;
-    this->path = msg;
+    m_go = true;
+    m_path = msg;
 }
 
 void control::stateCallback(const art_msgs::msg::VehicleState msg) {
-    this->state = msg;
+    m_state = msg;
 }
 
 void control::pubCallback(void) {
-    if (!this->go) {
+    if (!m_go) {
         return;
     }
 
     /*
         If input from .csv, calculate steering from file
     */
-    if (this->mode == "File") {
+    if (m_mode == "File") {
         calculateFromFile();
-    } else if (this->mode == "PID" && path.poses.size() > 0) {
-        this->steering = this->steeringGain * (path.poses[0].pose.position.y / path.poses[0].pose.position.x);
+    } else if (m_mode == "PID" && path.poses.size() > 0) {
+        m_steering = m_steeringGain * (path.poses[0].pose.position.y / path.poses[0].pose.position.x);
     }
 
     /*
         Only doing lateral conmtrol for now
     */
-    this->throttle = this->throttleGain * 0.55;
+    m_throttle = m_throttleGain * 0.55;
 
     art_msgs::msg::VehicleInput msg = art_msgs::msg::VehicleInput();
 
-    msg.steering = clip(this->steering, -1, 1);
-    msg.throttle = clip(this->throttle, 0, 1);
-    msg.braking = clip(this->braking, 0, 1);
+    msg.steering = clip(m_steering, -1, 1);
+    msg.throttle = clip(m_throttle, 0, 1);
+    msg.braking = clip(m_braking, 0, 1);
 
     msg.header.stamp = this->get_clock()->now();
 
@@ -169,11 +169,11 @@ void control::pubCallback(void) {
 }
 
 void control::calculateFromFile(void) {
-    long int timeDiff = (get_clock()->now().nanoseconds() / 1e9) - startTime;
+    long int timeDiff = (get_clock()->now().nanoseconds() / 1e9) - m_startTime;
 
-    this->throttle = interpolate(timeDiff, &recordedInputs, 1);
-    this->braking = interpolate(timeDiff, &recordedInputs, 2);
-    this->steering = interpolate(timeDiff, &recordedInputs, 3);
+    m_throttle = interpolate(timeDiff, &recordedInputs, 1);
+    m_braking = interpolate(timeDiff, &recordedInputs, 2);
+    m_steering = interpolate(timeDiff, &recordedInputs, 3);
 }
 
 double control::clip(double input, double min, double max) {
