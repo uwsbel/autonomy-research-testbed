@@ -51,40 +51,40 @@ class control : public rclcpp::Node {
                 PRIVATE
     *******************************/
   private:
-    uint nodeUpdateFrequency;
-    double steering;
-    double throttle;
-    double braking;
-    bool go;
+    uint m_nodeUpdateFrequency;
+    double m_steering;
+    double m_throttle;
+    double m_braking;
+    bool m_go;
 
     /*******************************
             LAUNCH PARAMETERS
     *******************************/
-    double steeringGain;
-    double throttleGain;
-    std::string mode;
-    std::string file;
-    std::string useSimMsg;
-    std::vector<float> recordedInputs;
+    double m_steeringGain;
+    double m_throttleGain;
+    std::string m_mode;
+    std::string m_file;
+    std::string m_useSimMsg;
+    std::vector<float> m_recordedInputs;
 
     /*******************************
             MESSAGE CLASSES
     *******************************/
-    nav_msgs::msg::Path path;
-    art_msgs::msg::VehicleState state;
+    nav_msgs::msg::Path m_path;
+    art_msgs::msg::VehicleState m_state;
 
     /*******************************
             TIMING VARIABLES
     *******************************/
-    double startTime;
-    rclcpp::TimerBase::SharedPtr timer_;
+    double m_startTime;
+    rclcpp::TimerBase::SharedPtr m_timer;
 
     /******************************
         PUBLISHERS & SUBSCRIBERS
     *******************************/
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr pathSubscriber_;
-    rclcpp::Subscription<art_msgs::msg::VehicleState>::SharedPtr stateSubscriber_;
-    rclcpp::Publisher<art_msgs::msg::VehicleInput>::SharedPtr vehicleCmdPublisher_;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr m_pathSubscriber;
+    rclcpp::Subscription<art_msgs::msg::VehicleState>::SharedPtr m_stateSubscriber;
+    rclcpp::Publisher<art_msgs::msg::VehicleInput>::SharedPtr m_vehicleCmdPublisher;
 
     /******************************
             MEMBER FUNCTIONS
