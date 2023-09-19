@@ -49,7 +49,7 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
     AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
     AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
-    AddLaunchArgument(ld, "input/groundTruth", "/vehicle/state")
+    AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
     AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
 
     AddLaunchArgument(ld, "use_sim_time", "False")
