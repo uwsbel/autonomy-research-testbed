@@ -53,8 +53,9 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
 
     AddLaunchArgument(ld, "use_sim_time", "False")
-
     AddLaunchArgument(ld, "estimation_alg", "ground_truth", choices=("ground_truth", "extended_kalman_filter", "particle_filter"))
+    AddLaunchArgument(ld, "dyn_path","/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml"))
+    AddLaunchArgument(ld, "filt_param_path", "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml"))
 
     # -----
     # Nodes
@@ -70,12 +71,14 @@ def generate_launch_description():
                 ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
                 ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
                 ("~/input/vehicle_inputs", GetLaunchArgument("art_localization/input/vehicle_inputs")),
-                ("~/input/ground_truth", GetLaunchArgument("input/ground_truth")),
+                ("~/input/ground_truth", GetLaunchArgument("art_localization/input/ground_truth")),
                 ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
         ],
         parameters=[
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
-            {"estimation_alg": GetLaunchArgument("estimation_alg")}
+            {"estimation_alg": GetLaunchArgument("estimation_alg")},
+            {"dyn_path": GetLaunchArgument("dyn_path")},
+            {"filt_param_path", GetLaunchArgument("filt_param_path")}
         ]
     )
     ld.add_action(node)

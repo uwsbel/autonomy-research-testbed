@@ -32,7 +32,10 @@ class StateEstimationNode(Node):
 
         self.declare_parameter('estimation_alg', "ground_truth")
         self.estimation_alg = self.get_parameter('estimation_alg').get_parameter_value().string_value
-
+        self.declare_parameter('dyn_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml")
+        dyn_path = self.get_parameter('dyn_path').get_parameter_value().string_value
+        self.declare_parameter('filt_param_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml")
+        param_path = self.get_parameter('filt_param_path').get_parameter_value().string_value
 
         #update frequency of this node
         self.freq = 10.0
@@ -92,12 +95,12 @@ class StateEstimationNode(Node):
         
         #filter
         if(self.estimation_alg == "extended_kalman_filter"):
-            self.ekf = EKF(self.dt_gps)
+            self.ekf = EKF(self.dt_gps, dyn_path, param_path)
         elif(self.estimation_alg == "particle_filter"):
-            self.pf = PF(self.dt_gps)
+            self.pf = PF(self.dt_gps, dyn_path)
 
         #our graph object, for reference frame
-        self.graph =  graph()
+        self.graph = Graph()
 
         #subscribers
         self.sub_gps = self.create_subscription(NavSatFix, '~/input/gps', self.gps_callback, 1)

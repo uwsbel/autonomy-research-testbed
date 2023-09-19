@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import random
 from scipy.stats import wasserstein_distance
 import yaml
+from dynamics import Dynamics
 
 class ParticleFilter:
     """
@@ -12,18 +13,6 @@ class ParticleFilter:
     This currently uses the 4DOF motion model. The Motion Model inputs are throttle and steering, and the observation model uses GPS and Magnetometer as sensors. States are cartesian coordinates x, y, heading theta, and velocity v. Further reference can be found at: https://sbel.wisc.edu/wp-content/uploads/sites/569/2023/07/TR-2023-05.pdf.
 
     Attributes:
-        c_1: The motor resistence torque linear component.
-        c_0: The motor resistence torque constant component.
-        l: The length of the vehicle.
-        r_wheel: The radius of the wheel.
-        i_wheel: the intertia of the wheel.
-        gamma: The gear ratio.
-        tau_0: The stalling torque for the motor torque model.
-        omega_0: The maximum no-load speed for the motor torque model.
-        df_1_dv: The derivative of the scaled motor torque relative to the velocity of the vehicle.
-        Q: The covariane matrix for our states.
-        R: The covariance matrix for our sensors.
-        P: The predicted covariance estimate.
         show_animation: Boolean for whether or not to show the particle animation.
         dt: The timestep for the filter.
         num_particles: The number of particles maintained by the filter.
@@ -36,7 +25,7 @@ class ParticleFilter:
     
     """
 
-    def __init__(self, dt):
+    def __init__(self, dt, path):
         """Initialize the PF.
 
         Initialize each of the global variables for the PF. Load the dynamics parameters for the vehicle from an external YAML file.
@@ -44,20 +33,12 @@ class ParticleFilter:
         Args:
             dt: The timestep at which this filter will operate at. 
         """
-        with open('/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml', 'r') as yaml_file:
+        with open(path, 'r') as yaml_file:
             config = yaml.safe_load(yaml_file)
         self.dt = dt
-        self.c_1 = config['c_1']
-        self.c_0 = config['c_0']
-        self.l = config['l']
-        self.r_wheel = config['r_wheel']
-        self.i_wheel = config['i_wheel']
-        self.gamma = config['gamma']
-        self.tau_0 = config['tau_0']
-        self.omega_0 = config['omega_0']
+        self.dyn = Dynamics(dt, path)
 
         self.show_animation = False
-        self.dt = dt
         self.num_particles = 100
         self.particles = []
         self.particle_weights =[]
@@ -99,7 +80,7 @@ class ParticleFilter:
         #first, update the motion model
         for i in range(0, self.num_particles):
             myu = np.array([[u[0,0]+np.random.normal(0,0.05)], [u[1,0]+np.random.normal(0,0.05)]])
-            self.particles[i] = self.motion_model(self.particles[i], myu)
+            self.particles[i] = self.dyn.motion_model(self.particles[i], myu)
         self.update_dist(obs)
         #then, reassign weights in relation to the observation
         self.assign_weights()
@@ -196,24 +177,5 @@ class ParticleFilter:
             total = total+self.particle_weights[i]
         for i in range(0,self.num_particles):
             self.particle_weights[i] = self.particle_weights[i]/total
-
-    def motion_model(self, x, u):
-        """The 4-DOF motioin model.
-        
-        This motion model is described in more detail here:https://sbel.wisc.edu/wp-content/uploads/sites/569/2023/06/TR-2023-06.pdf.
-
-        Args:
-            x: The state vector of the vehicle, consisting of cartesian coordinates x, y, heading theta, and velocity v.
-            u: The control input vector for the vehicle, consisting of throttle alpha, and steering delta.
-        
-        Returns:
-            An updated state for the vehicle based off of the 4-DOF model propogation. This is always a 4 dimensional vector.
-        """
-        x[0,0] = x[0,0] + math.cos(x[2,0])*self.dt*x[3,0]
-        x[1,0] = x[1,0]+math.sin(x[2,0])*self.dt*x[3,0]
-        x[2,0] = x[2,0]+self.dt*x[3,0]*math.tan(u[1,0])/self.l
-        f = self.tau_0*u[0,0]-self.tau_0*x[3,0]/(self.omega_0*self.r_wheel*self.gamma)
-        x[3,0] = x[3,0]+ self.dt*((self.r_wheel*self.gamma)/self.i_wheel)*(f-(x[3,0]*self.c_1)/(self.r_wheel*self.gamma)-self.c_0)
-        return x
     
     
