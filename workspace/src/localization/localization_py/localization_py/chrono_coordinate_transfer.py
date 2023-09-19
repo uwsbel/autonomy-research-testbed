@@ -1,6 +1,6 @@
 import numpy as np
 import math
-class graph:
+class Graph:
     """A copy of the CHRONO LTP gps2cartesian coordinate transfer.
 
     Generates cartesian coordinates from gps coordinates relative to a Local Tangent Plane. Additional features for rotating the LTP are added on top of the standard CHRONO methods.

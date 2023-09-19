@@ -5,7 +5,7 @@ import random
 from scipy.stats import wasserstein_distance
 import yaml
 
-class particle_filter:
+class ParticleFilter:
     """
     A basic Particle Filter implementation.
     

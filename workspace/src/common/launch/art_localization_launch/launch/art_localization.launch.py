@@ -70,7 +70,7 @@ def generate_launch_description():
                 ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
                 ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
                 ("~/input/vehicle_inputs", GetLaunchArgument("art_localization/input/vehicle_inputs")),
-                ("~/input/groundTruth", GetLaunchArgument("input/groundTruth")),
+                ("~/input/ground_truth", GetLaunchArgument("input/ground_truth")),
                 ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
         ],
         parameters=[

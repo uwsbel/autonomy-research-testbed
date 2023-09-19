@@ -19,8 +19,8 @@ ament_tools_root = os.path.join(os.path.dirname(__file__), '.')
 sys.path.insert(0, os.path.abspath(ament_tools_root))
 
 from EKF import EKF
-from particle_filter import particle_filter as PF
-from chrono_coordinate_transfer import graph
+from particle_filter import ParticleFilter as PF
+from chrono_coordinate_transfer import Graph
 
 class StateEstimationNode(Node):
     def __init__(self):
@@ -38,7 +38,7 @@ class StateEstimationNode(Node):
         self.freq = 10.0
 
         self.gps = ""
-        self.groundTruth = ""
+        self.ground_truth = ""
         self.mag = ""
         # NOTE: Remove this when we transition to CHRONO::ROS. This is bad practice, but the best solution for now
         if self.use_sim_msg:
@@ -102,7 +102,7 @@ class StateEstimationNode(Node):
         #subscribers
         self.sub_gps = self.create_subscription(NavSatFix, '~/input/gps', self.gps_callback, 1)
         if(self.use_sim_msg):
-            self.sub_groud_truth = self.create_subscription(ChVehicle, '~/input/groundTruth', self.ground_truth_callback, 1)
+            self.sub_groud_truth = self.create_subscription(ChVehicle, '~/input/ground_truth', self.ground_truth_callback, 1)
 
         self.sub_mag = self.create_subscription(MagneticField, "~/input/magnetometer", self.mag_callback, 1)
         #self.sub_gyro = self.create_subscription(Imu, "~/input/gyro", self.gyro_callback, 10)
