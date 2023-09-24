@@ -43,10 +43,13 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/filtered_state")
     AddLaunchArgument(ld, "art_planning/input/objects", "/perception/objects")
     AddLaunchArgument(ld, "art_planning/output/path", "/path_planning/path")
+    AddLaunchArgument(ld, "art_planning/output/error_state", "/path_planning/error_state")
 
+    AddLaunchArgument(ld, "planning_mode", "cones", choices=("cones", "waypoints"))
+    AddLaunchArgument(ld, "path_file", "/home/art/art/workspace/src/path_planning/path_planning/path.csv", choices=("/home/art/art/workspace/src/path_planning/path_planning/path.csv"))
     AddLaunchArgument(ld, "vis", "False")
     AddLaunchArgument(ld, "lookahead", ".75")
 
@@ -61,9 +64,12 @@ def generate_launch_description():
             remappings=[
                 ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
                 ("~/input/vehicle_state", GetLaunchArgument("art_planning/input/vehicle_state")),
-                ("~/output/path", GetLaunchArgument("art_planning/output/path"))
+                ("~/output/path", GetLaunchArgument("art_planning/output/path")),
+                ("~/output/error_state", GetLaunchArgument("art_planning/output/error_state")),
             ],
             parameters=[
+                {"planning_mode": GetLaunchArgument("planning_mode")},
+                {"path_file": GetLaunchArgument("path_file")},
                 {"vis": GetLaunchArgument("vis")},
                 {"lookahead": GetLaunchArgument("lookahead")},
                 {"use_sim_time": GetLaunchArgument("use_sim_time")}

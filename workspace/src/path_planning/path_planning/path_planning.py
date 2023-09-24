@@ -59,12 +59,21 @@ class PathPlanningNode(Node):
         package_share_directory = get_package_share_directory('path_planning')
 
         # READ IN PARAMETERS
+        self.declare_parameter('planning_mode', "cones")
+        self.planning_mode = self.get_parameter('planning_mode').get_parameter_value().string_value
+
         self.declare_parameter('vis', False)
         self.vis = self.get_parameter('vis').get_parameter_value().bool_value
 
         self.declare_parameter('lookahead', 2.0)
         self.lookahead = self.get_parameter('lookahead').get_parameter_value().double_value
         
+        if(self.planning_mode == "waypoints"):
+            self.declare_parameter('path_file', "/home/art/art/workspace/src/path_planning/path_planning/path.csv")
+            path_file = self.get_parameter('path_file').get_parameter_value().string_value
+            file = open(path_file)
+            self.ref_traj = np.loadtxt(file, delimiter=",")
+
         #data that will be used by this class
         self.state = VehicleState()
         self.path = Path()
@@ -79,7 +88,12 @@ class PathPlanningNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         # self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
-        self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
+        if(self.planning_mode == "waypoints"):
+            self.sub_state = self.create_subscription(VehicleState, '~/vehicle_state', self.state_callback, qos_profile)
+        else:
+            self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
+
+            
 
         if self.vis:
             matplotlib.use("TKAgg")
@@ -92,12 +106,16 @@ class PathPlanningNode(Node):
             self.right_boundary = None
             
         #publishers
-        self.pub_path = self.create_publisher(Path, '~/output/path', 10)
+        if(self.planning_mode == "waypoints"):
+            self.pub_err_state = self.create_publisher(VehicleState, '~/output/error_state', 10)
+        else:
+            self.pub_path = self.create_publisher(Path, '~/output/path', 10)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
     #function to process data this class subscribes to
     def state_callback(self, msg):
         # self.get_logger().info("Received '%s'" % msg)
+        self.go = True
         self.state = msg
 
     def objects_callback(self, msg):
@@ -207,25 +225,90 @@ class PathPlanningNode(Node):
 
         return target_pt
 
+    def wpts_path_plan(self):
+        x_current = self.state.pose.position.x
+        y_current = self.state.pose.position.y
+        #theta_current = np.arctan2( 2*(x*w+z*y), x**2-w**2+y**2-z**2 )
+        theta_current = self.state.pose.orientation.z-0.24845347641462115
+        while theta_current<-np.pi:
+            theta_current = theta_current+2*np.pi
+        while theta_current>np.pi:
+            theta_current = theta_current - 2*np.pi
+
+        v_current = np.sqrt(self.state.twist.linear.x**2+self.state.twist.linear.y**2)
+
+        #self.get_logger().info("SPEED: "+str(v_current))
+
+        dist = np.zeros((1,len(self.ref_traj[:,1])))
+        for i in range(len(self.ref_traj[:,1])):
+            dist[0][i] = dist[0][i] = (x_current+np.cos(theta_current)*self.lookahead-self.ref_traj[i][0])**2+(y_current+np.sin(theta_current)*self.lookahead-self.ref_traj[i][1])**2
+        index = dist.argmin()
+
+        ref_state_current = list(self.ref_traj[index,:])
+        err_theta = 0
+        ref = ref_state_current[2]
+        act = theta_current
+
+        if( (ref>0 and act>0) or (ref<=0 and act <=0)):
+            err_theta = ref-act
+        elif( ref<=0 and act > 0):
+            if(abs(ref-act)<abs(2*np.pi+ref-act)):
+                err_theta = -abs(act-ref)
+            else:
+                err_theta = abs(2*np.pi + ref- act)
+        else:
+            if(abs(ref-act)<abs(2*np.pi-ref+act)):
+                err_theta = abs(act-ref)
+            else: 
+                err_theta = -abs(2*np.pi-ref+act)
+
+
+        RotM = np.array([ 
+            [np.cos(-theta_current), -np.sin(-theta_current)],
+            [np.sin(-theta_current), np.cos(-theta_current)]
+        ])
+
+        errM = np.array([[ref_state_current[0]-x_current],[ref_state_current[1]-y_current]])
+
+        errRM = RotM@errM
+
+
+        error_state = [errRM[0][0],errRM[1][0],err_theta, ref_state_current[3]-v_current]
+
+        return error_state, ref_state_current[3]
+
+
     #callback to run a loop and publish data this class generates
     def pub_callback(self):
         if(not self.go):
             return
-        msg = Path()
+        if(self.planning_mode == "waypoints"):
+            msg = VehicleState()
+            error_state,ref_vel = self.wpts_path_plan()
+
+            err_state_msg.pose.position.x = error_state[0]
+            err_state_msg.pose.position.y = error_state[1]
+            err_state_msg.pose.orientation.z = error_state[2]
+            err_state_msg.twist.linear.x = error_state[3]
+            err_state_msg.twist.linear.y = ref_vel
+            self.pub_err_state.publish(err_state_msg)  
+
+        else:
+            msg = Path()
             
-        target_pt = self.plan_path()
+            target_pt = self.plan_path()
 
-        #calculate path from current cone locations
-        if(self.vis):
-            plt.draw()
-            plt.pause(0.0001)
+            #calculate path from current cone locations
+            if(self.vis):
+                plt.draw()
+                plt.pause(0.0001)
 
-        pt = PoseStamped()
-        pt.pose.position.x = target_pt[0]
-        pt.pose.position.y = target_pt[1]
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.poses.append(pt)
-        self.pub_path.publish(msg)
+            pt = PoseStamped()
+            pt.pose.position.x = target_pt[0]
+            pt.pose.position.y = target_pt[1]
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.poses.append(pt)
+            self.pub_path.publish(msg)
 
 def main(args=None):
     # print("=== Starting Path Planning Node ===")
