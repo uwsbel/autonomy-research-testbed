@@ -26,7 +26,6 @@ class EKF:
             dynamics_path: The path to the dynamics parameters yaml file.
             param_path: The path to the filter parameters yaml file
         """
-        path = '/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml'
 
         with open(param_path, 'r') as yaml_file:
             config = yaml.safe_load(yaml_file)
