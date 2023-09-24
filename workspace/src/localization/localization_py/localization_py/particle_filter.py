@@ -25,18 +25,17 @@ class ParticleFilter:
     
     """
 
-    def __init__(self, dt, path):
+    def __init__(self, dt, dynamics):
         """Initialize the PF.
 
         Initialize each of the global variables for the PF. Load the dynamics parameters for the vehicle from an external YAML file.
 
         Args:
             dt: The timestep at which this filter will operate at. 
+            dynamics: the parameters for the dynamics
         """
-        with open(path, 'r') as yaml_file:
-            config = yaml.safe_load(yaml_file)
         self.dt = dt
-        self.dyn = Dynamics(dt, path)
+        self.dyn = Dynamics(dt, dynamics)
 
         self.show_animation = False
         self.num_particles = 100

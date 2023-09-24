@@ -16,7 +16,7 @@ class EKF:
         dt: The timestep for the filter.
     """
 
-    def __init__(self, dt, dynamics_path, param_path):
+    def __init__(self, dt, dynamics, Q, R):
         """Initialize the EKF.
 
         Initialize each of the global variables for the EKF. Load the dynamics parameters for the vehicle from an external YAML file.
@@ -27,19 +27,17 @@ class EKF:
             param_path: The path to the filter parameters yaml file
         """
 
-        with open(param_path, 'r') as yaml_file:
-            config = yaml.safe_load(yaml_file)
         self.dt = dt
-        self.dyn = Dynamics(dt, dynamics_path)
+        self.dyn = Dynamics(dt, dynamics)
 
         self.Q = np.diag([
-            config['Q1'],  # variance of location on x-axis
-            config['Q1'],  # variance of location on y-axis
-            np.deg2rad(config['Q3']),  # variance of yaw angle
-            config['Q4'] # variance of velocity
+            Q[0],  # variance of location on x-axis
+            Q[0],  # variance of location on y-axis
+            Q[2],  # variance of yaw angle
+            Q[3] # variance of velocity
         ]) ** 2  # predict state covariance
         # Observation x,y position covariance
-        self.R = np.diag([config['R1'], config['R1'], config['R3']]) ** 2
+        self.R = np.diag([R[0], R[0], R[1]]) ** 2
         self.P = np.eye(4)
 
 

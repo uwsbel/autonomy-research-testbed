@@ -34,7 +34,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument
+from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
 
 
 def generate_launch_description():
@@ -54,8 +54,8 @@ def generate_launch_description():
 
     AddLaunchArgument(ld, "use_sim_time", "False")
     AddLaunchArgument(ld, "estimation_alg", "ground_truth", choices=("ground_truth", "extended_kalman_filter", "particle_filter"))
-    AddLaunchArgument(ld, "dyn_path","/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml"))
-    AddLaunchArgument(ld, "filt_param_path", "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml"))
+    #AddLaunchArgument(ld, "dyn_path","/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml"))
+    #AddLaunchArgument(ld, "filt_param_path", "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml"))
 
     # -----
     # Nodes
@@ -74,11 +74,12 @@ def generate_launch_description():
                 ("~/input/ground_truth", GetLaunchArgument("art_localization/input/ground_truth")),
                 ("~/output/vehicle/filtered_state", GetLaunchArgument("art_localization/output/vehicle/filtered_state")),
         ],
-        parameters=[
+        parameters=[GetPackageSharePath("art_localization_launch", "config", "4DOF_dynamics.yml"),
+            GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
-            {"estimation_alg": GetLaunchArgument("estimation_alg")},
-            {"dyn_path": GetLaunchArgument("dyn_path")},
-            {"filt_param_path", GetLaunchArgument("filt_param_path")}
+            {"estimation_alg": GetLaunchArgument("estimation_alg")}
+            #{"dyn_path": GetLaunchArgument("dyn_path")},
+            #{"filt_param_path", GetLaunchArgument("filt_param_path")}
         ]
     )
     ld.add_action(node)

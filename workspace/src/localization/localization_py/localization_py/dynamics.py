@@ -17,28 +17,26 @@ class Dynamics:
         omega_0: The maximum no-load speed for the motor torque model.
         df_1_dv: The derivative of the scaled motor torque relative to the velocity of the vehicle.
     """
-    def __init__(self, dt, path):
+    def __init__(self, dt, dynamics):
         """Initialize the dynamics object.
 
         Initialize each of the parameters for the 4DOF dynamics model. Load the dynamics parameters for the vehicle from an external YAML file.
 
         Args:
             dt: The timestep at which this filter will operate at. 
-            path: The path to the dynamics parameters yaml file.
+            dynamics: the parameters for the dynamics
         """
 
-        with open(path, 'r') as yaml_file:
-            config = yaml.safe_load(yaml_file)
         self.dt = dt
         #vehicle parameters:
-        self.c_1 = config['c_1']
-        self.c_0 = config['c_0']
-        self.l = config['l']
-        self.r_wheel = config['r_wheel']
-        self.i_wheel = config['i_wheel']
-        self.gamma = config['gamma']
-        self.tau_0 = config['tau_0']
-        self.omega_0 = config['omega_0']
+        self.c_1 = dynamics[0]
+        self.c_0 = dynamics[1]
+        self.l = dynamics[2]
+        self.r_wheel = dynamics[3]
+        self.i_wheel = dynamics[4]
+        self.gamma = dynamics[5]
+        self.tau_0 = dynamics[6]
+        self.omega_0 = dynamics[7]
         self.df_1_dv = -self.tau_0/(self.omega_0*self.r_wheel*self.gamma)
 
 

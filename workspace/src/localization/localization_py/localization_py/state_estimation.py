@@ -32,10 +32,46 @@ class StateEstimationNode(Node):
 
         self.declare_parameter('estimation_alg', "ground_truth")
         self.estimation_alg = self.get_parameter('estimation_alg').get_parameter_value().string_value
-        self.declare_parameter('dyn_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml")
-        dyn_path = self.get_parameter('dyn_path').get_parameter_value().string_value
-        self.declare_parameter('filt_param_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml")
-        param_path = self.get_parameter('filt_param_path').get_parameter_value().string_value
+        #self.declare_parameter('dyn_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml")
+        #dyn_path = self.get_parameter('dyn_path').get_parameter_value().string_value
+        #self.declare_parameter('filt_param_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml")
+        #param_path = self.get_parameter('filt_param_path').get_parameter_value().string_value
+
+        #EKF parameters
+        self.declare_parameter('Q1', 0.1)
+        Q1 = self.get_parameter('Q1').get_parameter_value().double_value
+        self.declare_parameter('Q3', 3)
+        Q3 = self.get_parameter('Q3').get_parameter_value().double_value
+        self.declare_parameter('Q4', 0.1)
+        Q4 = self.get_parameter('Q4').get_parameter_value().double_value
+        self.declare_parameter('R1', 0.0)
+        R1 = self.get_parameter('R1').get_parameter_value().double_value
+        self.declare_parameter('R3', 0.3)
+        R3 = self.get_parameter('R3').get_parameter_value().double_value
+        Q = [Q1, Q1, Q3, Q4]
+        R = [R1, R1, R3]
+
+        #dynamics parameters
+        self.declare_parameter('c_1', 0.0001)
+        c_1 = self.get_parameter('c_1').get_parameter_value().double_value
+        self.declare_parameter('c_0', 0.02)
+        c_0 = self.get_parameter('c_0').get_parameter_value().double_value
+        self.declare_parameter('l', 0.5)
+        l = self.get_parameter('l').get_parameter_value().double_value
+        self.declare_parameter('r_wheel', 0.08451952624)
+        r_wheel = self.get_parameter('r_wheel').get_parameter_value().double_value
+        self.declare_parameter('i_wheel', 0.001)
+        i_wheel = self.get_parameter('i_wheel').get_parameter_value().double_value
+        self.declare_parameter('gamma', 0.33333333)
+        gamma = self.get_parameter('gamma').get_parameter_value().double_value
+        self.declare_parameter('tau_0', 0.3)
+        tau_0 = self.get_parameter('tau_0').get_parameter_value().double_value
+        self.declare_parameter('omega_0', 30.0)
+        omega_0 = self.get_parameter('omega_0').get_parameter_value().double_value
+        dyn = [c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0]
+        self.get_logger().info(str(dyn))
+
+        
 
         #update frequency of this node
         self.freq = 10.0
@@ -95,9 +131,9 @@ class StateEstimationNode(Node):
         
         #filter
         if(self.estimation_alg == "extended_kalman_filter"):
-            self.ekf = EKF(self.dt_gps, dyn_path, param_path)
+            self.ekf = EKF(self.dt_gps, dyn, Q, R)
         elif(self.estimation_alg == "particle_filter"):
-            self.pf = PF(self.dt_gps, dyn_path)
+            self.pf = PF(self.dt_gps, dyn)
 
         #our graph object, for reference frame
         self.graph = Graph()
