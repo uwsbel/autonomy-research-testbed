@@ -89,7 +89,7 @@ class PathPlanningNode(Node):
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         # self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
         if(self.planning_mode == "waypoints"):
-            self.sub_state = self.create_subscription(VehicleState, '~/vehicle_state', self.state_callback, qos_profile)
+            self.sub_state = self.create_subscription(VehicleState, '~/input/vehicle_state', self.state_callback, qos_profile)
         else:
             self.sub_objects = self.create_subscription(ObjectArray, '~/input/objects', self.objects_callback, qos_profile)
 
@@ -286,12 +286,12 @@ class PathPlanningNode(Node):
             msg = VehicleState()
             error_state,ref_vel = self.wpts_path_plan()
 
-            err_state_msg.pose.position.x = error_state[0]
-            err_state_msg.pose.position.y = error_state[1]
-            err_state_msg.pose.orientation.z = error_state[2]
-            err_state_msg.twist.linear.x = error_state[3]
-            err_state_msg.twist.linear.y = ref_vel
-            self.pub_err_state.publish(err_state_msg)  
+            msg.pose.position.x = error_state[0]
+            msg.pose.position.y = error_state[1]
+            msg.pose.orientation.z = error_state[2]
+            msg.twist.linear.x = error_state[3]
+            msg.twist.linear.y = ref_vel
+            self.pub_err_state.publish(msg)  
 
         else:
             msg = Path()
