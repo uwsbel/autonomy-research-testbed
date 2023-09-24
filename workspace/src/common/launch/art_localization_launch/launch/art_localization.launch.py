@@ -50,7 +50,7 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
     AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
     AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
-    AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
+    AddLaunchArgument(ld, "art_localization/output/vehicle/filtered_state", "/vehicle/filtered_state")
 
     AddLaunchArgument(ld, "use_sim_time", "False")
     AddLaunchArgument(ld, "estimation_alg", "ground_truth", choices=("ground_truth", "extended_kalman_filter", "particle_filter"))
@@ -72,7 +72,7 @@ def generate_launch_description():
                 ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
                 ("~/input/vehicle_inputs", GetLaunchArgument("art_localization/input/vehicle_inputs")),
                 ("~/input/ground_truth", GetLaunchArgument("art_localization/input/ground_truth")),
-                ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
+                ("~/output/vehicle/filtered_state", GetLaunchArgument("art_localization/output/vehicle/filtered_state")),
         ],
         parameters=[
             {"use_sim_time": GetLaunchArgument("use_sim_time")},

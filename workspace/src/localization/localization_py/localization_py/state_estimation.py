@@ -112,7 +112,7 @@ class StateEstimationNode(Node):
         #self.sub_accel = self.create_subscription(Imu, "~/input/accel", self.accel_callback, 100)
         self.sub_control = self.create_subscription(VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1)
         #publishers
-        self.pub_objects = self.create_publisher(VehicleState, '/vehicle_state', 1)
+        self.pub_objects = self.create_publisher(VehicleState, '~/output/vehicle/filtered_state', 1)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
 
@@ -214,6 +214,7 @@ class StateEstimationNode(Node):
         if(self.estimation_alg == "ground_truth"):
             msg.pose.position.x = float(self.gtx)
             msg.pose.position.y = float(self.gty)
+            #TODO: this should be a quat in the future, not the heading.
             msg.pose.orientation.z = np.deg2rad(self.D)
             msg.twist.linear.x = float(self.gtvx)
             msg.twist.linear.y = float(self.gtvy)
