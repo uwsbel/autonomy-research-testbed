@@ -52,10 +52,7 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
     AddLaunchArgument(ld, "art_localization/output/vehicle/filtered_state", "/vehicle/filtered_state")
 
-    AddLaunchArgument(ld, "use_sim_time", "False")
     AddLaunchArgument(ld, "estimation_alg", "ground_truth", choices=("ground_truth", "extended_kalman_filter", "particle_filter"))
-    #AddLaunchArgument(ld, "dyn_path","/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml"))
-    #AddLaunchArgument(ld, "filt_param_path", "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml", choices=("/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml"))
 
     # -----
     # Nodes
@@ -78,8 +75,6 @@ def generate_launch_description():
             GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
             {"estimation_alg": GetLaunchArgument("estimation_alg")}
-            #{"dyn_path": GetLaunchArgument("dyn_path")},
-            #{"filt_param_path", GetLaunchArgument("filt_param_path")}
         ]
     )
     ld.add_action(node)
