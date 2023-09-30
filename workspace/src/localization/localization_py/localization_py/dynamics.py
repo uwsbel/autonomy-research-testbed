@@ -79,13 +79,26 @@ class Dynamics:
         """
 
         F = np.array([
-            [self.dt*1.0, 0.0, - self.dt*v *
-                math.sin(theta), self.dt*math.cos(theta)],
-            [0.0, 1.0, self.dt*v *
-                math.cos(theta), self.dt*math.sin(theta)],
-            [0.0, 0.0, self.dt*1.0, self.dt*np.tan(delta)/self.l],
-            [0.0, 0.0, 0.0,
-            self.dt*(1+(self.r_wheel*self.gamma/(self.i_wheel))*(-(self.tau_0/(self.omega_0*self.r_wheel*self.gamma))-(self.c_1/(self.r_wheel*self.gamma))))]
+            [self.dt,
+                0.0,
+                -self.dt*v *math.sin(theta),
+                self.dt*math.cos(theta)
+            ],
+            [0.0, 
+                1.0, 
+                self.dt*v *math.cos(theta), 
+                self.dt*math.sin(theta)
+            ],
+            [0.0,
+                0.0,
+                self.dt, 
+                self.dt*np.tan(delta)/self.l
+            ],
+            [0.0, 
+                0.0,
+                0.0,
+                self.dt*(1+(self.r_wheel*self.gamma/(self.i_wheel))*(-(self.tau_0/(self.omega_0*self.r_wheel*self.gamma))-(self.c_1/(self.r_wheel*self.gamma))))
+            ]
          ])
 
         return F

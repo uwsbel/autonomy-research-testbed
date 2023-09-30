@@ -17,10 +17,14 @@ class ParticleFilter:
         dt: The timestep for the filter.
         num_particles: The number of particles maintained by the filter.
         particles: The array of particles.
+        particle_weights: The weight assigned to each particle for the final state produced.
+
         hpx: The array of x coordinate histories for each particle. Used for the animation.
         hpy: The array of y coordinate histories for each particle. Used for the animation.
-        particle_distr_dist: The expected noise distribution for the position of the particles.
-        particle_distr_head: The expected noise distribution for the heading of the particles.
+        particle_distr_dist: The noise distribution for each particle, assuming that this particle is the true possition (relative to the measurement).
+        particle_distr_head: The noise distribution for each particle, assuming that this particle is the true heading (relative to the measurement)
+        dist_distr: The expected noise distribution for the position of the particles.
+        head_distr: The expected noise distribution for the heading of the particles.
         timestep: the current timestep. Used for the animation.
     
     """
@@ -46,8 +50,8 @@ class ParticleFilter:
         self.particle_distr_dist = []
         self.particle_distr_head = []
 
-        self.dist_distr = [abs(random.gauss(0, 0.8)) for _ in range(100)]
-        self.head_distr = [abs(random.gauss(0,0.1)) for _ in range(100)]
+        self.dist_distr = [abs(np.random.normal(0, 0.8)) for _ in range(100)]
+        self.head_distr = [abs(np.random.normals(0,0.1)) for _ in range(100)]
         #counts, bins = np.histogram(points, bins = 30)
 
         for i in range(0,self.num_particles):
@@ -56,7 +60,7 @@ class ParticleFilter:
             self.particle_distr_dist.append([])
             self.particle_distr_head.append([])
             #self.particles.append(np.zeros((4,1)))
-            self.particles.append(np.array([[random.gauss(0,0.8)], [random.gauss(0,0.8)], [0],[0]]))
+            self.particles.append(np.array([[np.random.normals(0,0.8)], [np.random.normals(0,0.8)], [0],[0]]))
             self.particle_weights.append(0.02)
         self.timestep = 0
 
@@ -143,7 +147,7 @@ class ParticleFilter:
                 already_seen.append(i)
                 new_particles.append(self.particles[i].copy())
             else:
-                new_particles.append(np.array([[self.particles[i][0,0]+random.gauss(0,0.1)],[self.particles[i][1,0]+random.gauss(0,0.1)],[self.particles[i][2,0]],[self.particles[i][3,0]]]))
+                new_particles.append(np.array([[self.particles[i][0,0]+np.random.normals(0,0.1)],[self.particles[i][1,0]+np.random.normals(0,0.1)],[self.particles[i][2,0]],[self.particles[i][3,0]]]))
         if(len(already_seen)<50):
             print("Particles Pruned: "+ str(50-len(already_seen)))
         self.particles = new_particles
