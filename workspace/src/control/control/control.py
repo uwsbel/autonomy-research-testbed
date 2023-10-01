@@ -401,10 +401,10 @@ class ControlNode(Node):
 
 
     def pid_control(self,error, error_sum, error_diff, error_prev):
-        # Set PID parameters
-        Kp = 0.2
-        Ki = 0.15
-        Kd = 1
+        # Working PID parameters
+        Kp = 0.1
+        Kd = 0.08
+        Ki = 25.0
 
         # do some PID
 
