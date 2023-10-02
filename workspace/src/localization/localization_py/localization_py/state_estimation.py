@@ -127,7 +127,7 @@ class StateEstimationNode(Node):
         self.steering = 0
 
         #time between imu updates, sec
-        self.dt_gps = 0.1
+        self.dt_gps = 1/self.freq
         
         #filter
         if(self.estimation_alg == "extended_kalman_filter"):
