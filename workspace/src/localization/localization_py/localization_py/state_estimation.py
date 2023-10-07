@@ -171,10 +171,10 @@ class StateEstimationNode(Node):
         self.gty = msg.pose.position.y
         self.gtvx = msg.twist.linear.x
         self.gtvy = msg.twist.linear.y
-        x = msg.pose.orientation.x
-        y = msg.pose.orientation.y
-        z = msg.pose.orientation.z
-        w = msg.pose.orientation.w
+        # x = msg.pose.orientation.x
+        # y = msg.pose.orientation.y
+        # z = msg.pose.orientation.z
+        # w = msg.pose.orientation.w
         
         
 
