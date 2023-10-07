@@ -21,77 +21,64 @@ x-optionals:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
     environment:
       DISPLAY: "${DISPLAY}"
+  vnc:
+    environment:
+      DISPLAY: vnc:0.0
 name: art
 services:
+  common:
+    build:
+      context: "./"
+      network: "host"
+      args: 
+        PROJECT: "${COMPOSE_PROJECT_NAME}"
+        ROS_DISTRO: ${ROS_DISTRO}
+    working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
+    volumes:
+      - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
+    tty: true
   dev:
+    extends: common
     image: "atk/${COMPOSE_PROJECT_NAME}:dev"
     hostname: "${COMPOSE_PROJECT_NAME}-dev"
     container_name: "${COMPOSE_PROJECT_NAME}-dev"
     build:
-      context: "./"
-      network: "host"
-      dockerfile: "./containers/dev/dev.dockerfile"
+      dockerfile: "./docker/dev.dockerfile"
       args:
-        PROJECT: "${COMPOSE_PROJECT_NAME}"
-        ROS_DISTRO: "${ROS_DISTRO}"
+        IMAGE_BASE: "ubuntu"
+        IMAGE_TAG: "22.04"
         APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-tf-transformations ros-${ROS_DISTRO}-rqt-graph"
         PIP_REQUIREMENTS: "pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt transforms3d"
         USER_GROUPS: "dialout video"
-        SCRIPTS_DIR: "containers/dev/scripts"
-    volumes:
-      - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
-    environment:
-      DISPLAY: "vnc:0.0"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
-    tty: true
+  chrono:
+    extends: common
+    image: "atk/${COMPOSE_PROJECT_NAME}:chrono"
+    hostname: "${COMPOSE_PROJECT_NAME}-chrono"
+    container_name: "${COMPOSE_PROJECT_NAME}-chrono"
+    build:
+      dockerfile: "./docker/chrono.dockerfile"
+      args:
+        IMAGE_BASE: "nvidia/cuda"
+        IMAGE_TAG: "12.2.0-devel-ubuntu22.04"
+        APT_DEPENDENCIES: ""
+        PIP_DEPENDENCIES: ""
+        OPTIX_SCRIPT: "docker/data/NVIDIA-OptiX-SDK-7.7.0-linux64-x86_64.sh"
+        CHRONO_BRANCH: "feature/ros"
+    working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/sim"
   vnc:
     image: "atk/${COMPOSE_PROJECT_NAME}:vnc"
     hostname: "${COMPOSE_PROJECT_NAME}-vnc"
     container_name: "${COMPOSE_PROJECT_NAME}-vnc"
     build:
-      context: "./containers/vnc"
-      dockerfile: "./vnc.dockerfile"
+      context: "./"
+      dockerfile: "./docker/vnc.dockerfile"
       network: "host"
       args:
         VNC_PASSWORD: "${COMPOSE_PROJECT_NAME}"
-        RUN_XTERM: "yes"
-        RUN_FLUXBOX: "yes"
-    environment:
-      RUN_XTERM: "no"
-      RUN_FLUXBOX: "yes"
     ports:
       - "127.0.0.1:8080-8099:8080"
       - "127.0.0.1:5900-5999:5900"
-  nx:
-    extends: dev
-    image: "atk/${COMPOSE_PROJECT_NAME}:nx"
-    hostname: "${COMPOSE_PROJECT_NAME}-nx"
-    container_name: "${COMPOSE_PROJECT_NAME}-nx"
-    network_mode: "host"
-    build:
-      args:
-        SCRIPTS_DIR: "containers/nx/scripts"
-  chrono:
-    image: "atk/${COMPOSE_PROJECT_NAME}:chrono"
-    hostname: "${COMPOSE_PROJECT_NAME}-chrono"
-    container_name: "${COMPOSE_PROJECT_NAME}-chrono"
-    build:
-      context: "./containers/chrono"
-      dockerfile: "./chrono.dockerfile"
-      network: "host"
-      args:
-        PROJECT: "${COMPOSE_PROJECT_NAME}"
-        CUDA_VERSION: "12.2.0"
-        UBUNTU_VERSION: "22.04"
-        APT_DEPENDENCIES: "python3.10 python3.10-dev python3-pip libirrlicht-dev libnvidia-gl-515 libeigen3-dev git cmake cmake-curses-gui libglu1-mesa-dev mesa-common-dev swig freeglut3-dev libglfw3 libglfw3-dev x11proto-gl-dev libxxf86vm-dev openmpi-common libopenmpi-dev ninja-build python3-numpy"
-        PIP_DEPENDENCIES: ""
-        OPTIX_SCRIPT: "NVIDIA-OptiX-SDK-7.7.0-linux64-x86_64.sh"
-    ports:
-      - "50000-50100:50000"
-    working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/sim"
-    volumes:
-      - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
-    tty: true
 networks:
   default:
     name: "${COMPOSE_PROJECT_NAME}"
