@@ -16,5 +16,5 @@ RUN [ -z "${PIP_REQUIREMENTS}" ] || pip install ${PIP_REQUIREMENTS}
 ARG DEFAULT_SHELL_ADD_ONS="export TERM=xterm-256color"
 ARG USER_SHELL_ADD_ONS=""
 RUN echo "${DEFAULT_SHELL_ADD_ONS}" >> ${USERSHELLPROFILE} && \
-        sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/' ~/.bashrc && \
+        sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/' ${USERSHELLPROFILE} && \
         [ -z "${USER_SHELL_ADD_ONS}" ] || echo "${USER_SHELL_ADD_ONS}" >> ${USERSHELLPROFILE}
