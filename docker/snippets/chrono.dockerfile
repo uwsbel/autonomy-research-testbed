@@ -47,7 +47,6 @@ RUN mkdir -p ${CHRONO_ROS_INTERFACES_DIR} && \
 ARG CHRONO_BRANCH="main"
 ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
 ARG CHRONO_INSTALL_DIR="/opt/chrono"
-RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} /tmp/chrono
 RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} /tmp/chrono && \
     cd /tmp/chrono/contrib/build-scripts/vsg/ && \
     bash buildVSG.sh /opt/vsg && \
@@ -86,4 +85,4 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} /tmp/chrono && \
 
 # Update shell config
 run echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \
-    echo "export PYTHONPATH=$$PYTHONPATH:${CHRONO_INSTALL_DIR}/bin"
+    echo "export PYTHONPATH=\$PYTHONPATH:${CHRONO_INSTALL_DIR}/share/chrono/python" >> ${USERSHELLPROFILE}
