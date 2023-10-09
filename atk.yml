@@ -1,4 +1,4 @@
-project: art
+project: art-harry
 default_containers: 
   - dev
   - vnc
@@ -21,6 +21,10 @@ custom_cli_arguments:
       action: 'store_true'
     all:
       devices:
+       # - /dev/video0
+        - /dev/ttyACM0
+        - /dev/ttyUSB1
+        - /dev/ttyUSB2
         - /dev/ttyUSB0
   network_mode_host:
     argparse:

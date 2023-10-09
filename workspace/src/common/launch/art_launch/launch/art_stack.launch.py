@@ -74,12 +74,12 @@ def generate_launch_description():
     #             get_package_share_directory('art_perception_launch'),
     #             'launch/cone_detection.launch.py')),
     # )
-    cone_detection = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_perception_launch'),
-                'launch/yolov5_detector.launch.py')),
-    )
-    launch_description.add_action(cone_detection)
+  #  cone_detection = IncludeLaunchDescription(
+  #      PythonLaunchDescriptionSource(
+  #          os.path.join(
+  #              get_package_share_directory('art_perception_launch'),
+    #            'launch/yolov5_detector.launch.py')),
+   # )
+    #launch_description.add_action(cone_detection)
 
     return launch_description

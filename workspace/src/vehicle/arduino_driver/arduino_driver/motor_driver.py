@@ -46,10 +46,10 @@ class SteeringServoDriver():
     def __init__(self):
         # === CONSTANTS ===
         # Pulse width as measured from the RC car receiver in milliseconds
-        self.TRIM = -50
-        self.PW_LEFT = 1700 + self.TRIM #absolute left: 1980
-        self.PW_RIGHT = 1300 + self.TRIM #absolute right: 1000
-        self.PW_CENTER = 1500 + self.TRIM 
+        self.TRIM = 0
+        self.PW_LEFT = 1600 + self.TRIM #absolute left: 1980
+        self.PW_RIGHT = 1200 + self.TRIM #absolute right: 1000
+        self.PW_CENTER = 1400 + self.TRIM 
         
         # clamp response to achieve target
         self.current_pw = self.PW_CENTER
@@ -82,7 +82,7 @@ class MotorDriver():
         # Pulse width as measured from the RC car receiver in milliseconds
         self.TRIM = 0
         self.PW_BRAKE = 1600 + self.TRIM #absolute full brake = 1980
-        self.PW_FULL_THROTTLE = 1400 + self.TRIM #absolute full throttle = 1000
+        self.PW_FULL_THROTTLE = 1380 + self.TRIM #absolute full throttle = 1000
         self.PW_NEUTRAL = 1500 + self.TRIM
         
         # clamp response to achieve target
@@ -152,14 +152,14 @@ class MotorDriverNode(Node):
         self.servo = SteeringServoDriver()
         
         BAUD_RATE = 250000
-        PORT = "/dev/ttyACM0"
+        PORT = "/dev/ttyUSB0"
         TIMEOUT = 0.1
         self.arduino = serial.Serial(port=PORT,baudrate=BAUD_RATE,timeout=TIMEOUT)
         
     # function to process data this class subscribes to
     def control_callback(self, msg):
         self.vehicle_cmd = msg  # save the message
-        # self.get_logger().info("vehicle_cmd msg='%s'" % self.vehicle_cmd)
+        #self.get_logger().info("vehicle_cmd msg='%s'" % self.vehicle_cmd)
         self.stale_timer = 0  # reset watchdog timer
 
     def update_motors(self):
@@ -171,6 +171,8 @@ class MotorDriverNode(Node):
 
         # self.get_logger().info("Motors '%s'" % self.vehicle_cmd)
 
+        # self.get_logger().info("vehicle_cmd_steering msg='%s'" % self.vehicle_cmd.steering)
+        # self.get_logger().info("vehicle_cmd_throttle msg='%s'" % self.vehicle_cmd.throttle)
         self.servo.setTargetSteering(self.vehicle_cmd.steering)
         target = self.motor.setTargetThrottle(
             self.vehicle_cmd.throttle, self.vehicle_cmd.braking)

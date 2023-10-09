@@ -48,7 +48,7 @@ def generate_launch_description():
             )
         )
 
-    AddLaunchArgument("input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument("input/vehicle_state", "/vehicle_state")
     AddLaunchArgument("input/objects", "/perception/objects")
     AddLaunchArgument("output/path", "/path_planning/path")
 

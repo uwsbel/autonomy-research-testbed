@@ -48,12 +48,16 @@ def generate_launch_description():
                 default_value=TextSubstitution(text=default)
             )
         )
-
+    #TODO: FOR MPC
+    #for MPC only, use /fix for GPS input. otherwise use \gnss 
     #AddLaunchArgument("input/gps","/fix")
-    #AddLaunchArgument("input/mag", "/imu/mag")
-    AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
-    AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
-    AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
+    AddLaunchArgument("input/gps","/gnss")
+    #also need to change the line below to actually use raw mag data.
+    AddLaunchArgument("input/mag", "/imu/mag")
+    #AddLaunchArgument("input/gps", "/chrono_ros_bridge/output/gps/data")
+    #AddLaunchArgument("input/mag", "/chrono_ros_bridge/output/magnetometer/data")
+    AddLaunchArgument("input/groundTruth", "/fix")
+    #AddLaunchArgument("input/groundTruth", "/chrono_ros_bridge/output/groundTruth/data")
     AddLaunchArgument("input/gyro", "/chrono_ros_bridge/output/gyroscope/data")
     AddLaunchArgument("input/accel", "/chrono_ros_bridge/output/accelerometer/data")
     AddLaunchArgument("input/vehicleInput", "/control/vehicle_inputs")

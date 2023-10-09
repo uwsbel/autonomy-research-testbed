@@ -53,13 +53,13 @@ def generate_launch_description():
     )
     launch_description.add_action(stack)
 
-    camera = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('art_sensing_launch'),
-                'launch/usb_cam.launch.py'))
-    )
-    launch_description.add_action(camera)
+#    camera = IncludeLaunchDescription(
+#        PythonLaunchDescriptionSource(
+#            os.path.join(
+#                get_package_share_directory('art_sensing_launch'),
+#                'launch/usb_cam.launch.py'))
+#    )
+#    launch_description.add_action(camera)
 
     arduino = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -68,14 +68,21 @@ def generate_launch_description():
                 'launch/arduino_driver.launch.py'))
     )
     launch_description.add_action(arduino)
+    # mocap = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(
+    #             get_package_share_directory('mocap_optitrack'),
+    #             'launch/mocap.launch.py'))
+    # )
+    # launch_description.add_action(mocap)
 
-    xsens = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('bluespace_ai_xsens_mti_driver'),
-                'launch/xsens_mti_node.launch.py'))
-    )
-    launch_description.add_action(xsens)
+#    xsens = IncludeLaunchDescription(
+#        PythonLaunchDescriptionSource(
+#            os.path.join(
+#                get_package_share_directory('bluespace_ai_xsens_mti_driver'),
+#                'launch/xsens_mti_node.launch.py'))
+#    )
+#    launch_description.add_action(xsens)
 
 
     return launch_description

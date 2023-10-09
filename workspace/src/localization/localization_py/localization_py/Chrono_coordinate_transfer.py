@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from scipy.spatial.transform import Rotation
 class graph(object):
     def __init__(self):
         self.r = self.r = 6378100
@@ -14,7 +15,8 @@ class graph(object):
         y = ((lat - self.lat) * math.pi / 180.0) * self.r
         z = alt - self.alt
         return x,y,z
-
+    def set_new_rotation(self, quat):
+        self.R = Rotation.from_quat(quat).as_matrix()
     def set_rotation(self, D):
         self.R = np.array([
             [math.cos(D), -math.sin(D)],

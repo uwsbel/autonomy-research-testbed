@@ -41,10 +41,10 @@ class EKF(object):
 
         #x[3,0] = x[3,0]+ \
         #        self.dt*((self.r_wheel*self.gamma/self.i_wheel)*(u[0,0]*self.new_f(x[3,0])-(x[3,0]*self.c_1/(self.r_wheel*self.gamma))-self.c_0))
-        
-        # if(x[3,0]<-0.2):
-        #     x[3,0]= -0.2
-        
+
+        #if(x[3,0]<0.0):
+        #    x[3,0]= -0.0
+
         ###THIS IS TEST...DEF NOT CORRECT EQ###
         # throttle = u[0,0]
         # max_vel = 2
@@ -129,8 +129,8 @@ class EKF(object):
         #     [0.0, 0.0, 0.0, 
         #     1+(self.r_wheel*self.gamma/(self.i_wheel))*(-(self.tau_0/(self.omega_0*self.r_wheel*self.gamma))-(self.c_1/(self.r_wheel*self.gamma)))]
 
-            
-            
+
+
         #     #1.0+(self.r_wheel*self.gamma/self.i_wheel)
         #     # * (throttle*self.df_1_dv+(1-throttle)*self.df_0_dv(v))*self.dt]
         # ])
@@ -141,8 +141,8 @@ class EKF(object):
             [0.0, 1.0, self.dt*v *
                 math.cos(theta), self.dt*math.sin(theta)],
             [0.0, 0.0, self.dt*1.0, self.dt*np.tan(delta)/self.l],
-            [0.0, 0.0, 0.0, 
-            self.dt*(1+(1/(self.i_wheel))*(-(self.tau_0/(self.omega_0))-(self.c_1)))]
+            [0.0, 0.0, 0.0,
+            self.dt*(1+(self.r_wheel*self.gamma/(self.i_wheel))*(-(self.tau_0/(self.omega_0*self.r_wheel*self.gamma))-(self.c_1/(self.r_wheel*self.gamma))))]
          ])
 
         return F
@@ -161,8 +161,8 @@ class EKF(object):
         self.r_wheel = 0.08451952624
         self.i_wheel = 1e-3
         self.gamma = 1/3
-        self.tau_0 = 0.09#1
-        self.omega_0 = 161.185
+        self.tau_0 = 0.3#1
+        self.omega_0 = 30.0
         self.df_1_dv = -self.tau_0/(self.omega_0*self.r_wheel*self.gamma)
 
 
@@ -173,16 +173,16 @@ class EKF(object):
         #     q4 # variance of velocity
         # ]) ** 2  # predict state covariance
         # # Observation x,y position covariance
-        # self.R = np.diag([r1, r1, r3]) ** 2
+       # self.R = npediag([r1, r1, r3]) ** 2
         # self.P = np.eye(4)
         self.Q = np.diag([
-            0.01,  # variance of location on x-axis
-            0.01,  # variance of location on y-axis
-            np.deg2rad(1),  # variance of yaw angle
+            0.1,  # variance of location on x-axis
+            0.1,  # variance of location on y-axis
+            np.deg2rad(3),  # variance of yaw angle
             0.1 # variance of velocity
         ]) ** 2  # predict state covariance
         # Observation x,y position covariance
-        self.R = np.diag([2, 2, 0.5]) ** 2
+        self.R = np.diag([1, 1, 0.3]) ** 2
         self.P = np.eye(4)
 
 
@@ -199,7 +199,7 @@ class EKF(object):
         # self.R = np.diag([2.0, 2.0, 1.0]) ** 2
         # self.P = np.eye(4)
 
-    
+
     def angle_diff(self,ref, act):
         if( (ref>0 and act>0) or (ref<=0 and act <=0)):
             err_theta = ref-act
@@ -211,12 +211,12 @@ class EKF(object):
         else:
             if(abs(ref-act)<abs(2*np.pi-ref+act)):
                 err_theta = abs(act-ref)
-            else: 
+            else:
                 err_theta = -abs(2*np.pi-ref+act)
         return err_theta
 
     def predict(self, x, u):
-        step_size = 100
+        step_size = 1
         self.dt = self.dt/step_size
         for i in range(0,step_size):
             x = self.new_motion_model(x, u)
@@ -263,3 +263,5 @@ class EKF(object):
         #     x[2,0] = x[2,0]+2*np.pi
         self.P = (np.eye(len(x))-K@H) @ self.P
         return x
+
+

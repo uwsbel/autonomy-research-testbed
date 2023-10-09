@@ -93,7 +93,7 @@ def mpc_wpts_solver(e,u,vel,vel_ref):
         # xmin = np.array([-0.75,-0.75,-np.inf,-np.inf])
         # xmax = np.array([0.75, 0.75, np.inf,np.inf])
         # Objective function
-        Q = sparse.diags([5500., 5500., 2500., 300.])
+        Q = sparse.diags([5500., 5500., 3500., 300.])
         QN = Q
         R = sparse.diags([10., 1000.])
 
