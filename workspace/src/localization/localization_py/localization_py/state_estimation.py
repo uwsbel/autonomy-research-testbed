@@ -5,15 +5,12 @@ from art_msgs.msg import VehicleState
 from sensor_msgs.msg import Imu, NavSatFix, MagneticField
 from chrono_ros_msgs.msg import ChVehicle
 from ament_index_python.packages import get_package_share_directory
-
 import matplotlib.pyplot as plt
 import matplotlib
 import math
 import numpy as np
-
 import sys
 import os
-
 
 ament_tools_root = os.path.join(os.path.dirname(__file__), '.')
 sys.path.insert(0, os.path.abspath(ament_tools_root))
@@ -26,16 +23,11 @@ class StateEstimationNode(Node):
     def __init__(self):
         super().__init__('state_estimation_node')
         
-
         # ROS PARAMETERS
         self.use_sim_msg = self.get_parameter("use_sim_time").get_parameter_value().bool_value
 
         self.declare_parameter('estimation_alg', "ground_truth")
         self.estimation_alg = self.get_parameter('estimation_alg').get_parameter_value().string_value
-        #self.declare_parameter('dyn_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/4DOF_dynamics.yml")
-        #dyn_path = self.get_parameter('dyn_path').get_parameter_value().string_value
-        #self.declare_parameter('filt_param_path', "/home/art/art/workspace/src/localization/localization_py/localization_py/EKF_param.yml")
-        #param_path = self.get_parameter('filt_param_path').get_parameter_value().string_value
 
         #EKF parameters
         self.declare_parameter('Q1', 0.1)
@@ -71,8 +63,6 @@ class StateEstimationNode(Node):
         dyn = [c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0]
         self.get_logger().info(str(dyn))
 
-        
-
         #update frequency of this node
         self.freq = 10.0
 
@@ -86,8 +76,6 @@ class StateEstimationNode(Node):
         else:
             global VehicleInput
             from art_msgs.msg import VehicleInput
-
-
 
         #x, y, from measurements
         self.x = 0
@@ -144,13 +132,10 @@ class StateEstimationNode(Node):
             self.sub_groud_truth = self.create_subscription(ChVehicle, '~/input/ground_truth', self.ground_truth_callback, 1)
 
         self.sub_mag = self.create_subscription(MagneticField, "~/input/magnetometer", self.mag_callback, 1)
-        #self.sub_gyro = self.create_subscription(Imu, "~/input/gyro", self.gyro_callback, 10)
-        #self.sub_accel = self.create_subscription(Imu, "~/input/accel", self.accel_callback, 100)
         self.sub_control = self.create_subscription(VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1)
         #publishers
         self.pub_objects = self.create_publisher(VehicleState, '~/output/vehicle/filtered_state', 1)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
-
 
     #CALLBACKS:
     def inputs_callback(self, msg):
@@ -158,26 +143,12 @@ class StateEstimationNode(Node):
         self.steering = self.inputs.steering
         self.throttle = self.inputs.throttle
 
-    def accel_callback(self, msg):
-        self.accel = msg
-
-    def gyro_callback(self, msg):
-        self.gyro = msg
-        
-
-
     def ground_truth_callback(self, msg):
         self.gtx = msg.pose.position.x
         self.gty = msg.pose.position.y
         self.gtvx = msg.twist.linear.x
         self.gtvy = msg.twist.linear.y
-        # x = msg.pose.orientation.x
-        # y = msg.pose.orientation.y
-        # z = msg.pose.orientation.z
-        # w = msg.pose.orientation.w
         
-        
-
     def mag_callback(self,msg):
         self.mag = msg
         mag_x = self.mag.magnetic_field.x
@@ -202,7 +173,6 @@ class StateEstimationNode(Node):
             self.graph.set_rotation(np.deg2rad(self.D) -self.init_theta)
             self.state[2,0] = self.init_theta
 
-
     def gps_callback(self,msg):
         self.gps = msg
         self.gps_ready = True
@@ -226,9 +196,7 @@ class StateEstimationNode(Node):
             self.x +=self.init_x
             self.y +=self.init_y
 
-
-
-    #callback to run a loop and publish data this class generates
+     #callback to run a loop and publish data this class generates
     def pub_callback(self):
         u = np.array([[self.throttle], [self.steering/2.2]])
 
@@ -238,13 +206,7 @@ class StateEstimationNode(Node):
             self.EKFstep(u, z)
         elif(self.estimation_alg == "particle_filter"):
             self.PFstep(u,z)
-        
-        # with open('data.csv', 'a', encoding = 'UTF8') as csvfile:
-        #    mywriter = csv.writer(csvfile)
-        #    mywriter.writerow([self.gtx, self.gty, np.deg2rad(self.D), self.state[3,0], self.throttle, self.steering])
-        #    csvfile.close()
-
-       
+    
         msg = VehicleState()
         #pos and velocity are in meters, from the origin, [x, y, z]
         if(self.estimation_alg == "ground_truth"):
@@ -260,9 +222,7 @@ class StateEstimationNode(Node):
             msg.pose.orientation.z = float(self.state[2,0])
             msg.twist.linear.x = float(self.state[3,0]*math.cos(self.state[2,0]))
             msg.twist.linear.y = float(self.state[3,0]*math.sin(self.state[2,0]))
-            
-
-
+        
         msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)
     
