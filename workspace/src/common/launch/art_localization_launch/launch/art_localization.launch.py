@@ -35,6 +35,8 @@ from launch_ros.actions import Node
 
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
+from enum import Enum
+from localization_py.state_estimation import EstimationAlgorithmOption
 
 
 def generate_launch_description():
@@ -52,7 +54,7 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
     AddLaunchArgument(ld, "art_localization/output/filtered_state", "/vehicle/filtered_state")
 
-    AddLaunchArgument(ld, "estimation_alg", "ground_truth", choices=("ground_truth", "extended_kalman_filter", "particle_filter"))
+    AddLaunchArgument(ld, "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value, choices=[o.value for o in EstimationAlgorithmOption.__members__.values()])
 
     # -----
     # Nodes

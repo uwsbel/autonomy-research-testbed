@@ -11,13 +11,16 @@ import math
 import numpy as np
 import sys
 import os
+from enum import Enum
+from localization_py.EKF import EKF
+from localization_py.particle_filter import ParticleFilter as PF
+from localization_py.chrono_coordinate_transfer import Graph
 
-ament_tools_root = os.path.join(os.path.dirname(__file__), '.')
-sys.path.insert(0, os.path.abspath(ament_tools_root))
+class EstimationAlgorithmOption(Enum):
+    GROUND_TRUTH = "ground_truth"
+    EXTENDED_KALMAN_FILTER = "extended_kalman_filter"
+    PARTICLE_FILTER = "particle_filter"
 
-from EKF import EKF
-from particle_filter import ParticleFilter as PF
-from chrono_coordinate_transfer import Graph
 
 class StateEstimationNode(Node):
     def __init__(self):
@@ -26,7 +29,7 @@ class StateEstimationNode(Node):
         # ROS PARAMETERS
         self.use_sim_msg = self.get_parameter("use_sim_time").get_parameter_value().bool_value
 
-        self.declare_parameter('estimation_alg', "ground_truth")
+        self.declare_parameter('estimation_alg', EstimationAlgorithmOption.GROUND_TRUTH)
         self.estimation_alg = self.get_parameter('estimation_alg').get_parameter_value().string_value
 
         #EKF parameters
@@ -118,9 +121,9 @@ class StateEstimationNode(Node):
         self.dt_gps = 1/self.freq
         
         #filter
-        if(self.estimation_alg == "extended_kalman_filter"):
+        if(self.estimation_alg == EstimationAlgorithmOption.EXTENDED_KALMAN_FILTER):
             self.ekf = EKF(self.dt_gps, dyn, Q, R)
-        elif(self.estimation_alg == "particle_filter"):
+        elif(self.estimation_alg == EstimationAlgorithmOption.PARTICLE_FILTER):
             self.pf = PF(self.dt_gps, dyn)
 
         #our graph object, for reference frame
@@ -202,14 +205,14 @@ class StateEstimationNode(Node):
 
         z = np.array([[self.x],[self.y], [np.deg2rad(self.D)]])
                 
-        if(self.estimation_alg == "extended_kalman_filter"):
+        if(self.estimation_alg == EstimationAlgorithmOption.EXTENDED_KALMAN_FILTER):
             self.EKFstep(u, z)
-        elif(self.estimation_alg == "particle_filter"):
+        elif(self.estimation_alg == EstimationAlgorithmOption.PARTICLE_FILTER):
             self.PFstep(u,z)
     
         msg = VehicleState()
         #pos and velocity are in meters, from the origin, [x, y, z]
-        if(self.estimation_alg == "ground_truth"):
+        if(self.estimation_alg == EstimationAlgorithmOption.GROUND_TRUTH):
             msg.pose.position.x = float(self.gtx)
             msg.pose.position.y = float(self.gty)
             #TODO: this should be a quat in the future, not the heading.
