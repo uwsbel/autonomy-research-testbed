@@ -5,13 +5,13 @@
 # Install ROS
 ARG ROS_DISTRO
 RUN apt-get update && \
-        apt-get install curl software-properties-common -y && \
-        add-apt-repository universe && \
-        curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo ${UBUNTU_CODENAME}) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
-        apt-get update && \
-        apt-get install -y ros-${ROS_DISTRO}-ros-base && \
-        apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+      apt-get install curl software-properties-common -y && \
+      add-apt-repository universe && \
+      curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo ${UBUNTU_CODENAME}) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
+      apt-get update && \
+      apt-get install -y ros-${ROS_DISTRO}-ros-base && \
+      apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Update shell config
 RUN echo ". /opt/ros/${ROS_DISTRO}/setup.${USERSHELL}" >> ${USERSHELLPROFILE}

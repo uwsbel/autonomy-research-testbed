@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 # This snippet install Chrono in /opt/chrono
 # NOTE: Requires OPTIX_SCRIPT to be set and for there be a file that exists there
+# NOTE: ROS needs to be installed, as well
 
 # Install Chrono dependencies
 RUN apt-get update && \
@@ -84,6 +85,6 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} /tmp/chrono && \
     rm -rf /tmp/chrono
 
 # Update shell config
-run echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \
+RUN echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \
     echo "export PYTHONPATH=\$PYTHONPATH:${CHRONO_INSTALL_DIR}/share/chrono/python" >> ${USERSHELLPROFILE} && \
     echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:${CHRONO_INSTALL_DIR}/lib" >> ${USERSHELLPROFILE}
