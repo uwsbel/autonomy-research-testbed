@@ -34,7 +34,9 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument
+from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
+from enum import Enum
+from localization_py.state_estimation import EstimationAlgorithmOption
 
 
 def generate_launch_description():
@@ -48,9 +50,11 @@ def generate_launch_description():
     AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
     AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
     AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
-    AddLaunchArgument(ld, "art_localization/output/vehicle_state", "/vehicle/filtered_state")
+    AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
+    AddLaunchArgument(ld, "art_localization/output/filtered_state", "/vehicle/filtered_state")
 
-    AddLaunchArgument(ld, "vis", "False")
+    AddLaunchArgument(ld, "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value, choices=[o.value for o in EstimationAlgorithmOption.__members__.values()])
 
     # -----
     # Nodes
@@ -65,11 +69,14 @@ def generate_launch_description():
                 ("~/input/magnetometer", GetLaunchArgument("art_localization/input/magnetometer")),
                 ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
                 ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
-                ("~/output/vehicle_state", GetLaunchArgument("art_localization/output/vehicle_state")),
+                ("~/input/vehicle_inputs", GetLaunchArgument("art_localization/input/vehicle_inputs")),
+                ("~/input/ground_truth", GetLaunchArgument("art_localization/input/ground_truth")),
+                ("~/output/filtered_state", GetLaunchArgument("art_localization/output/filtered_state")),
         ],
-        parameters=[
-            {"vis": GetLaunchArgument("vis")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")}
+        parameters=[GetPackageSharePath("art_localization_launch", "config", "4DOF_dynamics.yml"),
+            GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
+            {"use_sim_time": GetLaunchArgument("use_sim_time")},
+            {"estimation_alg": GetLaunchArgument("estimation_alg")}
         ]
     )
     ld.add_action(node)
