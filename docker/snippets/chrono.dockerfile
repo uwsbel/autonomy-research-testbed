@@ -36,30 +36,31 @@ RUN wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | tee /etc/
     apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # chrono_ros_interfaces
-ARG ROS_WORKSPACE_DIR="/opt/workspace"
+ARG ROS_WORKSPACE_DIR="${USERHOME}/ros_workspace"
 ARG CHRONO_ROS_INTERFACES_DIR="${ROS_WORKSPACE_DIR}/src/chrono_ros_interfaces"
 RUN mkdir -p ${CHRONO_ROS_INTERFACES_DIR} && \
     git clone https://github.com/AaronYoung5/chrono_ros_interfaces.git ${CHRONO_ROS_INTERFACES_DIR} && \
     cd ${ROS_WORKSPACE_DIR} && \
     . /opt/ros/${ROS_DISTRO}/setup.sh && \
-    colcon build --symlink-install --packages-select chrono_ros_interfaces
+    colcon build --packages-select chrono_ros_interfaces
 
 # Chrono
 ARG CHRONO_BRANCH="main"
 ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
+ARG CHRONO_DIR="${USERHOME}/chrono"
 ARG CHRONO_INSTALL_DIR="/opt/chrono"
-RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} /tmp/chrono && \
-    cd /tmp/chrono/contrib/build-scripts/vsg/ && \
+RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
+    cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
     bash buildVSG.sh /opt/vsg && \
-    cd /tmp/chrono/contrib/build-scripts/urdf/ && \
+    cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
     bash buildURDF.sh /opt/urdf && \
     . ${ROS_WORKSPACE_DIR}/install/setup.sh && \
-    mkdir /tmp/chrono/build && \
-    cd /tmp/chrono/build && \
+    mkdir ${CHRONO_DIR}/build && \
+    cd ${CHRONO_DIR}/build && \
     cmake ../ -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DBUILD_BENCHMARKING=OFF \
         -DBUILD_DEMOS=OFF \
+        -DBUILD_BENCHMARKING=OFF \
         -DBUILD_TESTING=OFF \
         -DENABLE_MODULE_VEHICLE=ON \
         -DENABLE_MODULE_IRRLICHT=ON \
@@ -81,8 +82,7 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} /tmp/chrono && \
         -Dconsole_bridge_DIR=/opt/urdf/lib/console_bridge/cmake \
         -Dtinyxml2_DIR=/opt/urdf/CMake \
         && \
-    ninja && ninja install && \
-    rm -rf /tmp/chrono
+    ninja && ninja install
 
 # Update shell config
 RUN echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \
