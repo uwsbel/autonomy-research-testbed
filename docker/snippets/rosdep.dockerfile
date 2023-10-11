@@ -18,5 +18,3 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
     rosdep install --from-paths src --ignore-src -r -y && \
     rm -rf /tmp/workspace && \
     apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
-
-RUN echo "[ -f ${USERHOME}/${PROJECT}/workspace/install/setup.${USERSHELL} ] && . ${USERHOME}/${PROJECT}/workspace/install/setup.${USERSHELL}" >> ${USERSHELLPROFILE}
