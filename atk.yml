@@ -47,8 +47,9 @@ services:
       args:
         IMAGE_BASE: "ubuntu"
         IMAGE_TAG: "22.04"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv rapidjson-dev ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-tf-transformations ros-${ROS_DISTRO}-rqt-graph"
+        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-tf-transformations ros-${ROS_DISTRO}-rqt-graph"
         PIP_REQUIREMENTS: "pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt transforms3d scipy"
+        PIP_REQUIREMENTS: "pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt transforms3d"
         USER_GROUPS: "dialout video"
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
@@ -62,7 +63,7 @@ services:
       args:
         IMAGE_BASE: "nvidia/cuda"
         IMAGE_TAG: "12.2.0-devel-ubuntu22.04"
-        APT_DEPENDENCIES: ""
+        APT_DEPENDENCIES: "cmake cmake-curses-gui"
         PIP_DEPENDENCIES: ""
         OPTIX_SCRIPT: "docker/data/NVIDIA-OptiX-SDK-7.7.0-linux64-x86_64.sh"
         CHRONO_BRANCH: "feature/ros"
