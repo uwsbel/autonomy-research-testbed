@@ -23,16 +23,20 @@ x-optionals:
       DISPLAY: "${DISPLAY}"
   vnc:
     environment:
-      DISPLAY: vnc:0.0
+      DISPLAY: "vnc:0.0"
 name: art
 services:
   common:
+    env_file: 
+      - atk.env
     build:
       context: "./"
       network: "host"
       args: 
         PROJECT: "${COMPOSE_PROJECT_NAME}"
-        ROS_DISTRO: ${ROS_DISTRO}
+        ROS_DISTRO: "${ROS_DISTRO}"
+        USER_UID: "${USER_UID:-1000}"
+        USER_GID: "${USER_GID:-1000}"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     volumes:
       - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
