@@ -3,7 +3,7 @@ std_msgs/Header header
 
 # Input message that is to be sent to the vehicle
 #
-# The input includes steering, throttle, and braking. 
+# The input includes steering, throttle, and braking.
 
 # Steering value [-1,1]
 # -1 indicates turn fully to the left, 1 indicates turn fully to the right

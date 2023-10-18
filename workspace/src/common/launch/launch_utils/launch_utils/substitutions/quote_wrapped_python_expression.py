@@ -7,7 +7,7 @@ class QuoteWrappedPythonExpression(PythonExpression):
     """Helper class that fixes a weird flaw in PythonExpression perform method where
     substituted LaunchConfiguration variables need to be wrapped in quotes."""
 
-    def __init__(self, expression: 'SomeSubstitutionsType') -> None:
+    def __init__(self, expression: "SomeSubstitutionsType") -> None:
         super().__init__(expression)
 
         _expression = []
@@ -20,4 +20,4 @@ class QuoteWrappedPythonExpression(PythonExpression):
                 _expression.append(expr)
 
         # HACK
-        vars(self)['_PythonExpression__expression'] = _expression
+        vars(self)["_PythonExpression__expression"] = _expression
