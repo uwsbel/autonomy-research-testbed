@@ -17,4 +17,6 @@
 	url = https://github.com/ros-drivers/nmea_navsat_driver.git
 [submodule "workspace/src/simulation/chrono_ros_interfaces"]
 	path = workspace/src/simulation/chrono_ros_interfaces
-	url = https://github.com/AaronYoung5/chrono_ros_interfaces.git
+	url = https://github.com/projectchrono/chrono_ros_interfaces.git
+[submodule "chrono_ros_interfaces"]
+	url = https://github.com/projectchrono/chrono_ros_interfaces.git
