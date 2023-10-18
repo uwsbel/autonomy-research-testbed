@@ -5,9 +5,6 @@
 	path = workspace/src/sensing/usb_cam
 	url = https://github.com/ros-drivers/usb_cam.git
 	ignore = dirty
-[submodule "workspace/src/simulation/chrono-ros-bridge"]
-	path = workspace/src/simulation/chrono-ros-bridge
-	url = https://github.com/uwsbel/chrono-ros-bridge
 [submodule "workspace/src/external/rosboard"]
 	path = workspace/src/external/rosboard
 	url = https://github.com/dheera/rosboard.git
@@ -18,3 +15,6 @@
 [submodule "workspace/src/nmea_navsat_driver"]
 	path = workspace/src/sensing/nmea_navsat_driver
 	url = https://github.com/ros-drivers/nmea_navsat_driver.git
+[submodule "workspace/src/simulation/chrono_ros_interfaces"]
+	path = workspace/src/simulation/chrono_ros_interfaces
+	url = https://github.com/AaronYoung5/chrono_ros_interfaces.git

@@ -30,7 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 import rclpy
 from rclpy.node import Node
-from art_msgs.msg import VehicleState
+from art_msgs.msg import VehicleState, VehicleInput
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
@@ -79,10 +79,6 @@ class ControlNode(Node):
             self.get_parameter("throttle_gain").get_parameter_value().double_value
         )
 
-        self.use_sim_msg = (
-            self.get_parameter("use_sim_time").get_parameter_value().bool_value
-        )
-
         if self.file == "":
             self.mode = "PID"
         else:
@@ -96,12 +92,6 @@ class ControlNode(Node):
         # data that will be used by this class
         self.state = ""
         self.path = Path()
-        if self.use_sim_msg:
-            global VehicleInput
-            from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
-        else:
-            global VehicleInput
-            from art_msgs.msg import VehicleInput
         self.vehicle_cmd = VehicleInput()
 
         # waits for first path if using PID, otherwise runs right away
@@ -160,8 +150,7 @@ class ControlNode(Node):
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
 
-        if not self.use_sim_msg:
-            msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = self.get_clock().now().to_msg()
 
         self.pub_vehicle_cmd.publish(msg)
 
