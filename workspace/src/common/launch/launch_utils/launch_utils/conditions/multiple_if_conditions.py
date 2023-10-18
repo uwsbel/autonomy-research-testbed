@@ -22,15 +22,24 @@ class MultipleIfConditions(Condition):
     the sum of the evaluate predicates is >= ``num``. If -1, all must be true.
     """
 
-    def __init__(self, predicate_expressions: Iterable[SomeSubstitutionsType], *, num: int = -1) -> None:
-        self.__predicate_expressions = [normalize_to_list_of_substitutions(
-            expr) for expr in predicate_expressions]
+    def __init__(
+        self, predicate_expressions: Iterable[SomeSubstitutionsType], *, num: int = -1
+    ) -> None:
+        self.__predicate_expressions = [
+            normalize_to_list_of_substitutions(expr) for expr in predicate_expressions
+        ]
         super().__init__(predicate=self._predicate_func)
 
         self.__num = num if num != -1 else len(predicate_expressions)
 
     def _predicate_func(self, context: LaunchContext) -> bool:
-        return sum(evaluate_condition_expression(context, expr) for expr in self.__predicate_expressions) >= self.__num
+        return (
+            sum(
+                evaluate_condition_expression(context, expr)
+                for expr in self.__predicate_expressions
+            )
+            >= self.__num
+        )
 
     def describe(self) -> Text:
         """Return a description of this Condition."""

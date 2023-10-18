@@ -1,5 +1,7 @@
 import numpy as np
 import math
+
+
 class Graph:
     """A copy of the CHRONO LTP gps2cartesian coordinate transfer.
 
@@ -14,9 +16,9 @@ class Graph:
 
     Chrono documentation: https://api.projectchrono.org/namespacechrono_1_1sensor.html#a69c276ee1766b50936ed940d39a2555d
     """
+
     def __init__(self):
-        """Initialize the graph instance.
-        """
+        """Initialize the graph instance."""
         self.r = 6378100
 
     def set_graph(self, lat, lon, alt):
@@ -33,7 +35,7 @@ class Graph:
         self.lon = lon
         self.alt = alt
 
-    def gps2cartesian(self,lat,lon,alt):
+    def gps2cartesian(self, lat, lon, alt):
         """Translates GPS coordinates to our LTP frame.
 
         Projects the GPS coordinates onto the 2D LTP, and then returns the coordinates relative to the unrotated LTP.
@@ -43,35 +45,31 @@ class Graph:
             lon: The Longitude for the point we want to translate.
             alt: The Altitude for the point we want to translate.
         """
-        x = ((lon - self.lon) * math.pi / 180.0) * (self.r * math.cos(lat * math.pi / 180.0))
+        x = ((lon - self.lon) * math.pi / 180.0) * (
+            self.r * math.cos(lat * math.pi / 180.0)
+        )
         y = ((lat - self.lat) * math.pi / 180.0) * self.r
         z = alt - self.alt
-        return x,y,z
+        return x, y, z
 
     def set_rotation(self, D):
-        """Sets the 2D rotation matrix for the LTP. 
+        """Sets the 2D rotation matrix for the LTP.
 
         Args:
             D: The offset angle we want for the x-axis of our LTP.
         """
-        self.R = np.array([
-            [math.cos(D), -math.sin(D)],
-            [math.sin(D), math.cos(D)]
-        ])
+        self.R = np.array([[math.cos(D), -math.sin(D)], [math.sin(D), math.cos(D)]])
         self.R = np.linalg.inv(self.R)
-    
+
     def rotate(self, x, y, z):
         """Rotates a given point relative to the rotation matrix.
 
-        Args: 
+        Args:
             x: the x-coordinate we would like to rotate.
             y: the y-coordinate we would like to roatate.
             z: the z-coordinate.
         """
-        position = np.array([
-            [x],
-            [y]
-        ])
+        position = np.array([[x], [y]])
         position = self.R @ position
 
-        return position[0][0], position[1][0],z
+        return position[0][0], position[1][0], z

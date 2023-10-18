@@ -38,7 +38,7 @@ from launch_ros.actions import Node
 from launch.conditions import IfCondition
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument 
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
 
 def generate_launch_description():
@@ -48,10 +48,14 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_simulation/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(
+        ld, "art_simulation/input/vehicle_inputs", "/control/vehicle_inputs"
+    )
     AddLaunchArgument(ld, "art_simulation/output/time", "/clock")
     AddLaunchArgument(ld, "art_simulation/output/vehicle", "/vehicle/state")
-    AddLaunchArgument(ld, "art_simulation/output/camera", "/sensing/front_facing_camera/raw")
+    AddLaunchArgument(
+        ld, "art_simulation/output/camera", "/sensing/front_facing_camera/raw"
+    )
     AddLaunchArgument(ld, "ip", "")
     AddLaunchArgument(ld, "hostname", "")
 
@@ -62,23 +66,28 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package='chrono_ros_bridge',
-        executable='chrono_ros_bridge_node',
-        name='chrono_ros_bridge',
+        package="chrono_ros_bridge",
+        executable="chrono_ros_bridge_node",
+        name="chrono_ros_bridge",
         remappings=[
-            ("~/input/driver_inputs", GetLaunchArgument("art_simulation/input/vehicle_inputs")),
+            (
+                "~/input/driver_inputs",
+                GetLaunchArgument("art_simulation/input/vehicle_inputs"),
+            ),
             ("~/output/time", GetLaunchArgument("art_simulation/output/time")),
             ("~/output/vehicle", GetLaunchArgument("art_simulation/output/vehicle")),
-            ("~/output/camera/front_facing_camera", GetLaunchArgument("art_simulation/output/camera")),
+            (
+                "~/output/camera/front_facing_camera",
+                GetLaunchArgument("art_simulation/output/camera"),
+            ),
         ],
         parameters=[
-             {"ip": GetLaunchArgument("ip")},
-             {"hostname": GetLaunchArgument("hostname")},
-             {"use_sim_time": GetLaunchArgument("use_sim_time")}
+            {"ip": GetLaunchArgument("ip")},
+            {"hostname": GetLaunchArgument("hostname")},
+            {"use_sim_time": GetLaunchArgument("use_sim_time")},
         ],
-        condition=IfCondition(GetLaunchArgument("use_sim"))
+        condition=IfCondition(GetLaunchArgument("use_sim")),
     )
     ld.add_action(node)
 
     return ld
-

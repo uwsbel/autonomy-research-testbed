@@ -44,20 +44,25 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "arduino_driver/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(
+        ld, "arduino_driver/input/vehicle_inputs", "/control/vehicle_inputs"
+    )
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-            package='arduino_driver',
-            executable='motor_driver',
-            name='motor_driver',
-            remappings=[
-                ("~/output/vehicle_inputs", GetLaunchArgument("arduino_driver/input/vehicle_inputs"))
-            ],
-        )
+        package="arduino_driver",
+        executable="motor_driver",
+        name="motor_driver",
+        remappings=[
+            (
+                "~/output/vehicle_inputs",
+                GetLaunchArgument("arduino_driver/input/vehicle_inputs"),
+            )
+        ],
+    )
     ld.add_action(node)
 
     return ld

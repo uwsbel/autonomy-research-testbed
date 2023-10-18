@@ -50,7 +50,8 @@ import matplotlib.patches as patches
 
 from loader import *
 
-class RecognitionNetwork():
+
+class RecognitionNetwork:
     def __init__(self):
         # network parameters
         num_classes = 3  # background, red cones, green cones
@@ -61,17 +62,30 @@ class RecognitionNetwork():
         trainable_layers = 0
         pretrained = False
         pretrained_backbone = True
-        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        self.device = (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
 
-        #fasterrcnn_mobilenet_v3_large_fpn
-        #fasterrcnn_mobilenet_v3_large_320_fpn
+        # fasterrcnn_mobilenet_v3_large_fpn
+        # fasterrcnn_mobilenet_v3_large_320_fpn
         self.model = fasterrcnn_mobilenet_v3_large_320_fpn(
-            pretrained=pretrained, pretrained_backbone=pretrained_backbone, 
-            trainable_backbone_layers=trainable_layers, num_classes=num_classes, 
-            min_size=min_size, max_size=max_size, box_score_thresh=box_score_thresh,
-            box_detections_per_img=box_detections_per_img)
+            pretrained=pretrained,
+            pretrained_backbone=pretrained_backbone,
+            trainable_backbone_layers=trainable_layers,
+            num_classes=num_classes,
+            min_size=min_size,
+            max_size=max_size,
+            box_score_thresh=box_score_thresh,
+            box_detections_per_img=box_detections_per_img,
+        )
 
-        self.model.transform = GeneralizedRCNNTransform(min_size,max_size,(0.485, 0.456, 0.406), (0.229, 0.224, 0.225),fixed_size=(max_size,min_size))
+        self.model.transform = GeneralizedRCNNTransform(
+            min_size,
+            max_size,
+            (0.485, 0.456, 0.406),
+            (0.229, 0.224, 0.225),
+            fixed_size=(max_size, min_size),
+        )
 
         self.model.to(self.device)
 
@@ -108,10 +122,10 @@ class RecognitionNetwork():
             epoch_loss_total += losses.item()
 
             losses.backward()
-            if((i + 1) % accumulation_step == 0):
+            if (i + 1) % accumulation_step == 0:
                 opt.step()
                 opt.zero_grad()
-        
+
         return epoch_loss_total
 
     def eval_dataset(self, val_loader):
@@ -131,7 +145,6 @@ class RecognitionNetwork():
                 target_dict["labels"] = labels[b, ids].to(self.device)
                 img_list.append(img_tensor)
                 target_list.append(target_dict)
-
 
             # fig, ax = plt.subplots()
             # ax.imshow(img_list[0].cpu().numpy().transpose((1, 2, 0)))
@@ -168,7 +181,7 @@ class RecognitionNetwork():
 
             prediction = self.predict(img_list)
 
-            #DEBUG INFO
+            # DEBUG INFO
             # fig, ax = plt.subplots()
             # gt_boxes = target_list[0]["boxes"].cpu().detach().numpy()
             # gt_labels = target_list[0]["labels"].cpu().detach().numpy()
@@ -176,87 +189,87 @@ class RecognitionNetwork():
             # pred_labels = prediction[0]["labels"].cpu().detach().numpy()
 
             # ax.imshow(img_list[0].cpu().detach().numpy().transpose((1,2,0)))
-            # for b in range(gt_boxes.shape[0]):    
+            # for b in range(gt_boxes.shape[0]):
             #     color = 'b'
             #     rect = patches.Rectangle((gt_boxes[b, 0], gt_boxes[b, 1]), gt_boxes[b, 2]-gt_boxes[b, 0], gt_boxes[b, 3]-gt_boxes[b,1], linewidth=2, edgecolor=color, facecolor='none')
             #     ax.add_patch(rect)
 
-            # for b in range(pred_boxes.shape[0]):    
+            # for b in range(pred_boxes.shape[0]):
             #     color = 'r' if int(pred_labels[b])==1 else 'g'
             #     rect = patches.Rectangle((pred_boxes[b, 0], pred_boxes[b, 1]), pred_boxes[b, 2]-pred_boxes[b, 0], pred_boxes[b, 3]-pred_boxes[b,1], linewidth=2, edgecolor=color, facecolor='none')
             #     ax.add_patch(rect)
             # plt.show()
 
-            #perform box matching for each class
+            # perform box matching for each class
             gt_boxes = target_list[0]["boxes"].cpu().detach().numpy()
             gt_labels = target_list[0]["labels"].cpu().detach().numpy()
             pred_boxes = prediction[0]["boxes"].cpu().detach().numpy()
             pred_labels = prediction[0]["labels"].cpu().detach().numpy()
 
-            # do matching on all classes together to include mislabeling in error metrics 
-            gt_boxes = gt_boxes[gt_labels>0]
-            gt_labels = gt_labels[gt_labels>0]
-            pred_boxes = pred_boxes[pred_labels>0]
-            pred_labels = pred_labels[pred_labels>0]
+            # do matching on all classes together to include mislabeling in error metrics
+            gt_boxes = gt_boxes[gt_labels > 0]
+            gt_labels = gt_labels[gt_labels > 0]
+            pred_boxes = pred_boxes[pred_labels > 0]
+            pred_labels = pred_labels[pred_labels > 0]
 
-            iou_matrix = np.zeros((len(pred_labels),len(gt_labels)))
+            iou_matrix = np.zeros((len(pred_labels), len(gt_labels)))
 
-            #calculate iou for predicted box vs each gt box
+            # calculate iou for predicted box vs each gt box
             for p in range(len(pred_labels)):
                 for g in range(len(gt_labels)):
-                    gx0,gy0,gx1,gy1 = gt_boxes[g,:].astype(np.int32)
-                    px0,py0,px1,py1 = pred_boxes[p,:].astype(np.int32)
+                    gx0, gy0, gx1, gy1 = gt_boxes[g, :].astype(np.int32)
+                    px0, py0, px1, py1 = pred_boxes[p, :].astype(np.int32)
 
-                    #do mask comparison
-                    mask = np.zeros((self.w,self.h)).astype(np.int32)
-                    mask[gx0:gx1,gy0:gy1] += 1
-                    mask[px0:px1,py0:py1] += 1
+                    # do mask comparison
+                    mask = np.zeros((self.w, self.h)).astype(np.int32)
+                    mask[gx0:gx1, gy0:gy1] += 1
+                    mask[px0:px1, py0:py1] += 1
 
-                    intersection = np.count_nonzero(mask[mask==2])
-                    union = np.count_nonzero(mask[mask>0])
+                    intersection = np.count_nonzero(mask[mask == 2])
+                    union = np.count_nonzero(mask[mask > 0])
 
-                    iou_matrix[p,g] = intersection / float(union)
+                    iou_matrix[p, g] = intersection / float(union)
 
-            #greedily find the max IOU to match boxes
+            # greedily find the max IOU to match boxes
             pairs = []
 
             gt_ids = list(range(len(gt_labels)))
             pred_ids = list(range(len(pred_labels)))
-            
-            if(len(pred_labels) > 0 and len(gt_labels) > 0):
+
+            if len(pred_labels) > 0 and len(gt_labels) > 0:
                 for p in range(len(pred_labels)):
-                    if(np.max(iou_matrix) < 1e-9):
+                    if np.max(iou_matrix) < 1e-9:
                         break
 
                     id_max = np.unravel_index(iou_matrix.argmax(), iou_matrix.shape)
                     pairs.append(id_max)
                     pred_ids.remove(id_max[0])
                     gt_ids.remove(id_max[1])
-                    #zero out the row and column selected
-                    iou_matrix[id_max[0],:] = -1
-                    iou_matrix[:,id_max[1]] = -1
+                    # zero out the row and column selected
+                    iou_matrix[id_max[0], :] = -1
+                    iou_matrix[:, id_max[1]] = -1
 
-            #handle any remaining predictions or gt boxes with no pairs
+            # handle any remaining predictions or gt boxes with no pairs
             for p in pred_ids:
-                pairs.append((p,-1))
+                pairs.append((p, -1))
             for g in gt_ids:
-                pairs.append((-1,g))      
+                pairs.append((-1, g))
 
-            for p,pair in enumerate(pairs):
+            for p, pair in enumerate(pairs):
                 iou = 0
                 p_id = pair[0]
                 g_id = pair[1]
-                if(p_id >= 0 and g_id >= 0):
-                    mask = np.zeros((self.w,self.h)).astype(np.int32)
-                    mask[gx0:gx1,gy0:gy1] += 1
-                    mask[px0:px1,py0:py1] += 1
+                if p_id >= 0 and g_id >= 0:
+                    mask = np.zeros((self.w, self.h)).astype(np.int32)
+                    mask[gx0:gx1, gy0:gy1] += 1
+                    mask[px0:px1, py0:py1] += 1
 
-                    intersection = np.count_nonzero(mask[mask==2])
-                    union = np.count_nonzero(mask[mask>0])
+                    intersection = np.count_nonzero(mask[mask == 2])
+                    union = np.count_nonzero(mask[mask > 0])
                     iou = intersection / union
                 iou_list.append(iou)
 
-            if(i >= samples):
+            if i >= samples:
                 break
                 # print("IOU:",iou_list)
                 # return np.mean(iou_list)
@@ -264,9 +277,20 @@ class RecognitionNetwork():
         # print("IOU:",iou_list)
         return np.mean(iou_list)
 
-    def train(self, train_loader, val_loader, epochs=1, lr=.001, use_scheduler=False, accumulation_step=4, scheduler_step=1, output_path="output", save_interval=10):
+    def train(
+        self,
+        train_loader,
+        val_loader,
+        epochs=1,
+        lr=0.001,
+        use_scheduler=False,
+        accumulation_step=4,
+        scheduler_step=1,
+        output_path="output",
+        save_interval=10,
+    ):
         self.model.train()
-        if(not os.path.exists(output_path)):
+        if not os.path.exists(output_path):
             os.mkdir(output_path)
 
         params = [p for p in self.model.parameters() if p.requires_grad]
@@ -276,13 +300,15 @@ class RecognitionNetwork():
         validation_samples = 2000
         output_samples = 100
 
-        if(val_loader==None):
+        if val_loader == None:
             val_loader = train_loader
 
         for e in range(epochs):
             self.model.train()
-            train_loss_total = self.train_single_epoch(train_loader, opt, accumulation_step)
-            if(use_scheduler and (e+1) % scheduler_step == 0):
+            train_loss_total = self.train_single_epoch(
+                train_loader, opt, accumulation_step
+            )
+            if use_scheduler and (e + 1) % scheduler_step == 0:
                 scheduler.step()
 
             val_loss_total = self.eval_dataset(val_loader)
@@ -290,12 +316,18 @@ class RecognitionNetwork():
             train_iou = self.evaluate_iou(train_loader, len(val_loader))
             val_iou = self.evaluate_iou(val_loader, len(val_loader))
 
-
-            print("Epoch [{}/{}], Lr [{:.6f}], Train Loss [{:.4f}], Val loss [{:.4f}, Train IOU [{:.4f}], Val IOU [{:.4f}]".format(e+1, epochs, scheduler.get_last_lr()[0],
-                                                                                     train_loss_total / len(train_loader),
-                                                                                     val_loss_total / len(val_loader),
-                                                                                     train_iou, val_iou))
-            if((e+1) % save_interval == 0):
+            print(
+                "Epoch [{}/{}], Lr [{:.6f}], Train Loss [{:.4f}], Val loss [{:.4f}, Train IOU [{:.4f}], Val IOU [{:.4f}]".format(
+                    e + 1,
+                    epochs,
+                    scheduler.get_last_lr()[0],
+                    train_loss_total / len(train_loader),
+                    val_loss_total / len(val_loader),
+                    train_iou,
+                    val_iou,
+                )
+            )
+            if (e + 1) % save_interval == 0:
                 self.save(output_path)
             # # get an example prediction and show it after each epoch
             # if((e+1) % display_interval == 0):
@@ -356,25 +388,23 @@ class RecognitionNetwork():
             #             break
 
     def load(self, path):
-        self.model.load_state_dict(torch.load(path,map_location=self.device))
+        self.model.load_state_dict(torch.load(path, map_location=self.device))
         print("Loaded pretrained model at {}".format(path))
 
-    def save(self,output_dir="output",model_name="model"):
-        if(not os.path.exists(output_dir)):
+    def save(self, output_dir="output", model_name="model"):
+        if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        torch.save(self.model.state_dict(), os.path.join(output_dir,model_name))
+        torch.save(self.model.state_dict(), os.path.join(output_dir, model_name))
 
-    def export(self,output_path="output",name="model.onnx",w=1280,h=720):
+    def export(self, output_path="output", name="model.onnx", w=1280, h=720):
         print("Starting export to onnx")
         # if(not os.path.exists(output_path)):
         #     os.mkdir(output_path)
 
-
         # # print(self.model)
         # # print(type(self.model))
 
-        
         # self.model.cpu()
         # self.model.train()
 
@@ -385,10 +415,7 @@ class RecognitionNetwork():
         # self.eval()
         # self.model.cpu()
 
-
-
         # tmp_model = self.model
-
 
         # # print(tmp_model.transform)
 
@@ -399,7 +426,6 @@ class RecognitionNetwork():
         # tmp_model.transform = DummyTransform(720,1280,(0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         # p = tmp_model(x)
         # print(tmp_model)
-
 
         # # Export the model
         # torch.onnx.export(tmp_model,               # model being run

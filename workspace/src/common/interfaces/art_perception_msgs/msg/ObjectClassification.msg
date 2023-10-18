@@ -8,12 +8,12 @@ float32 confidence
 
 # The classification types
 # See ART_OBJECT_CLASSIFICATION below
-uint8 classification 
+uint8 classification
 
 # Further custom classification types to be used to further define an object
 # 	Example use case is a traffic light, which can be defined as green, red, etc.
 # 	This variable should then be set to a different enum, as desired
-uint8 custom_classification 
+uint8 custom_classification
 
 # THe possible classification types
 uint8 ART_OBJECT_CLASSIFICATION_UNKNOWN=0
