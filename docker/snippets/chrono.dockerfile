@@ -17,6 +17,8 @@ RUN apt-get update && \
         libxxf86vm-dev \
         freeglut3-dev \
         libglu1-mesa-dev \
+        libglfw3-dev \
+        libglew-dev \
         wget \
         xorg-dev && \
         apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
@@ -34,6 +36,9 @@ RUN wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | tee /etc/
     wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list http://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list && \
     apt-get update && apt-get install vulkan-sdk -y && \
     apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+# Temporarily change to the user so that file permissions are okay
+USER ${USERNAME}
 
 # chrono_ros_interfaces
 ARG ROS_WORKSPACE_DIR="${USERHOME}/ros_workspace"
@@ -82,7 +87,10 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
         -Dconsole_bridge_DIR=/opt/urdf/lib/console_bridge/cmake \
         -Dtinyxml2_DIR=/opt/urdf/CMake \
         && \
-    ninja && ninja install
+    ninja && sudo ninja install
+
+# Switch back out of the USER back to root
+USER root
 
 # Update shell config
 RUN echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \
