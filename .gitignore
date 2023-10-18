@@ -26,6 +26,9 @@ _version.py
 .dockerignore
 .copyright.tmpl
 
+# Environment files
+.env
+
 # Ignore all bags
 *.db3
 *.bag
@@ -36,4 +39,3 @@ ATK-*
 etc.hosts
 resolv.conf
 *.sif
-.atk-singularity.env
