@@ -44,15 +44,11 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(
-        ld, "cone_detector/input/image", "/sensing/front_facing_camera/raw"
-    )
+    AddLaunchArgument(ld, "cone_detector/input/image", "/sensing/front_facing_camera/raw")
     AddLaunchArgument(ld, "cone_detector/input/vehicle_state", "/vehicle/state")
     AddLaunchArgument(ld, "cone_detector/output/objects", "/perception/objects")
 
-    node = AddLaunchArgument(
-        ld, "node", "yolov5_detector", choices=("yolov5_detector", "object_recognition")
-    )
+    node = AddLaunchArgument(ld, "node", "yolov5_detector", choices=("yolov5_detector", "object_recognition"))
     AddLaunchArgument(ld, "model", "data/real.onnx")
     AddLaunchArgument(ld, "camera_calibration_file", "data/calibration.json")
     AddLaunchArgument(ld, "vis", "False")
@@ -67,19 +63,16 @@ def generate_launch_description():
         name=node,
         remappings=[
             ("~/input/image", GetLaunchArgument("cone_detector/input/image")),
-            (
-                "~/input/vehicle_state",
-                GetLaunchArgument("cone_detector/input/vehicle_state"),
-            ),
-            ("~/output/objects", GetLaunchArgument("cone_detector/output/objects")),
+            ("~/input/vehicle_state", GetLaunchArgument("cone_detector/input/vehicle_state")),
+            ("~/output/objects", GetLaunchArgument("cone_detector/output/objects"))
         ],
         parameters=[
-            {"model": GetLaunchArgument("model")},
-            {"camera_calibration_file": GetLaunchArgument("camera_calibration_file")},
-            {"vis": GetLaunchArgument("vis")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")},
-        ],
+             {"model": GetLaunchArgument("model")},
+             {"camera_calibration_file": GetLaunchArgument("camera_calibration_file")},
+             {"vis": GetLaunchArgument("vis")},
+             {"use_sim_time": GetLaunchArgument("use_sim_time")}
+        ]
     )
     ld.add_action(node)
 
-    return ld
+    return ld 

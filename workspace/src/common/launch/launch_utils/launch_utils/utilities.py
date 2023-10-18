@@ -2,8 +2,7 @@ from launch import LaunchDescription
 
 
 def AddLaunchArgument(
-    ld: LaunchDescription, arg: "Any", default: "Any", **kwargs
-) -> "LaunchConfiguration":
+        ld: LaunchDescription, arg: "Any", default: "Any", **kwargs) -> "LaunchConfiguration":
     """Helper method to add a launch argument to a LaunchDescription"""
     from launch.actions import DeclareLaunchArgument
 
@@ -11,9 +10,7 @@ def AddLaunchArgument(
     return GetLaunchArgument(arg)
 
 
-def SetLaunchArgument(
-    ld: LaunchDescription, arg: "Any", value: "Any", **kwargs
-) -> None:
+def SetLaunchArgument(ld: LaunchDescription, arg: "Any", value: "Any",  **kwargs) -> None:
     """Helper method to set a launch argument of a LaunchDescription"""
     from launch.actions import SetLaunchConfiguration
 
@@ -29,9 +26,9 @@ def GetLaunchArgument(name: str, **kwargs) -> "LaunchConfiguration":
 
 
 def GetPackageSharePath(package: str, *args, **kwargs) -> "pathlib.Path":
-    """Wrapper around ament_index_python.packages.get_package_share_directory that
+    """Wrapper around ament_index_python.packages.get_package_share_directory that 
     returns a pathlib.Path.
-
+    
     Args:
         package (str): the package passed to ``get_package_share_directory``.
     """
@@ -41,7 +38,7 @@ def GetPackageSharePath(package: str, *args, **kwargs) -> "pathlib.Path":
     return Path(get_package_share_directory(package), *args, **kwargs)
 
 
-def GetPackageSourceDirectory(package: str, base: str = None) -> "pathlib.Path":
+def GetPackageSourceDirectory(package: str, base: str = None) -> 'pathlib.Path':
     """Helper method to get the package **source** directory.
 
     Usually it's recommended to use ament_index_python.packages.get_package_share_directory,
@@ -67,7 +64,7 @@ def GetPackageSourceDirectory(package: str, base: str = None) -> "pathlib.Path":
         base = os.environ.get("ROS_WORKSPACE_SRC", os.getcwd())
 
     for root, dirs, files in os.walk(base):
-        if package == os.path.basename(root) and "package.xml" in files:
+        if package == os.path.basename(root) and 'package.xml' in files:
             return Path(root)
 
     return None
@@ -85,7 +82,7 @@ def AddComposableNode(
     load_composable_nodes_kwargs: dict = {},
     node_kwargs: dict = {},
     add_as_regular_node: bool = True,
-    **kwargs,
+    **kwargs
 ) -> None:
     """
     Conditionally add a node dependent on whether the LaunchConfiguration ``container`` is
@@ -115,7 +112,8 @@ def AddComposableNode(
         )
     ]
     load_composable_nodes = LoadComposableNodes(
-        condition=MultipleIfConditions([composable_condition, *composable_conditions]),
+        condition=MultipleIfConditions(
+            [composable_condition, *composable_conditions]),
         composable_node_descriptions=composable_nodes,
         target_container=container,
         **load_composable_nodes_kwargs,
@@ -134,9 +132,7 @@ def AddComposableNode(
         ld.add_action(node)
 
 
-def IncludeLaunchDescriptionWithCondition(
-    ld: LaunchDescription, share: str, package: str, *, default: str = "False", **kwargs
-):
+def IncludeLaunchDescriptionWithCondition(ld: LaunchDescription, share: str, package: str, *, default: str = "False", **kwargs):
     """
     Conditionally include launch file.
 
@@ -161,20 +157,16 @@ def IncludeLaunchDescriptionWithCondition(
 
     launch_argument = f"disable_{package}"
     disable_package = AddLaunchArgument(
-        ld,
-        launch_argument,
-        default,
-        description=f"Disable the '{package}.launch.py' file from being included.",
-    )
+        ld, launch_argument, default, description=f"Disable the '{package}.launch.py' file from being included.")
 
     package = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                PathJoinSubstitution(
-                    [FindPackageShare(share), "launch", f"{package}.launch.py"]
-                )
-            ]
-        ),
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare(share),
+                "launch",
+                f"{package}.launch.py"
+            ])
+        ]),
         condition=UnlessCondition(disable_package),
     )
     ld.add_action(package)

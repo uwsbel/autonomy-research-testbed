@@ -59,3 +59,5 @@ RUN echo "\n\
     autorestart=true" > /opt/supervisord.conf
 
 CMD ["set -ex; exec supervisord -c /opt/supervisord.conf"]
+
+

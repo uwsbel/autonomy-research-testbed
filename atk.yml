@@ -27,12 +27,12 @@ x-optionals:
 name: art
 services:
   common:
-    env_file:
+    env_file: 
       - atk.env
     build:
       context: "./"
       network: "host"
-      args:
+      args: 
         PROJECT: "${COMPOSE_PROJECT_NAME}"
         ROS_DISTRO: "${ROS_DISTRO}"
         USER_UID: "${USER_UID:-1000}"

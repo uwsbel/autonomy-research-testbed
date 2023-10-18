@@ -18,3 +18,4 @@ geometry_msgs/Pose pose
 
 # The twist (derivative of pose) of the detected Object
 geometry_msgs/Twist twist
+

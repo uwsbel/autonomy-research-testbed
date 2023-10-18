@@ -1,6 +1,6 @@
 # Autonomy Research Testbed (ART)
 
-ART is meant to be a testbed for automated driving algorithm development and is to be used as a mechanism for validating the simulation platform [Chrono](https://projectchrono.org). The ART platform is under activate development by the [Simulation Based Engineering Laboratory](https://sbel.wisc.edu) at the [University of Wisconsin-Madison](https://wisc.edu).
+ART is meant to be a testbed for automated driving algorithm development and is to be used as a mechanism for validating the simulation platform [Chrono](https://projectchrono.org). The ART platform is under activate development by the [Simulation Based Engineering Laboratory](https://sbel.wisc.edu) at the [University of Wisconsin-Madison](https://wisc.edu). 
 
 ## Background
 

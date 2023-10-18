@@ -36,7 +36,6 @@ from launch_ros.actions import Node
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument
 
-
 def generate_launch_description():
     ld = LaunchDescription()
 
@@ -56,23 +55,20 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package="path_planning",
-        executable="path_planning",
-        name="path_planning",
-        remappings=[
-            ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
-            (
-                "~/input/vehicle_state",
-                GetLaunchArgument("art_planning/input/vehicle_state"),
-            ),
-            ("~/output/path", GetLaunchArgument("art_planning/output/path")),
-        ],
-        parameters=[
-            {"vis": GetLaunchArgument("vis")},
-            {"lookahead": GetLaunchArgument("lookahead")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")},
-        ],
-    )
+            package='path_planning',
+            executable='path_planning',
+            name='path_planning',
+            remappings=[
+                ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
+                ("~/input/vehicle_state", GetLaunchArgument("art_planning/input/vehicle_state")),
+                ("~/output/path", GetLaunchArgument("art_planning/output/path"))
+            ],
+            parameters=[
+                {"vis": GetLaunchArgument("vis")},
+                {"lookahead": GetLaunchArgument("lookahead")},
+                {"use_sim_time": GetLaunchArgument("use_sim_time")}
+            ]
+        )
     ld.add_action(node)
 
-    return ld
+    return ld 

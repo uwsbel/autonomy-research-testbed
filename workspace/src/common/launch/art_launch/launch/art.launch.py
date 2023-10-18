@@ -36,13 +36,7 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import ComposableNodeContainer
 
 # internal imports
-from launch_utils import (
-    IncludeLaunchDescriptionWithCondition,
-    GetLaunchArgument,
-    AddLaunchArgument,
-    SetLaunchArgument,
-)
-
+from launch_utils import IncludeLaunchDescriptionWithCondition, GetLaunchArgument, AddLaunchArgument, SetLaunchArgument
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -53,31 +47,14 @@ def generate_launch_description():
 
     AddLaunchArgument(ld, "use_sim", "False")
     AddLaunchArgument(ld, "use_sim_time", "False")
-    SetLaunchArgument(
-        ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
-    )
+    SetLaunchArgument(ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
+   
+    AddLaunchArgument(ld, "container", "") 
+    container_name = AddLaunchArgument(ld, "container_name", "art_container") 
 
-    AddLaunchArgument(ld, "container", "")
-    container_name = AddLaunchArgument(ld, "container_name", "art_container")
-
-    SetLaunchArgument(
-        ld,
-        "disable_art_sensing",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_art_vehicle",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_art_simulation",
-        "True",
-        condition=UnlessCondition(GetLaunchArgument("use_sim")),
-    )
+    SetLaunchArgument(ld, "disable_art_sensing", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
+    SetLaunchArgument(ld, "disable_art_vehicle", "True", condition=IfCondition(GetLaunchArgument("use_sim")))
+    SetLaunchArgument(ld, "disable_art_simulation", "True", condition=UnlessCondition(GetLaunchArgument("use_sim")))
 
     # -------------
     # Composability
@@ -90,7 +67,9 @@ def generate_launch_description():
     # If a container name is not provided,
     # set the name of the container launched above for image_proc nodes
     set_container_name = SetLaunchConfiguration(
-        condition=use_composability, name="container", value=container_name
+        condition=use_composability,
+        name='container',
+        value=container_name
     )
     ld.add_action(set_container_name)
 
@@ -110,13 +89,11 @@ def generate_launch_description():
     # ---------------
 
     IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
-    IncludeLaunchDescriptionWithCondition(
-        ld, "art_localization_launch", "art_localization"
-    )
+    IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "art_localization")
     IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
     IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
     IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
-    return ld
+    return ld 
