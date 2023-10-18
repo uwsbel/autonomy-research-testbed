@@ -27,7 +27,7 @@ x-optionals:
 name: art
 services:
   common:
-    env_file: 
+    env_file:
       - atk.env
     build:
       context: "./"

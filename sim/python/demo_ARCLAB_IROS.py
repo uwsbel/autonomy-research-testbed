@@ -597,7 +597,7 @@ def main():
 
 # The path to the Chrono data directory containing various assets (meshes, textures, data files)
 # is automatically set, relative to the default location of this demo.
-# If running from a different directory, you must change the path to the data directory with: 
+# If running from a different directory, you must change the path to the data directory with:
 data_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "")
 chrono.SetChronoDataPath(data_folder)
 veh.SetDataPath(chrono.GetChronoDataPath() + "vehicle/")
