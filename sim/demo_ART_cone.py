@@ -1,12 +1,15 @@
-# Local Imports
-from ART1 import ART1
+from pathlib import Path
 
-# Chrono Imports
 import pychrono as chrono
 import pychrono.vehicle as veh
-import pychrono.irrlicht as irr
 import pychrono.sensor as sens
 import pychrono.ros as ros
+
+from ART1 import ART1
+
+DATA_DIR = Path(__file__).resolve().parent / "data/"
+chrono.SetChronoDataPath(f"{str(DATA_DIR)}/")
+veh.SetDataPath(f"{str(DATA_DIR / 'vehicle')}/")
 
 # =============================================================================
 
@@ -66,7 +69,7 @@ def LabelAssets(assets, class_id):
 # =============================================================================
 
 
-def main(args):
+def main():
     print("Running demo_ART_cone.py...")
 
     # Create the vehicle
@@ -82,23 +85,24 @@ def main(args):
     patch_mat.SetRestitution(0.01)
     patch = terrain.AddPatch(
         patch_mat,
-        chrono.ChVectorD(0, 0, 0),
-        chrono.ChVectorD(0, 0, 1),
+        chrono.CSYSNORM,
         7.0,
         7.0,
     )
-    patch.SetTexture(veh.GetDataFile("vehicle/terrain/textures/tile4.jpg"), 200, 200)
+    patch.SetTexture(veh.GetDataFile("terrain/textures/tile4.jpg"), 200, 200)
     patch.SetColor(chrono.ChColor(0.8, 0.8, 0.5))
 
     terrain.Initialize()
 
     # Create the sensor manager
     sensor_manager = sens.ChSensorManager(vehicle.GetSystem())
-    sensor_manager.scene.AddPointLight(chrono.ChVectorF(0, 0, 100), chrono.ChVectorF(1, 1, 1), 5000)
+    sensor_manager.scene.AddPointLight(
+        chrono.ChVectorF(0, 0, 100), chrono.ChColor(1, 1, 1), 5000
+    )
 
     b = sens.Background()
-    b.color_horizon = chrono.ChVectorF(.6, .7, .8)
-    b.color_zenith = chrono.ChVectorF(.4, .5, .6)
+    b.color_horizon = chrono.ChVectorF(0.6, 0.7, 0.8)
+    b.color_zenith = chrono.ChVectorF(0.4, 0.5, 0.6)
     b.mode = sens.BackgroundMode_GRADIENT
     sensor_manager.scene.SetBackground(b)
 
@@ -108,12 +112,34 @@ def main(args):
     # Create the ROS manager
     ros_manager = ros.ChROSManager()
     ros_manager.RegisterHandler(ros.ChROSClockHandler())
-    ros_manager.RegisterHandler(ros.ChROSDriverInputsHandler(vehicle.driver, "~/input/driver_inputs"))
-    ros_manager.RegisterHandler(ros.ChROSCameraHandler(vehicle.cam.GetUpdateRate(), vehicle.cam, "~/output/camera/data/image"))
-    ros_manager.RegisterHandler(ros.ChROSGPSHandler(vehicle.gps.GetUpdateRate(), vehicle.gps, "~/output/gps/data"))
-    ros_manager.RegisterHandler(ros.ChROSAccelerometerHandler(vehicle.acc.GetUpdateRate(), vehicle.acc, "~/output/acc/data"))
-    ros_manager.RegisterHandler(ros.ChROSGyroscopeHandler(vehicle.gyro.GetUpdateRate(), vehicle.gyro, "~/output/gyro/data"))
-    ros_manager.RegisterHandler(ros.ChROSMagnetometerHandler(vehicle.mag.GetUpdateRate(), vehicle.mag, "~/output/mag/data"))
+    ros_manager.RegisterHandler(
+        ros.ChROSDriverInputsHandler(0, vehicle.driver, "~/input/driver_inputs")
+    )
+    ros_manager.RegisterHandler(
+        ros.ChROSCameraHandler(
+            vehicle.cam.GetUpdateRate(), vehicle.cam, "~/output/camera/data/image"
+        )
+    )
+    ros_manager.RegisterHandler(
+        ros.ChROSGPSHandler(
+            vehicle.gps.GetUpdateRate(), vehicle.gps, "~/output/gps/data"
+        )
+    )
+    ros_manager.RegisterHandler(
+        ros.ChROSAccelerometerHandler(
+            vehicle.acc.GetUpdateRate(), vehicle.acc, "~/output/acc/data"
+        )
+    )
+    ros_manager.RegisterHandler(
+        ros.ChROSGyroscopeHandler(
+            vehicle.gyro.GetUpdateRate(), vehicle.gyro, "~/output/gyro/data"
+        )
+    )
+    ros_manager.RegisterHandler(
+        ros.ChROSMagnetometerHandler(
+            vehicle.mag.GetUpdateRate(), vehicle.mag, "~/output/mag/data"
+        )
+    )
     ros_manager.Initialize()
 
     # Simulation Loop
@@ -121,6 +147,7 @@ def main(args):
     time_step = 1e-3
     time_end = 100
 
+    realtime_timer = chrono.ChRealtimeStepTimer()
     while time < time_end:
         time = vehicle.GetSystem().GetChTime()
 
@@ -142,3 +169,10 @@ def main(args):
         # Update the ROS manager
         if not ros_manager.Update(time, time_step):
             break
+
+        # Spin in place for real time to catch up
+        realtime_timer.Spin(time_step)
+
+
+if __name__ == "__main__":
+    main()

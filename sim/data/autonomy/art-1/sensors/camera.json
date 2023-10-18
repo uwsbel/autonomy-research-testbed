@@ -9,7 +9,7 @@
     "Height": 720,
     "Horizontal Field of View": 1.4,
     "Exposure Time": 0,
-    "Supersample Factor": 2,
+    "Supersample Factor": 1,
     "Lens Model": "RADIAL"
   },
 
@@ -17,6 +17,11 @@
   [
     {
       "Filter": "ChFilterRGBA8Access"
+    },
+    {
+      "Filter": "ChFilterVisualize",
+      "Width": 640,
+      "Height": 360
     }
   ]
 }
