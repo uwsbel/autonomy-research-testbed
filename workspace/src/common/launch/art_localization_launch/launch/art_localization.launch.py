@@ -47,38 +47,72 @@ def generate_launch_description():
     # ----------------
 
     AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
-    AddLaunchArgument(ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data")
+    AddLaunchArgument(
+        ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data"
+    )
     AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
-    AddLaunchArgument(ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data")
-    AddLaunchArgument(ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs")
+    AddLaunchArgument(
+        ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data"
+    )
+    AddLaunchArgument(
+        ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs"
+    )
     AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
-    AddLaunchArgument(ld, "art_localization/output/filtered_state", "/vehicle/filtered_state")
+    AddLaunchArgument(
+        ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
+    )
 
-    AddLaunchArgument(ld, "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value, choices=[o.value for o in EstimationAlgorithmOption.__members__.values()])
+    AddLaunchArgument(
+        ld,
+        "estimation_alg",
+        EstimationAlgorithmOption.GROUND_TRUTH.value,
+        choices=[o.value for o in EstimationAlgorithmOption.__members__.values()],
+    )
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package='localization_py',
-        executable='state_estimation',
-        name='state_estimation',
+        package="localization_py",
+        executable="state_estimation",
+        name="state_estimation",
         remappings=[
-                ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
-                ("~/input/magnetometer", GetLaunchArgument("art_localization/input/magnetometer")),
-                ("~/input/gyroscope", GetLaunchArgument("art_localization/input/gyroscope")),
-                ("~/input/accelerometer", GetLaunchArgument("art_localization/input/accelerometer")),
-                ("~/input/vehicle_inputs", GetLaunchArgument("art_localization/input/vehicle_inputs")),
-                ("~/input/ground_truth", GetLaunchArgument("art_localization/input/ground_truth")),
-                ("~/output/filtered_state", GetLaunchArgument("art_localization/output/filtered_state")),
+            ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
+            (
+                "~/input/magnetometer",
+                GetLaunchArgument("art_localization/input/magnetometer"),
+            ),
+            (
+                "~/input/gyroscope",
+                GetLaunchArgument("art_localization/input/gyroscope"),
+            ),
+            (
+                "~/input/accelerometer",
+                GetLaunchArgument("art_localization/input/accelerometer"),
+            ),
+            (
+                "~/input/vehicle_inputs",
+                GetLaunchArgument("art_localization/input/vehicle_inputs"),
+            ),
+            (
+                "~/input/ground_truth",
+                GetLaunchArgument("art_localization/input/ground_truth"),
+            ),
+            (
+                "~/output/filtered_state",
+                GetLaunchArgument("art_localization/output/filtered_state"),
+            ),
         ],
-        parameters=[GetPackageSharePath("art_localization_launch", "config", "4DOF_dynamics.yml"),
+        parameters=[
+            GetPackageSharePath(
+                "art_localization_launch", "config", "4DOF_dynamics.yml"
+            ),
             GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
-            {"estimation_alg": GetLaunchArgument("estimation_alg")}
-        ]
+            {"estimation_alg": GetLaunchArgument("estimation_alg")},
+        ],
     )
     ld.add_action(node)
 
-    return ld 
+    return ld

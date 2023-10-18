@@ -36,7 +36,12 @@ from pathlib import Path
 from launch import LaunchDescription
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument, AddComposableNode, GetPackageSharePath
+from launch_utils import (
+    AddLaunchArgument,
+    GetLaunchArgument,
+    AddComposableNode,
+    GetPackageSharePath,
+)
 
 
 def generate_launch_description():
@@ -53,18 +58,16 @@ def generate_launch_description():
     # -----
 
     AddComposableNode(
-       ld,
-       plugin="usb_cam::UsbCamNode",
-       package="usb_cam",
-       executable="usb_cam_node_exe",
-       name="usb_cam",
-       parameters=[
-         GetPackageSharePath("art_sensing_launch", "config", "usb_cam.params.yaml"),
-         {"use_sim_time": GetLaunchArgument("use_sim_time")}
-      ],
-       remappings=[
-        ("~/output/image_raw", GetLaunchArgument("usb_cam/output/image"))
-       ]
+        ld,
+        plugin="usb_cam::UsbCamNode",
+        package="usb_cam",
+        executable="usb_cam_node_exe",
+        name="usb_cam",
+        parameters=[
+            GetPackageSharePath("art_sensing_launch", "config", "usb_cam.params.yaml"),
+            {"use_sim_time": GetLaunchArgument("use_sim_time")},
+        ],
+        remappings=[("~/output/image_raw", GetLaunchArgument("usb_cam/output/image"))],
     )
 
     return ld

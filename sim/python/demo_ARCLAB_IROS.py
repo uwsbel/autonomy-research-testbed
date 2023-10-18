@@ -38,7 +38,8 @@ import pychrono.vehicle as veh
 import pychrono.irrlicht as irr
 import pychrono.sensor as sens
 
-#// =============================================================================
+# // =============================================================================
+
 
 class ChSystem_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
     def __init__(self, id: str, system: chrono.ChSystem):
@@ -48,6 +49,7 @@ class ChSystem_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
 
     def Serialize(self, writer):
         writer.Key("time") << self.system.GetChTime()
+
 
 class ChCameraSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
     def __init__(self, id: str, cam: sens.ChCameraSensor):
@@ -59,17 +61,22 @@ class ChCameraSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunc
         rgba8_buffer = self.cam.GetMostRecentRGBA8Buffer()
         if rgba8_buffer.HasData():
             rgba8_data = rgba8_buffer.GetRGBA8Data()
-            rgba8_data = np.ascontiguousarray(np.flipud(rgba8_data)) # Needs to be contigious
+            rgba8_data = np.ascontiguousarray(
+                np.flipud(rgba8_data)
+            )  # Needs to be contigious
             shape = rgba8_data.shape
             writer.Key("width") << shape[1]
-            writer.Key("height") << shape[0] 
+            writer.Key("height") << shape[0]
             writer.Key("size") << shape[2]
             writer.Key("encoding") << "rgba8"
-            writer.Key("image").PointerAsString(rgba8_data.ctypes.data, int(np.prod(shape)))
+            writer.Key("image").PointerAsString(
+                rgba8_data.ctypes.data, int(np.prod(shape))
+            )
 
     def HasData(self) -> bool:
         rgba8_buffer = self.cam.GetMostRecentRGBA8Buffer()
         return rgba8_buffer.HasData()
+
 
 class ChVehicle_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
     def __init__(self, id: str, vehicle: veh.ChVehicle):
@@ -87,7 +94,10 @@ class ChVehicle_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
         writer.Key("lin_acc") << body.GetPos_dtdt()
         writer.Key("ang_acc") << body.GetWacc_loc()
 
-class ChAccelerometerSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
+
+class ChAccelerometerSensor_DataGeneratorFunctor(
+    veh.ChExternalDriver_DataGeneratorFunctor
+):
     def __init__(self, id: str, acc: sens.ChAccelerometerSensor):
         super().__init__("ChAccelerometerSensor", id)
 
@@ -104,6 +114,7 @@ class ChAccelerometerSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGenera
     def HasData(self) -> bool:
         buffer = self.acc.GetMostRecentAccelBuffer()
         return buffer.HasData()
+
 
 class ChGyroscopeSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
     def __init__(self, id: str, gyro: sens.ChGyroscopeSensor):
@@ -123,7 +134,10 @@ class ChGyroscopeSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorF
         buffer = self.gyro.GetMostRecentGyroBuffer()
         return buffer.HasData()
 
-class ChMagnetometerSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
+
+class ChMagnetometerSensor_DataGeneratorFunctor(
+    veh.ChExternalDriver_DataGeneratorFunctor
+):
     def __init__(self, id: str, mag: sens.ChMagnetometerSensor):
         super().__init__("ChMagnetometerSensor", id)
 
@@ -140,6 +154,7 @@ class ChMagnetometerSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGenerat
     def HasData(self) -> bool:
         buffer = self.mag.GetMostRecentMagnetBuffer()
         return buffer.HasData()
+
 
 class ChGPSSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor):
     def __init__(self, id: str, gps: sens.ChGPSSensor):
@@ -159,13 +174,12 @@ class ChGPSSensor_DataGeneratorFunctor(veh.ChExternalDriver_DataGeneratorFunctor
         buffer = self.gps.GetMostRecentGPSBuffer()
         return buffer.HasData()
 
+
 class ChDriverInputs_DataParserFunctor(veh.ChExternalDriver_DataParserFunctor):
     def __init__(self, driver: veh.ChDriver):
         super().__init__("ChDriverInputs")
 
         self.driver = driver
-
-
 
     def Deserialize(self, reader):
         steering = reader.GetFloat()
@@ -177,19 +191,19 @@ class ChDriverInputs_DataParserFunctor(veh.ChExternalDriver_DataParserFunctor):
         self.driver.SetBraking(braking)
 
 
-#// =============================================================================
+# // =============================================================================
+
 
 def main():
-    
     def AddRandomCones(count, filename, class_id=1):
         mmesh = chrono.ChTriangleMeshConnected()
-        mmesh.SetLoadWavefrontMesh(filename, False, True)  
-        mmesh.SetTransform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33(1)) 
+        mmesh.SetLoadWavefrontMesh(filename, False, True)
+        mmesh.SetTransform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33(1))
         for i in range(count):
             # Generate a random position
-            x = (chrono.ChRandom() - .5) * cone_spread_x + cone_offset_x
-            y = (chrono.ChRandom() - .5) * cone_spread_y + cone_offset_y
-            z = terrain.GetHeight(chrono.ChVectorD(x, y, 1000)) # get the terrain z
+            x = (chrono.ChRandom() - 0.5) * cone_spread_x + cone_offset_x
+            y = (chrono.ChRandom() - 0.5) * cone_spread_y + cone_offset_y
+            z = terrain.GetHeight(chrono.ChVectorD(x, y, 1000))  # get the terrain z
             pos = chrono.ChVectorD(x, y, z)
 
             trimesh_shape = chrono.ChTriangleMeshShape()
@@ -207,7 +221,7 @@ def main():
             mesh_body.SetBodyFixed(True)
             vehicle.GetSystem().Add(mesh_body)
 
-            if (class_id == 1):
+            if class_id == 1:
                 red_cone_assets.append(trimesh_shape)
                 cones.append(mesh_body)
             else:
@@ -216,11 +230,15 @@ def main():
 
     def AddConesFromFile():
         green_cone_mesh = chrono.ChTriangleMeshConnected()
-        green_cone_mesh.LoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), False, True) 
+        green_cone_mesh.LoadWavefrontMesh(
+            chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), False, True
+        )
         green_cone_mesh.Transform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33D(1))
 
         red_cone_mesh = chrono.ChTriangleMeshConnected()
-        red_cone_mesh.LoadWavefrontMesh(chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), False, True)
+        red_cone_mesh.LoadWavefrontMesh(
+            chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), False, True
+        )
         red_cone_mesh.Transform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33D(1))
 
         with open(chrono.GetChronoDataFile(cone_path_file)) as cone_file:
@@ -228,7 +246,7 @@ def main():
                 line = cone_file.readline()
                 if not line:
                     break
-                id, color, x, y = map(float, line.split('\t')) 
+                id, color, x, y = map(float, line.split("\t"))
 
                 pos_x = x + cone_offset_x
                 pos_y = y + cone_offset_y
@@ -238,7 +256,7 @@ def main():
                 rot = chrono.ChQuaternionD(1, 0, 0, 0)
 
                 cone_shape = chrono.ChTriangleMeshShape()
-                if (color == 0):
+                if color == 0:
                     cone_shape.SetMesh(red_cone_mesh)
                     red_cone_assets.append(cone_shape)
                 else:
@@ -255,23 +273,20 @@ def main():
                 cones.append(cone_body)
                 vehicle.GetSystem().Add(cone_body)
 
-            
     def LabelConeAssets():
-            cone_id = 0
-            for cone in red_cone_assets:
-                cone_id += 1
-                for mat in cone.GetMaterials():
-                    mat.SetClassID(1)
-                    mat.SetInstanceID(cone_id)
+        cone_id = 0
+        for cone in red_cone_assets:
+            cone_id += 1
+            for mat in cone.GetMaterials():
+                mat.SetClassID(1)
+                mat.SetInstanceID(cone_id)
 
-
-            cone_id = 0
-            for cone in green_cone_assets:
-                cone_id += 1
-                for mat in cone.GetMaterials():
-                    mat.SetClassID(2)
-                    mat.SetInstanceID(cone_id)
-
+        cone_id = 0
+        for cone in green_cone_assets:
+            cone_id += 1
+            for mat in cone.GetMaterials():
+                mat.SetClassID(2)
+                mat.SetInstanceID(cone_id)
 
     # Create the RCCar vehicle, set parameters, and initialize
     vehicle = veh.RCCar()
@@ -282,7 +297,6 @@ def main():
     vehicle.SetInitPosition(chrono.ChCoordsysD(initLoc, initRot))
     vehicle.SetTireStepSize(tire_step_size)
     vehicle.Initialize()
-
 
     vehicle.SetChassisVisualizationType(chassis_vis_type)
     vehicle.SetSuspensionVisualizationType(suspension_vis_type)
@@ -295,10 +309,16 @@ def main():
 
     patch_mat = chrono.ChMaterialSurfaceNSC()
     patch_mat.SetFriction(0.9)
-    patch_mat.SetRestitution(0.01) #-----check if mu, cr, and y is set similar to minfo
+    patch_mat.SetRestitution(
+        0.01
+    )  # -----check if mu, cr, and y is set similar to minfo
 
     # not right need to introduce point cloud -- not sure how to access this using the package_share_directory
-    patch = terrain.AddPatch(patch_mat, chrono.CSYSNORM, chrono.GetChronoDataFile("autonomy-toolkit/me3038/me3038_stereo_10cm_2.obj"))  #chrono.ChCoordsysD(chrono.ChVectorD(0, 0, 0), chrono.ChQuaternionD(1, 0, 0, 0))
+    patch = terrain.AddPatch(
+        patch_mat,
+        chrono.CSYSNORM,
+        chrono.GetChronoDataFile("autonomy-toolkit/me3038/me3038_stereo_10cm_2.obj"),
+    )  # chrono.ChCoordsysD(chrono.ChVectorD(0, 0, 0), chrono.ChQuaternionD(1, 0, 0, 0))
     # patch = terrain.AddPatch(patch_mat, chrono.CSYSNORM, chrono.GetChronoDataFile("autonomy-toolkit/me3038/rm3038_pt_cloud_2.obj"))
     # patch.SetTexture(veh.GetDataFile("terrain/textures/tile4.jpg"), 200, 200)
     # patch.SetColor(chrono.ChColor(0.8, 0.8, 0.5))
@@ -306,7 +326,11 @@ def main():
 
     # add in ME3038 room mesh
     room_mmesh = chrono.ChTriangleMeshConnected()
-    room_mmesh.LoadWavefrontMesh(chrono.GetChronoDataFile("autonomy-toolkit/me3038/rm3038_pt_cloud.obj"), False, True)
+    room_mmesh.LoadWavefrontMesh(
+        chrono.GetChronoDataFile("autonomy-toolkit/me3038/rm3038_pt_cloud.obj"),
+        False,
+        True,
+    )
     room_mmesh.Transform(chrono.ChVectorD(0, 0, 0), chrono.ChMatrix33D(1))
 
     room_trimesh_shape = chrono.ChTriangleMeshShape()
@@ -322,25 +346,32 @@ def main():
 
     vehicle.GetSystem().Add(room_mesh_body)
 
-
     if cones_from_file:
         AddConesFromFile()
     else:
-        AddRandomCones(num_cones / 2, chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), 2)
-        AddRandomCones(num_cones / 2, chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), 1)
-
+        AddRandomCones(
+            num_cones / 2, chrono.GetChronoDataFile("sensor/cones/green_cone.obj"), 2
+        )
+        AddRandomCones(
+            num_cones / 2, chrono.GetChronoDataFile("sensor/cones/red_cone.obj"), 1
+        )
 
     # === create sensors ===
     manager = sens.ChSensorManager(vehicle.GetSystem())
-    manager.scene.AddPointLight(chrono.ChVectorF(0, 0, 100), chrono.ChColor(1, 1, 1), 5000)
-    
+    manager.scene.AddPointLight(
+        chrono.ChVectorF(0, 0, 100), chrono.ChColor(1, 1, 1), 5000
+    )
+
     b = sens.Background()
-    b.color_horizon = chrono.ChVectorF(.6, .7, .8)
-    b.color_zenith = chrono.ChVectorF(.4, .5, .6)
+    b.color_horizon = chrono.ChVectorF(0.6, 0.7, 0.8)
+    b.color_zenith = chrono.ChVectorF(0.4, 0.5, 0.6)
     b.mode = sens.BackgroundMode_GRADIENT
     manager.scene.SetBackground(b)
 
-    camera_pose = chrono.ChFrameD(chrono.ChVectorD(0.204, 0, 0.10018), chrono.Q_from_AngAxis(.1, chrono.ChVectorD(0, 1, 0)))
+    camera_pose = chrono.ChFrameD(
+        chrono.ChVectorD(0.204, 0, 0.10018),
+        chrono.Q_from_AngAxis(0.1, chrono.ChVectorD(0, 1, 0)),
+    )
     width = 1280
     height = 720
     frame_rate = 30.0
@@ -348,14 +379,15 @@ def main():
     # fov = 1.59
 
     camera = sens.ChCameraSensor(
-                vehicle.GetChassisBody(), # body camera is attached to
-                frame_rate,                 # update rate in Hz
-                camera_pose,                # offset pose
-                width,                      # image width
-                height,                     # image height
-                fov,                        # FOV
-                2,
-                sens.RADIAL)  # super sample diameter
+        vehicle.GetChassisBody(),  # body camera is attached to
+        frame_rate,  # update rate in Hz
+        camera_pose,  # offset pose
+        width,  # image width
+        height,  # image height
+        fov,  # FOV
+        2,
+        sens.RADIAL,
+    )  # super sample diameter
     camera.SetRadialLensParameters(chrono.ChVectorF(-0.369, 0.1257, -0.0194))
     camera.SetName("Camera Sensor")
     c_window = float(0)
@@ -371,16 +403,18 @@ def main():
     camera.PushFilter(sens.ChFilterRGBA8Access())
     manager.AddSensor(camera)
 
-
     camera2 = sens.ChCameraSensor(
-                patch.GetGroundBody(),  # body camera is attached to
-                30,                      # update rate in Hz
-                chrono.ChFrameD(chrono.ChVectorD(-3.09,-2.89,1.28), 
-                chrono.Q_from_Euler123(chrono.ChVectorD(.0,.45,chrono.CH_C_PI_4+.1))),  # offset pose   ------ not sure what CH_C_PI_2 is
-                1920,                                                           # image width
-                1080,                                                            # image height
-                1.2,                                                       # FOV
-                2)                                                              # super sample diameter
+        patch.GetGroundBody(),  # body camera is attached to
+        30,  # update rate in Hz
+        chrono.ChFrameD(
+            chrono.ChVectorD(-3.09, -2.89, 1.28),
+            chrono.Q_from_Euler123(chrono.ChVectorD(0.0, 0.45, chrono.CH_C_PI_4 + 0.1)),
+        ),  # offset pose   ------ not sure what CH_C_PI_2 is
+        1920,  # image width
+        1080,  # image height
+        1.2,  # FOV
+        2,
+    )  # super sample diameter
     camera2.SetName("Camera Sensor 2")
     if vis:
         camera2.PushFilter(sens.ChFilterVisualize(640, 360))
@@ -388,34 +422,47 @@ def main():
         camera2.PushFilter(sens.ChFilterSave(sensor_data_dir + "cam2/"))
     manager.AddSensor(camera2)
 
-
     noise_model = sens.ChNoiseNone()
-    #gps_noise_model = sens.ChNoiseNone()
-    gps_noise_model = sens.ChNoiseNormal(chrono.ChVectorD(0, 0, 0), chrono.ChVectorD(0.6, 0.6, 0.6))
-    imu_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
-    gps_offset_pose = chrono.ChFrameD(chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0)))
+    # gps_noise_model = sens.ChNoiseNone()
+    gps_noise_model = sens.ChNoiseNormal(
+        chrono.ChVectorD(0, 0, 0), chrono.ChVectorD(0.6, 0.6, 0.6)
+    )
+    imu_offset_pose = chrono.ChFrameD(
+        chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0))
+    )
+    gps_offset_pose = chrono.ChFrameD(
+        chrono.ChVectorD(0, 0, 0), chrono.Q_from_AngAxis(0, chrono.ChVectorD(1, 0, 0))
+    )
     gps_reference = chrono.ChVectorD(-89.400, 43.070, 260.0)
 
     # accelerometer
-    acc = sens.ChAccelerometerSensor(vehicle.GetChassisBody(), 100, imu_offset_pose, noise_model)
+    acc = sens.ChAccelerometerSensor(
+        vehicle.GetChassisBody(), 100, imu_offset_pose, noise_model
+    )
     acc.SetName("IMU - Accelerometer")
     acc.PushFilter(sens.ChFilterAccelAccess())
     manager.AddSensor(acc)
 
     # gyroscope
-    gyro = sens.ChGyroscopeSensor(vehicle.GetChassisBody(), 100, imu_offset_pose, noise_model)
+    gyro = sens.ChGyroscopeSensor(
+        vehicle.GetChassisBody(), 100, imu_offset_pose, noise_model
+    )
     gyro.SetName("IMU - Gyroscope")
     gyro.PushFilter(sens.ChFilterGyroAccess())
     manager.AddSensor(gyro)
 
     # magnetometer
-    mag = sens.ChMagnetometerSensor(vehicle.GetChassisBody(), 100, imu_offset_pose, noise_model, gps_reference)
+    mag = sens.ChMagnetometerSensor(
+        vehicle.GetChassisBody(), 100, imu_offset_pose, noise_model, gps_reference
+    )
     mag.SetName("IMU - Magnetometer")
     mag.PushFilter(sens.ChFilterMagnetAccess())
     manager.AddSensor(mag)
 
     # gps
-    gps = sens.ChGPSSensor(vehicle.GetChassisBody(), 10, gps_offset_pose, gps_reference, gps_noise_model)
+    gps = sens.ChGPSSensor(
+        vehicle.GetChassisBody(), 10, gps_offset_pose, gps_reference, gps_noise_model
+    )
     gps.SetName("GPS")
     gps.PushFilter(sens.ChFilterGPSAccess())
     manager.AddSensor(gps)
@@ -427,22 +474,34 @@ def main():
 
     driver = veh.ChExternalDriver(vehicle.GetVehicle(), 50000)
 
-    system_generator = ChSystem_DataGeneratorFunctor("~/output/time", vehicle.GetSystem())
+    system_generator = ChSystem_DataGeneratorFunctor(
+        "~/output/time", vehicle.GetSystem()
+    )
     driver.AddDataGenerator(system_generator)
 
-    veh_generator = ChVehicle_DataGeneratorFunctor("~/output/vehicle", vehicle.GetVehicle())
+    veh_generator = ChVehicle_DataGeneratorFunctor(
+        "~/output/vehicle", vehicle.GetVehicle()
+    )
     driver.AddDataGenerator(veh_generator, 10)
 
-    cam_generator = ChCameraSensor_DataGeneratorFunctor("~/output/camera/front_facing_camera", camera)
+    cam_generator = ChCameraSensor_DataGeneratorFunctor(
+        "~/output/camera/front_facing_camera", camera
+    )
     driver.AddDataGenerator(cam_generator, frame_rate)
 
-    acc_generator = ChAccelerometerSensor_DataGeneratorFunctor("~/output/accelerometer/data", acc)
+    acc_generator = ChAccelerometerSensor_DataGeneratorFunctor(
+        "~/output/accelerometer/data", acc
+    )
     driver.AddDataGenerator(acc_generator, 100)
 
-    gyro_generator = ChGyroscopeSensor_DataGeneratorFunctor("~/output/gyroscope/data", gyro)
+    gyro_generator = ChGyroscopeSensor_DataGeneratorFunctor(
+        "~/output/gyroscope/data", gyro
+    )
     driver.AddDataGenerator(gyro_generator, 100)
 
-    mag_generator = ChMagnetometerSensor_DataGeneratorFunctor("~/output/magnetometer/data", mag)
+    mag_generator = ChMagnetometerSensor_DataGeneratorFunctor(
+        "~/output/magnetometer/data", mag
+    )
     driver.AddDataGenerator(mag_generator, 100)
 
     gps_generator = ChGPSSensor_DataGeneratorFunctor("~/output/gps/data", gps)
@@ -453,9 +512,9 @@ def main():
 
     # Create the vehicle Irrlicht interface
     if USE_IRRLICHT:
-        app = veh.ChWheeledVehicleIrrApp(vehicle.GetVehicle(), 'RC Car')
+        app = veh.ChWheeledVehicleIrrApp(vehicle.GetVehicle(), "RC Car")
         app.AddTypicalLights()
-        app.AddLogo(chrono.GetChronoDataFile('logo_pychrono_alpha.png'))
+        app.AddLogo(chrono.GetChronoDataFile("logo_pychrono_alpha.png"))
         app.SetChaseCamera(trackPoint, 15.0, 0.5)
         app.SetTimestep(step_size)
         app.AssetBindAll()
@@ -470,14 +529,14 @@ def main():
 
     throttle_time = 1.0
     steering_time = 1.0
-    braking_time = .5
+    braking_time = 0.5
     delta_throttle = 1.0 * step_size / throttle_time
     delta_braking = 1.0 * step_size / braking_time
     delta_steering = 2.0 * step_size / steering_time
 
     while True:
         time = vehicle.GetSystem().GetChTime()
-    
+
         # End simulation
         if (USE_IRRLICHT and not app.GetDevice().run()) or time >= t_end:
             break
@@ -491,12 +550,22 @@ def main():
         # Get driver inputs
         driver_inputs = driver.GetInputs()
 
-        #clamp driver inputs
+        # clamp driver inputs
         driver_inputs.m_steering
 
-        pthrottle = np.clip(driver_inputs.m_throttle,pthrottle-delta_throttle,pthrottle+delta_throttle)
-        psteering = np.clip(driver_inputs.m_steering,psteering-delta_steering,psteering+delta_steering)
-        pbraking = np.clip(driver_inputs.m_braking,pbraking-delta_braking,pbraking+delta_braking)
+        pthrottle = np.clip(
+            driver_inputs.m_throttle,
+            pthrottle - delta_throttle,
+            pthrottle + delta_throttle,
+        )
+        psteering = np.clip(
+            driver_inputs.m_steering,
+            psteering - delta_steering,
+            psteering + delta_steering,
+        )
+        pbraking = np.clip(
+            driver_inputs.m_braking, pbraking - delta_braking, pbraking + delta_braking
+        )
 
         driver_inputs.m_throttle = pthrottle
         driver_inputs.m_steering = psteering
@@ -522,16 +591,16 @@ def main():
 
         # Spin in place for real time to catch up
         realtime_timer.Spin(step_size)
-    
-    return 0       
-    
+
+    return 0
+
 
 # The path to the Chrono data directory containing various assets (meshes, textures, data files)
 # is automatically set, relative to the default location of this demo.
 # If running from a different directory, you must change the path to the data directory with: 
 data_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "")
 chrono.SetChronoDataPath(data_folder)
-veh.SetDataPath(chrono.GetChronoDataPath() + 'vehicle/')
+veh.SetDataPath(chrono.GetChronoDataPath() + "vehicle/")
 
 vis = True
 save_sensor_data = False
@@ -547,8 +616,12 @@ cone_offset_y = 0
 cone_spread_x = 1.0
 cone_spread_y = 1.0
 
-throttle_scaling = .5 * abs(1400.0 - 1500.0) / (1980.0 - 1500.0) # based on motor_driver.py limits for safety
-braking_scaling = abs(1600.0 - 1500.0) / (1980.0 - 1500.0)  # based on motor_driver.py limits for safety
+throttle_scaling = (
+    0.5 * abs(1400.0 - 1500.0) / (1980.0 - 1500.0)
+)  # based on motor_driver.py limits for safety
+braking_scaling = abs(1600.0 - 1500.0) / (
+    1980.0 - 1500.0
+)  # based on motor_driver.py limits for safety
 steering_scaling = 1.0  # abs(1725.0 - 1500.0) / (1980.0 - 1500.0);  // based on motor_driver.py limits for safety
 
 trackPoint = chrono.ChVectorD(0.0, 0.0, 1.75)
@@ -584,9 +657,9 @@ chassis_collision_type = veh.CollisionType_NONE
 tire_model = veh.TireModelType_TMEASY
 
 # Rigid terrain -- not sure about this
-terrainHeight = -.2339      # terrain height (FLAT terrain only)
+terrainHeight = -0.2339  # terrain height (FLAT terrain only)
 terrainLength = 7.0  # size in X direction
-terrainWidth = 7.0   # size in Y direction
+terrainWidth = 7.0  # size in Y direction
 
 # Contact method
 contact_method = chrono.ChContactMethod_NSC
@@ -603,4 +676,3 @@ tire_step_size = step_size
 t_end = 1000
 
 main()
-

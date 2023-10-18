@@ -43,6 +43,8 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
-    IncludeLaunchDescriptionWithCondition(ld, "bluespace_ai_xsens_mti_driver", "xsens_mti_node")
+    IncludeLaunchDescriptionWithCondition(
+        ld, "bluespace_ai_xsens_mti_driver", "xsens_mti_node"
+    )
 
     return ld

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 # Syntax provided by the devthefuture/dockerfile-x project
-# Will copy in the base configuration for the build 
+# Will copy in the base configuration for the build
 INCLUDE ./docker/common/base.dockerfile
 
 # Snippets
