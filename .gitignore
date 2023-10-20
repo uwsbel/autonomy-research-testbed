@@ -21,7 +21,6 @@ _version.py
 !.github/workflows/*
 
 # Docker/atk stuff
-.atk.user_count
 .atk-compose.yml
 .dockerignore
 .copyright.tmpl
@@ -32,10 +31,9 @@ _version.py
 # Ignore all bags
 *.db3
 *.bag
-ATK-*
 
-# Ignore singularity specific files
-*singularity.temp
-etc.hosts
-resolv.conf
-*.sif
+# Media
+*.mp4
+*.jpg
+*.png
+*.gif
