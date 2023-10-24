@@ -29,7 +29,7 @@ class ART1(veh.RCCar):
         self.driver = veh.ChDriver(self.veh.GetVehicle())
 
         self._sensors = []
-        sensor_path = Path(chrono.GetChronoDataFile("autonomy/art-1/sensors/"))
+        sensor_path = Path(__file__).parent.parent / "data" / "art-1" / "sensors"
 
         camera_pos = chrono.ChVectorD(0.204, 0, 0.10018)
         camera_rot = chrono.Q_from_AngAxis(0.1, chrono.ChVectorD(0, 1, 0))

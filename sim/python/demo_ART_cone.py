@@ -7,10 +7,6 @@ import pychrono.ros as ros
 
 from ART1 import ART1
 
-DATA_DIR = Path(__file__).resolve().parent / "data/"
-chrono.SetChronoDataPath(f"{str(DATA_DIR)}/")
-veh.SetDataPath(f"{str(DATA_DIR / 'vehicle')}/")
-
 # =============================================================================
 
 
@@ -71,6 +67,10 @@ def LabelAssets(assets, class_id):
 
 def main():
     print("Running demo_ART_cone.py...")
+
+    DATA_DIR = "/opt/chrono/share/chrono/data"
+    chrono.SetChronoDataPath(f"{DATA_DIR}/")
+    veh.SetDataPath(f"{DATA_DIR}/vehicle/")
 
     # Create the vehicle
     init_loc = chrono.ChVectorD(-2.2, 0.5, 0.5)
