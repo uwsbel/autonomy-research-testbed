@@ -17,6 +17,8 @@ RUN apt-get update && \
         libxxf86vm-dev \
         freeglut3-dev \
         libglu1-mesa-dev \
+        libglfw3-dev \
+        libglew-dev \
         wget \
         xorg-dev && \
         apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
@@ -35,6 +37,9 @@ RUN wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | tee /etc/
     apt-get update && apt-get install vulkan-sdk -y && \
     apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
+# Temporarily change to the user so that file permissions are okay
+USER ${USERNAME}
+
 # chrono_ros_interfaces
 ARG ROS_WORKSPACE_DIR="${USERHOME}/ros_workspace"
 ARG CHRONO_ROS_INTERFACES_DIR="${ROS_WORKSPACE_DIR}/src/chrono_ros_interfaces"
@@ -50,11 +55,11 @@ ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
 ARG CHRONO_DIR="${USERHOME}/chrono"
 ARG CHRONO_INSTALL_DIR="/opt/chrono"
 RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
-    cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
-    bash buildVSG.sh /opt/vsg && \
-    cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
-    bash buildURDF.sh /opt/urdf && \
     . ${ROS_WORKSPACE_DIR}/install/setup.sh && \
+    cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
+    sudo bash buildVSG.sh /opt/vsg && \
+    cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
+    sudo bash buildURDF.sh /opt/urdf && \
     mkdir ${CHRONO_DIR}/build && \
     cd ${CHRONO_DIR}/build && \
     cmake ../ -G Ninja \
@@ -82,7 +87,10 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
         -Dconsole_bridge_DIR=/opt/urdf/lib/console_bridge/cmake \
         -Dtinyxml2_DIR=/opt/urdf/CMake \
         && \
-    ninja && ninja install
+    ninja && sudo sh -c ". ${ROS_WORKSPACE_DIR}/install/setup.sh; ninja install"
+
+# Switch back out of the USER back to root
+USER root
 
 # Update shell config
 RUN echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \

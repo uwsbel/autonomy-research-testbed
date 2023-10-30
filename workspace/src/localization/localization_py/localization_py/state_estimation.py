@@ -1,7 +1,7 @@
 import csv
 import rclpy
 from rclpy.node import Node
-from art_msgs.msg import VehicleState
+from art_msgs.msg import VehicleState, VehicleInput
 from sensor_msgs.msg import Imu, NavSatFix, MagneticField
 from chrono_ros_msgs.msg import ChVehicle
 from ament_index_python.packages import get_package_share_directory
@@ -77,13 +77,6 @@ class StateEstimationNode(Node):
         self.gps = ""
         self.ground_truth = ""
         self.mag = ""
-        # NOTE: Remove this when we transition to CHRONO::ROS. This is bad practice, but the best solution for now
-        if self.use_sim_msg:
-            global VehicleInput
-            from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
-        else:
-            global VehicleInput
-            from art_msgs.msg import VehicleInput
 
         # x, y, from measurements
         self.x = 0

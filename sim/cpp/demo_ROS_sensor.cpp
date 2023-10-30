@@ -53,8 +53,6 @@ using namespace chrono::geometry;
 
 // =============================================================================
 
-// #define CHRONO_DATA_DIR
-
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2023 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
     SetChronoDataPath(CHRONO_DATA_DIR);
