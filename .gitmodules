@@ -18,3 +18,7 @@
 [submodule "workspace/src/nmea_navsat_driver"]
 	path = workspace/src/sensing/nmea_navsat_driver
 	url = https://github.com/ros-drivers/nmea_navsat_driver.git
+[submodule "workspace/src/robot_localization"]
+	path = workspace/src/robot_localization
+	url = https://github.com/cra-ros-pkg/robot_localization.git
+	branch = foxy-devel
