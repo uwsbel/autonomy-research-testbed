@@ -121,11 +121,12 @@ class ControlNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
-        if not self.go:
-            return
-
+        self.get_logger().info("control callback")
+        #if not self.go:
+        #    return
+        
         msg = VehicleInput()
-
+        '''    
         if self.mode == "File":
             self.calc_inputs_from_file()
         elif self.mode == "PID" and len(self.path.poses) > 0:
@@ -145,11 +146,14 @@ class ControlNode(Node):
         # self.steering = 0.0
         self.throttle = self.throttle_gain * 0.55  # only doing lateral conmtrol for now
         # self.braking = 0.0
-
+        
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
-
+        '''
+        msg.steering = 0.5
+        msg.throttle = 0.7
+        msg.braking = 0.0
         msg.header.stamp = self.get_clock().now().to_msg()
 
         self.pub_vehicle_cmd.publish(msg)
