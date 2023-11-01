@@ -37,3 +37,13 @@ _version.py
 *.jpg
 *.png
 *.gif
+
+#csv files in the workspace 
+workspace/*.csv
+
+# training NN
+*.keras
+
+#exclude the optix file in order to 
+#get rid of redistribution rules violation
+docker/data/

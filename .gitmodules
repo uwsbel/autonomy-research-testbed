@@ -18,3 +18,9 @@
 [submodule "workspace/src/simulation/chrono_ros_interfaces"]
 	path = workspace/src/simulation/chrono_ros_interfaces
 	url = https://github.com/projectchrono/chrono_ros_interfaces.git
+[submodule "workspace/src/teleop_twist_keyboard"]
+	path = workspace/src/teleop_twist_keyboard
+	url = https://github.com/harryzhang1018/teleop_twist_keyboard.git
+[submodule "workspace/src/hil_lidar_training"]
+	path = workspace/src/hil_lidar_training
+	url = https://github.com/harryzhang1018/hil_lidar_training.git
