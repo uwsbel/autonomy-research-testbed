@@ -9,6 +9,19 @@ x-optionals:
     environment:
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: all
+
+  rtkgps:
+    devices:
+      - "/dev/ttyACM0"
+
+  camera:
+    devices:
+      - "/dev/video0"
+
+  sbgimu:
+     devices:
+       - "/dev/ttyUSB0"
+
   devices:
     devices:
       - "/dev/video0"
