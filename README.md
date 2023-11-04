@@ -10,7 +10,7 @@ The ART platform provides the following resources for expediting development of 
 3. A development workflow for writing ROS 2 code and various already implemented algorithms
 4. A database system to expedite data recording and parsing and an accompaning command line interface
 
-For more information about the design considerations and purpose for this project, see the [background](https://projects.sbel.org/autonomy-toolkit/background.html) section.
+For more information about the design considerations and purpose for this project, see the [docs](./docs).
 
 ## Support
 
