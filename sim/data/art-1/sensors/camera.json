@@ -17,11 +17,6 @@
   [
     {
       "Filter": "ChFilterRGBA8Access"
-    },
-    {
-      "Filter": "ChFilterVisualize",
-      "Width": 640,
-      "Height": 360
     }
   ]
 }
