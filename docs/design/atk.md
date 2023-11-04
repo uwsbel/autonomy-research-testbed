@@ -31,7 +31,7 @@ simulation. The `chrono` service should really only ever be run on a powerful wo
 
 The `vnc` service spins up a container that allows visualizing GUI windows in a browser
 while running commands in a container. It builds on top of NoVNC. Please see
-[How to Run](./how_to_run.md#visualizing-the-output) for a detailed usage explanation.
+[How to Run](./how_to_run.md#vnc) for a detailed usage explanation.
 
 ## Optionals
 
