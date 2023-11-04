@@ -24,21 +24,12 @@ docker/
 ```
 
 > [!NOTE]
-> In order to be more extensible and general purpose, the dockerfiles mentioned below
-> were built around `dockerfile-x`.
-> [`dockerfile-x`](https://github.com/devthefuture/dockerfile-x.git) is a docker plugin
-> that supports importing of other dockerfiles through the `INCLUDE` docker build
-> action. Using `INCLUDE`, we can construct service dockerfiles that mix and match
-> different [snippets](#dockersnippets) that we implement.
-
-> [!INFO]
-> This repository was built to accommodate is
-[autonomy-toolkit](https://projects.sbel.org/autonomy-toolkit). For more information
-regarding specific commands, please see [Workflow](./02_workflow.md)
+> This repository was built to accommodate [autonomy-toolkit](https://projects.sbel.org/autonomy-toolkit). For more information regarding specific commands, please see [Workflow](./02_workflow.md)
 
 ## `docker/data/`
 
-This folder holds data files that may be used by dockerfile snippets.
+This folder holds data files that may be used by dockerfile snippets. For example,
+the [`docker/snippets/chrono.dockerfile`](../../docker/snippets/chrono.dockerfile) requires the OptiX build script; this file should go here.
 
 ## `docker/common/`
 
@@ -52,21 +43,16 @@ such as `USERNAME`, `PROJECT`, etc. Furthermore, it will create a user that has 
 desired `uid` and `gid` (can be defined through the `USER_UID` and the `USER_GID`
 `ARGS`), and will assign any user groups that the user should be apart of.
 
-#### Required `ARGS`
-
-**IMAGE_BASE**: Used in conjunction with **IMAGE_TAG**; defines that base image which
+**IMAGE_BASE**: Used in conjunction with **IMAGE_TAG**; defines the base image which
 the custom docker image will be constructed from. The image is constructed using the
 following base image: `${IMAGE_BASE}:${IMAGE_TAG}`. An **IMAGE_BASE** of `ubuntu` and an
-**IMAGE_TAG** of `22.04` would then build the image from `ubuntu::22.04`.
+**IMAGE_TAG** of `22.04` would then build the image from `ubuntu:22.04`.
 
 **IMAGE_TAG**: Used in conjunction with **IMAGE_TAG**. See above for details. An
 **IMAGE_BASE** of `ubuntu` and an **IMAGE_TAG** of `22.04` would then build the image
-from `ubuntu::22.04`.
+from `ubuntu:22.04`.
 
-**PROJECT**: The name of the project. Synonymous with `project` in docker. The created
-user in the container is assigned to **PROJECT**, as well as the home directory.
-
-#### Optional `ARGS`
+**PROJECT**: The name of the project. Synonymous with `project` in docker.
 
 **USERNAME** _(Default: `${PROJECT}`)_: The username to assign to the new user created
 in the image.
@@ -96,12 +82,6 @@ for more information.
 This dockerfile runs command that we can assume most services want, like package
 installation.
 
-#### Required `ARGS`
-
-There are no required args.
-
-#### Optional `ARGS`
-
 **APT_DEPENDENCIES** _(Default: "")_: A space separated list of apt dependencies to
 install in the image. Installed with `apt install`.
 
@@ -118,14 +98,6 @@ into the user shell profile. For instance,
 This dockerfile runs commands that are expected to be run after all main installation
 snippets are run. It will set the `USER` to our new user, set environment variables, and
 set the `CMD` to be `${USERSHELLPATH}`.
-
-#### Required `ARGS`
-
-There are no required args.
-
-#### Optional `ARGS`
-
-There are no optional args.
 
 ## `docker/snippets`
 
@@ -145,11 +117,7 @@ chrono modules that is listed below:
 - `Chrono::Parsers`
 - `Chrono::ROS`
 
-Furthermore,
-[`chrono_ros_interfaces`](https://github.com/projectchrono/chrono_ros_interfaces) is
-built. This is required to build `Chrono::ROS`.
-
-#### Required `ARGS`
+Furthermore, it also builds [`chrono_ros_interfaces`](https://github.com/projectchrono/chrono_ros_interfaces). This is required to build `Chrono::ROS`.
 
 **OPTIX_SCRIPT**: The location _on the host_ that the optix script is located at. This
 script can be found on NVIDIA's OptiX downloads page. For more information, see the
@@ -157,15 +125,12 @@ script can be found on NVIDIA's OptiX downloads page. For more information, see 
 
 **ROS_DISTRO**: The ROS distro to use.
 
-#### Optional `ARGS`
-
 **ROS_WORKSPACE_DIR** _(Default: `${USERHOME}/ros_workspace`)_. The directory to build
 `chrono_ros_interfaces` at. Helpful so that you can add custom messages after building
 the image. Ensure you copy the changes to the host before tearing down the container
 as this is _not_ a volume.
 
-**CHRONO_ROS_INTERFACES_DIR** _(Default: `${ROS_WORKSPACE_DIR}/src/chrono_ros_interfaces`)_:
-The folder where the `chrono_ros_interfaces` package is actually cloned.
+**CHRONO_ROS_INTERFACES_DIR** _(Default: `${ROS_WORKSPACE_DIR}/src/chrono_ros_interfaces`)_: The folder where the `chrono_ros_interfaces` package is actually cloned.
 
 **CHRONO_BRANCH** _(Default: `main`)_: The Chrono branch to build from.
 
@@ -187,13 +152,7 @@ To decrease image size and allow easy customization, ROS is installed separately
 opposed to the usual method of building _on top_ of an official ROS image). This
 snippet will install ROS here.
 
-#### Required `ARGS`
-
 **ROS_DISTRO**: The ROS distro to use.
-
-#### Optional `ARGS`
-
-There are no optional args.
 
 ### `docker/snippets/rosdep.dockerfile`
 
@@ -202,11 +161,7 @@ There are no optional args.
 package through the best means (e.g. `apt`, `pip`, etc.). This file will run `rosdep` on
 the ROS workspace located within the `autonomy-research-testbed` repository.
 
-#### Required `ARGS`
-
 **ROS_DISTRO**: The ROS distro to use.
-
-#### Optional `ARGS`
 
 **ROS_WORKSPACE** _(Default: `./workspace`)_: The directory location _on the host_ of
 the ROS workspace to run `rosdep` on.
@@ -234,3 +189,11 @@ The dockerfile for the `dev` service. It will do the following:
 ## `docker/vnc.dockerfile`
 
 The dockerfile for the `vnc` service.
+
+## More Information
+
+Below is some additional information for people interested in the underlying workings of the docker implementation.
+
+### `dockerfile-x`
+
+In order to be more extensible and general purpose, the dockerfiles mentioned below were built around `dockerfile-x`. [`dockerfile-x`](https://github.com/devthefuture/dockerfile-x.git) is a docker plugin that supports importing of other dockerfiles through the `INCLUDE` docker build action. Using `INCLUDE`, we can construct service dockerfiles that mix and match different [snippets](#dockersnippets) that we implement.

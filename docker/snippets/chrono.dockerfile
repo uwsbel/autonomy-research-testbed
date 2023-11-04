@@ -41,7 +41,6 @@ RUN wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | tee /etc/
 USER ${USERNAME}
 
 # chrono_ros_interfaces
-ARG ROS_DISTRO
 ARG ROS_WORKSPACE_DIR="${USERHOME}/ros_workspace"
 ARG CHRONO_ROS_INTERFACES_DIR="${ROS_WORKSPACE_DIR}/src/chrono_ros_interfaces"
 RUN mkdir -p ${CHRONO_ROS_INTERFACES_DIR} && \

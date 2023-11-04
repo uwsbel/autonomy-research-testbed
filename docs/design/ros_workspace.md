@@ -13,17 +13,14 @@ This page describes the underlying philosophy of the ROS workspace for the
 
 The general philosophy of the ROS workspace structure is inspired from
 [Autoware Universe](https://github.com/autowarefoundation/autoware.universe.git).
-Basically, the mentality can be split into three main principles.
+Basically, the philosophy can be split into three main principles.
 
 ### Principle 1: ROS packages are separated by function
 
 This principle serves two purposes: it defines how the package folders are organized and
 what should be implemented in a package.
 
-ROS packages should be organized in a hierarchy that separates the node directories by
-their overarching purpose. For instance, perception nodes should be placed in the
-[`perception/`](../workspace/src/perception/) subfolder. See
-[Workspace Structure](#workspace-structure) for a more detailed explanation of all the
+The ROS packages should be organized in a hierarchy that separates the node directories by their overarching purpose. For instance, perception nodes should be placed in the [`perception/`](../workspace/src/perception/) subfolder. See [Workspace Structure](#workspace-structure) for a more detailed explanation of all the
 subfolders.
 
 Additionally, this principle is meant to describe what goes in a package. Generally
@@ -32,24 +29,18 @@ like-nodes, or define shared utilities/helpers that are used by other packages. 
 instance, the [`launch_utils`](../workspace/src/common/launch/launch_utils/) package
 does not have a node, but implements utilities used by other launch files.
 
-### Principle 2: Meta-packages and launch files organize vehicle spin up/tear down
+### Principle 2: Metapackages and launch files organize vehicle spin up/tear down
 
 It is certainly possible that there exists multiple ART vehicles each with a different
 setup (i.e. different sensors, computational hardware, etc.). Therefore, this principle
 helps to define which nodes are created and/or built as it depends on the specific
 vehicle platform in use.
 
-First, meta-packages are a new-ish ROS construct which helps define the build
-dependencies for a specific package. Essentially, a meta-package has no nodes or code.
-It is an empty package except for a `package.xml` and `CMakeLists.txt` file which define
-build dependencies. These build dependencies can then be used to directly build
-nodes/packages for a specific vehicle platform by only using `colcon build` to build
-that package. For instance, if a certain vehicle requires the made up packages called
-`camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can
-specify all these packages as `<build_depend>` in the meta-package. When
-`colcon build --packages-select <meta-package>` is run, the `<build_depend>` packages
-are automatically built. **In summary, each vehicle platform should have a meta-package
-that defines it's nodes that are required to be built for it to run successfully.**
+First, [metapackages](https://wiki.ros.org/Metapackages) are a new-ish ROS construct which helps define the build dependencies for a specific package. Essentially, a metapackage has no nodes or code. It is an empty package except for a `package.xml` and `CMakeLists.txt` file which define build dependencies. These build dependencies can then be used to directly build nodes/packages for a specific vehicle platform by only using `colcon build` to build that package.
+
+For instance, if a certain vehicle requires packages named `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can specify all these packages as `<build_depend>` in the metapackage. When `colcon build --packages-select <metapackage>` is run, the `<build_depend>` packages are automatically built.
+
+**TL;DR: Each vehicle platform should have a metapackage that defines it's nodes that are required to be built for it to run successfully.**
 
 In a similar vein, individual vehicle platforms should have a launch file which is the
 primary entrypoint for which the vehicle nodes can be launched. This main launch file
@@ -84,23 +75,19 @@ workspace/src/
 ### `workspace/src/common`
 
 Included in this subfolder is common utilities, interfaces, launch files, and
-meta-packages.
+metapackages.
 
 #### `workspace/src/common/interfaces`
 
-An interface in ROS is defined as a schema file that defines either a message (`.msg`),
-action (`.action`), or service (`.srv`). Custom internal messages should be defined
-here.
+An interface in ROS is schema file that defines either a message (`.msg`), action (`.action`), or service (`.srv`). Custom internal messages should be defined here.
 
 #### `workspace/src/common/launch`
 
-Launch files for spinning up the vehicle platforms should be implemented here. For a
-more detailed explanation about the launch system, please refer to
-[this page](./launch_system.md).
+Launch files for spinning up the vehicle platforms should be implemented here. For a more detailed explanation about the launch system, please refer to [the Launch System page](./launch_system.md).
 
 #### `workspace/src/common/meta`
 
-Vehicle platform meta packages are placed here.
+Vehicle platform metapackages are placed here.
 
 ### `workspace/src/external`
 
@@ -110,7 +97,7 @@ External packages that are used for debug should be placed here. For instance,
 ### `workspace/src/sensing`
 
 Packages placed here are responsible for interfacing with sensors (i.e. drivers).
-These are usually submodules.
+These are usually submodules and not written by us.
 
 ### `workspace/src/simulation`
 

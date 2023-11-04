@@ -24,7 +24,7 @@ See [this page](./dockerfiles.md) for more information.
 
 ## `docs/`
 
-This folder holds the documentation for the `autonomy-research-testbed` repo.
+This folder holds the documentation pages for the `autonomy-research-testbed` repo.
 
 ## `sim/`
 
@@ -32,7 +32,9 @@ This folder holds simulation files.
 
 ### `sim/cpp/`
 
-C++ demos are contained here.
+C++ demos are contained here. To add a new demo, place the `.cpp` file in this directory
+and add the demo to the `DEMOS` list in
+[`CMakeLists.txt`](../../sim/cpp/CMakeLists.txt).
 
 ### `sim/python/`
 
@@ -42,13 +44,30 @@ Python demos are contained here.
 
 Data folders for the simulation are put here.
 
-> [!NOTE]
-> When building the `chrono` service's image, the Chrono's data folder is both contained
-> in the Chrono clone directory and in the shared installed directory (see
-> [`dockerfiles`](./dockerfiles.md#dockersnippetschronodockerfile) for more
-> information). Therefore, the sim files should set the Chrono data directory to one of
-> these folders. Additional data files that should be loaded at runtime should be set
-> directly (i.e. don't use the Chrono path utilities).
+The [`chrono`](./dockerfiles.md#dockersnippetschronodockerfile) service contains the
+Chrono data folder, so there is no need to include that folder again here. Instead,
+include demo-specific data files.
+
+Ensure, when writing demos, that you set the Chrono data directories correctly.
+```python
+# demo.py
+chrono.SetChronoDataPath("/opt/chrono/share/chrono/data/")
+```
+```cpp
+// demo.cpp
+SetChronoDataPath("/opt/chrono/share/chrono/data/");
+```
+
+And then to access data files in `sim/data/`, you just pass the string directly. It will
+probably be relative to the `sim/python` or `sim/cpp` folders, respectively.
+```python
+# demo.py
+path_to_data_file = "../data/data_file.txt"
+```
+```cpp
+// demo.cpp
+path_to_data_file = "../data/data_file.txt";
+```
 
 ## `workspace/`
 
@@ -64,6 +83,11 @@ in the `.pre-commit-config.yaml` file are run.
 In addition to on commits, `pre-commit` is required to be run in order for PRs to be
 merged. This ensures all code in the main branch is formatted.
 
+To automatically run `pre-commit` on _every_ commit, run the following:
+```bash
+pre-commit install
+```
+
 Please see [the official documentation](https://pre-commit.com) for more detailed
 information.
 
@@ -71,17 +95,16 @@ information.
 
 This is the `atk` configuration file. See [the ART/ATK documentation](./atk.md) for
 detailed information about how the `atk` file is configured. Additionally, please see
-the official `autonomy-toolkit` documentation for more details regarding how `atk` works.
+[the official `autonomy-toolkit` documentation](projects.sbel.org/autonomy-toolkit) for more details regarding how `atk` works.
 
 ## `atk.env`
 
 This file contains environment variables that are evaluated at runtime in the `atk.yml`.
-The values defined here can be thought of as variables that are substituted into the
-defined locations in `atk.yml` (e.g. `${VARIABLE_NAME}`). See
+You can think of these values as variables that are substituted into the `atk.yml`
+placeholders (like `${VARIABLE_NAME}`). See
 [the official docker documentation](https://docs.docker.com/compose/environment-variables/set-environment-variables) for a more detailed explanation.
 
 ## `requirements.txt`
 
 This file defines required pip packages needed to interact with this repository.
-Currently, `autonomy-toolkit` is the only requirement. Additional requirements should be
-put here.
+Currently, `autonomy-toolkit` and `pre-commit` are the only requirements. Additional requirements should be put here.
