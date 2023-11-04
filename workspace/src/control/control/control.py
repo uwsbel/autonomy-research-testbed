@@ -30,7 +30,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 import rclpy
 from rclpy.node import Node
-from art_msgs.msg import VehicleState, VehicleInput
+from art_msgs.msg import VehicleState
+from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory

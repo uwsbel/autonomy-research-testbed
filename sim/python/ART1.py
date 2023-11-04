@@ -1,6 +1,6 @@
-"""Wrapper around the chrono.vehicle.RCCar class which matches the ART-1 platform.
+"""Wrapper around the chrono.vehicle.ARTcar class which matches the ART-1 platform.
 
-It derives contains the veh.RCCar and all the sensors associated with the physical
+It derives contains the veh.ARTcar and all the sensors associated with the physical
 platform.
 """
 
@@ -15,18 +15,18 @@ import pychrono.sensor as sens
 
 class ART1(veh.ARTcar):
     def __init__(self, init_loc: chrono.ChVectorD, init_rot: chrono.ChQuaternionD):
-        self.veh = veh.ARTcar()
-        self.veh.SetContactMethod(chrono.ChContactMethod_NSC)
-        self.veh.SetChassisCollisionType(veh.CollisionType_NONE)
-        self.veh.SetChassisFixed(False)
-        self.veh.SetTireType(veh.TireModelType_TMEASY)
-        self.veh.SetInitPosition(chrono.ChCoordsysD(init_loc, init_rot))
-        self.veh.SetTireStepSize(1e-3)
-        self.veh.Initialize()
+        super().__init__()
+        self.SetContactMethod(chrono.ChContactMethod_NSC)
+        self.SetChassisCollisionType(veh.CollisionType_NONE)
+        self.SetChassisFixed(False)
+        self.SetTireType(veh.TireModelType_TMEASY)
+        self.SetInitPosition(chrono.ChCoordsysD(init_loc, init_rot))
+        self.SetTireStepSize(1e-3)
+        super().Initialize()
 
-        chassis_body = self.veh.GetChassisBody()
+        chassis_body = self.GetChassisBody()
 
-        self.driver = veh.ChDriver(self.veh.GetVehicle())
+        self.driver = veh.ChDriver(self.GetVehicle())
 
         self._sensors = []
         sensor_path = Path(__file__).parent.parent / "data" / "art-1" / "sensors"
@@ -69,15 +69,12 @@ class ART1(veh.ARTcar):
         self._sensors.append(self.gps)
 
     def Initialize(self, sensor_manager: sens.ChSensorManager):
-        self.veh.SetChassisVisualizationType(veh.VisualizationType_PRIMITIVES)
-        self.veh.SetSuspensionVisualizationType(veh.VisualizationType_PRIMITIVES)
-        self.veh.SetSteeringVisualizationType(veh.VisualizationType_PRIMITIVES)
-        self.veh.SetWheelVisualizationType(veh.VisualizationType_MESH)
-        self.veh.SetTireVisualizationType(veh.VisualizationType_MESH)
+        self.SetChassisVisualizationType(veh.VisualizationType_PRIMITIVES)
+        self.SetSuspensionVisualizationType(veh.VisualizationType_PRIMITIVES)
+        self.SetSteeringVisualizationType(veh.VisualizationType_PRIMITIVES)
+        self.SetWheelVisualizationType(veh.VisualizationType_MESH)
+        self.SetTireVisualizationType(veh.VisualizationType_MESH)
 
         for sensor in self._sensors:
             sensor_manager.AddSensor(sensor)
         sensor_manager.Update()
-
-    def GetSystem(self) -> chrono.ChSystem:
-        return self.veh.GetSystem()

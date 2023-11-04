@@ -32,7 +32,9 @@ class StateEstimationNode(Node):
             self.get_parameter("use_sim_time").get_parameter_value().bool_value
         )
 
-        self.declare_parameter("estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH)
+        self.declare_parameter(
+            "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value
+        )
         self.estimation_alg = (
             self.get_parameter("estimation_alg").get_parameter_value().string_value
         )

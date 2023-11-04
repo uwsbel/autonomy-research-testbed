@@ -30,12 +30,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
 
 # external imports
-from pathlib import Path
 
 # ros imports
 from launch import LaunchDescription
-from launch_ros.actions import Node
-from launch.conditions import IfCondition
+from launch_ros.actions import SetRemap
 
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument
@@ -51,43 +49,57 @@ def generate_launch_description():
     AddLaunchArgument(
         ld, "art_simulation/input/vehicle_inputs", "/control/vehicle_inputs"
     )
-    AddLaunchArgument(ld, "art_simulation/output/time", "/clock")
-    AddLaunchArgument(ld, "art_simulation/output/vehicle", "/vehicle/state")
+    AddLaunchArgument(ld, "art_simulation/output/gps", "/sensing/gps/data")
+    AddLaunchArgument(ld, "art_simulation/output/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(
+        ld, "art_simulation/output/accelerometer", "/sensing/accelerometer/data"
+    )
+    AddLaunchArgument(
+        ld, "art_simulation/output/magnetometer", "/sensing/magnetometer/data"
+    )
     AddLaunchArgument(
         ld, "art_simulation/output/camera", "/sensing/front_facing_camera/raw"
     )
-    AddLaunchArgument(ld, "ip", "")
-    AddLaunchArgument(ld, "hostname", "")
 
-    # TODO: Make a better exit case
+    # ------
+    # Remaps
+    # ------
 
-    # -----
-    # Nodes
-    # -----
-
-    node = Node(
-        package="chrono_ros_bridge",
-        executable="chrono_ros_bridge_node",
-        name="chrono_ros_bridge",
-        remappings=[
-            (
-                "~/input/driver_inputs",
-                GetLaunchArgument("art_simulation/input/vehicle_inputs"),
-            ),
-            ("~/output/time", GetLaunchArgument("art_simulation/output/time")),
-            ("~/output/vehicle", GetLaunchArgument("art_simulation/output/vehicle")),
-            (
-                "~/output/camera/front_facing_camera",
-                GetLaunchArgument("art_simulation/output/camera"),
-            ),
-        ],
-        parameters=[
-            {"ip": GetLaunchArgument("ip")},
-            {"hostname": GetLaunchArgument("hostname")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")},
-        ],
-        condition=IfCondition(GetLaunchArgument("use_sim")),
+    ld.add_action(
+        SetRemap(
+            src="/chrono_ros_node/input/driver_inputs",
+            dst=GetLaunchArgument("art_simulation/input/vehicle_inputs"),
+        )
     )
-    ld.add_action(node)
+    ld.add_action(
+        SetRemap(
+            src="/chrono_ros_node/output/acc/data",
+            dst=GetLaunchArgument("art_simulation/output/accelerometer"),
+        )
+    )
+    ld.add_action(
+        SetRemap(
+            src="/chrono_ros_node/output/cam/data",
+            dst=GetLaunchArgument("art_simulation/output/camera"),
+        )
+    )
+    ld.add_action(
+        SetRemap(
+            src="/chrono_ros_node/output/gps/data",
+            dst=GetLaunchArgument("art_simulation/output/gps"),
+        )
+    )
+    ld.add_action(
+        SetRemap(
+            src="/chrono_ros_node/output/gyro/data",
+            dst=GetLaunchArgument("art_simulation/output/gyroscope"),
+        )
+    )
+    ld.add_action(
+        SetRemap(
+            src="/chrono_ros_node/output/mag/data",
+            dst=GetLaunchArgument("art_simulation/output/magnetometer"),
+        )
+    )
 
     return ld

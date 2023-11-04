@@ -1,8 +1,10 @@
+from typing import Any
+
 from launch import LaunchDescription
 
 
 def AddLaunchArgument(
-    ld: LaunchDescription, arg: "Any", default: "Any", **kwargs
+    ld: LaunchDescription, arg: Any, default: Any, **kwargs
 ) -> "LaunchConfiguration":
     """Helper method to add a launch argument to a LaunchDescription"""
     from launch.actions import DeclareLaunchArgument
@@ -11,9 +13,7 @@ def AddLaunchArgument(
     return GetLaunchArgument(arg)
 
 
-def SetLaunchArgument(
-    ld: LaunchDescription, arg: "Any", value: "Any", **kwargs
-) -> None:
+def SetLaunchArgument(ld: LaunchDescription, arg: Any, value: Any, **kwargs) -> None:
     """Helper method to set a launch argument of a LaunchDescription"""
     from launch.actions import SetLaunchConfiguration
 

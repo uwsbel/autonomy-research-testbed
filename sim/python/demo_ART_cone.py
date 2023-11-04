@@ -6,74 +6,19 @@ import pychrono.sensor as sens
 import pychrono.ros as ros
 
 from ART1 import ART1
-
-# =============================================================================
-
-
-def AddConesFromFile(system, terrain, path_filename, cone_offset=(0, 0)):
-    cone_offset_x, cone_offset_y = cone_offset
-
-    red_cone_mesh_filename = chrono.GetChronoDataFile("sensor/cones/red_cone.obj")
-    red_cone_mesh = chrono.ChTriangleMeshConnected()
-    red_cone_mesh.LoadWavefrontMesh(red_cone_mesh_filename, False, True)
-
-    green_cone_mesh_filename = chrono.GetChronoDataFile("sensor/cones/green_cone.obj")
-    green_cone_mesh = chrono.ChTriangleMeshConnected()
-    green_cone_mesh.LoadWavefrontMesh(green_cone_mesh_filename, False, True)
-
-    red_cone_assets, green_cone_assets = [], []
-    with open(chrono.GetChronoDataFile(path_filename)) as cone_file:
-        while line := cone_file.readline():
-            _, color, x, y = map(float, line.split("\t"))
-
-            pos_x = x + cone_offset_x
-            pos_y = y + cone_offset_y
-            pos_z = terrain.GetHeight(chrono.ChVectorD(pos_x, pos_y, 1000))
-
-            pos = chrono.ChVectorD(pos_x, pos_y, pos_z)
-            rot = chrono.ChQuaternionD(1, 0, 0, 0)
-
-            cone_shape = chrono.ChTriangleMeshShape()
-            if color == 0:
-                cone_shape.SetMesh(red_cone_mesh)
-                red_cone_assets.append(cone_shape)
-            else:
-                cone_shape.SetMesh(green_cone_mesh)
-                green_cone_assets.append(cone_shape)
-
-            cone_shape.SetStatic(True)
-
-            cone_body = chrono.ChBody()
-            cone_body.SetPos(pos)
-            cone_body.SetRot(rot)
-            cone_body.AddAsset(cone_shape)
-            cone_body.SetBodyFixed(True)
-            system.Add(cone_body)
-
-    return red_cone_assets, green_cone_assets
+from utils import AddConesFromFile, LabelAssets
 
 
-def LabelAssets(assets, class_id):
-    instance_id = 0
-    for cone in assets:
-        instance_id += 1
-        for mat in cone.GetMaterials():
-            mat.SetClassID(class_id)
-            mat.SetInstanceID(instance_id)
-
-
-# =============================================================================
-
-
-def main():
+def main(args):
     print("Running demo_ART_cone.py...")
 
     DATA_DIR = "/opt/chrono/share/chrono/data"
     chrono.SetChronoDataPath(f"{DATA_DIR}/")
     veh.SetDataPath(f"{DATA_DIR}/vehicle/")
+    sens.SetSensorShaderDir("/opt/chrono/lib/sensor_ptx/")
 
     # Create the vehicle
-    init_loc = chrono.ChVectorD(-2.2, 0.5, 0.5)
+    init_loc = chrono.ChVectorD(-2.2, 0.5, 0.2)
     init_rot = chrono.Q_from_AngZ(chrono.CH_C_PI / 2)
     vehicle = ART1(init_loc, init_rot)
 
@@ -94,6 +39,12 @@ def main():
 
     terrain.Initialize()
 
+    # Add cones
+    data_path = Path(__file__).parent.parent / "data"
+    red_cones, green_cones = AddConesFromFile(
+        vehicle.GetSystem(), terrain, data_path / "cone_paths" / "cone_path_iros.csv"
+    )
+
     # Create the sensor manager
     sensor_manager = sens.ChSensorManager(vehicle.GetSystem())
     sensor_manager.scene.AddPointLight(
@@ -109,35 +60,70 @@ def main():
     # Initialize the vehicle
     vehicle.Initialize(sensor_manager)
 
+    # Add an irrlicht visualization, if desired
+    if args.irrlicht:
+        vis = veh.ChWheeledVehicleVisualSystemIrrlicht()
+        vis.SetWindowTitle("ART1")
+        vis.SetWindowSize(1280, 720)
+        vis.SetChaseCamera(chrono.ChVectorD(0.0, 0.0, 0.0), 1.0, 0.1)
+        vis.Initialize()
+        vis.AddLogo(chrono.GetChronoDataFile("logo_pychrono_alpha.png"))
+        vis.AddLightDirectional()
+        vis.AddSkyBox()
+        vis.AttachVehicle(vehicle.GetVehicle())
+
+    # Add a vehicle camera follower, if desired
+    if args.track:
+        offset_pose = chrono.ChFrameD(
+            chrono.ChVectorD(-3.09, -2.89, 1.28),
+            chrono.Q_from_Euler123(chrono.ChVectorD(0.0, 0.45, chrono.CH_C_PI_4 + 0.1)),
+        )
+        tracking_cam = sens.ChCameraSensor(
+            vehicle.GetChassisBody(),
+            30,
+            offset_pose,
+            1280,
+            720,
+            chrono.CH_C_PI / 3,
+            2,
+        )
+        tracking_cam.PushFilter(sens.ChFilterVisualize(1280, 720, "Tracking Camera"))
+        sensor_manager.AddSensor(tracking_cam)
+
+    sensor_manager.ReconstructScenes()
+    LabelAssets(red_cones, 1)
+    LabelAssets(green_cones, 2)
+    sensor_manager.ReconstructScenes()
+
     # Create the ROS manager
     ros_manager = ros.ChROSManager()
     ros_manager.RegisterHandler(ros.ChROSClockHandler())
     ros_manager.RegisterHandler(
-        ros.ChROSDriverInputsHandler(0, vehicle.driver, "~/input/driver_inputs")
+        ros.ChROSDriverInputsHandler(0, vehicle.driver, "/control/vehicle_inputs")
     )
     ros_manager.RegisterHandler(
         ros.ChROSCameraHandler(
-            vehicle.cam.GetUpdateRate(), vehicle.cam, "~/output/camera/data/image"
+            vehicle.cam.GetUpdateRate(), vehicle.cam, "/sensing/front_facing_camera/raw"
         )
     )
     ros_manager.RegisterHandler(
         ros.ChROSGPSHandler(
-            vehicle.gps.GetUpdateRate(), vehicle.gps, "~/output/gps/data"
+            vehicle.gps.GetUpdateRate(), vehicle.gps, "/sensing/gps/data"
         )
     )
     ros_manager.RegisterHandler(
         ros.ChROSAccelerometerHandler(
-            vehicle.acc.GetUpdateRate(), vehicle.acc, "~/output/acc/data"
+            vehicle.acc.GetUpdateRate(), vehicle.acc, "/sensing/accelerometer/data"
         )
     )
     ros_manager.RegisterHandler(
         ros.ChROSGyroscopeHandler(
-            vehicle.gyro.GetUpdateRate(), vehicle.gyro, "~/output/gyro/data"
+            vehicle.gyro.GetUpdateRate(), vehicle.gyro, "/sensor/gyroscope/data"
         )
     )
     ros_manager.RegisterHandler(
         ros.ChROSMagnetometerHandler(
-            vehicle.mag.GetUpdateRate(), vehicle.mag, "~/output/mag/data"
+            vehicle.mag.GetUpdateRate(), vehicle.mag, "/sensing/magnetometer/data"
         )
     )
     ros_manager.Initialize()
@@ -149,6 +135,14 @@ def main():
 
     realtime_timer = chrono.ChRealtimeStepTimer()
     while time < time_end:
+        if args.irrlicht:
+            if not vis.Run():
+                break
+
+            vis.BeginScene()
+            vis.Render()
+            vis.EndScene()
+
         time = vehicle.GetSystem().GetChTime()
 
         driver_inputs = vehicle.driver.GetInputs()
@@ -156,12 +150,12 @@ def main():
         # Update modules (process inputs from other modules)
         vehicle.driver.Synchronize(time)
         terrain.Synchronize(time)
-        vehicle.veh.Synchronize(time, driver_inputs, terrain)
+        vehicle.Synchronize(time, driver_inputs, terrain)
 
         # Advance simulation for one timestep for all modules
         vehicle.driver.Advance(time_step)
         terrain.Advance(time_step)
-        vehicle.veh.Advance(time_step)
+        vehicle.Advance(time_step)
 
         # Update the sensor manager
         sensor_manager.Update()
@@ -171,8 +165,25 @@ def main():
             break
 
         # Spin in place for real time to catch up
-        realtime_timer.Spin(time_step)
+        if args.realtime:
+            realtime_timer.Spin(time_step)
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser("Demo of ART1 with cones")
+
+    parser.add_argument("--track", action="store_true", help="Enable tracking camera")
+    parser.add_argument(
+        "--irr",
+        "--irrlicht",
+        dest="irrlicht",
+        action="store_true",
+        help="Enable Irrlicht",
+    )
+    parser.add_argument("--realtime", action="store_true", help="Enable real time")
+
+    args = parser.parse_args()
+
+    main(args)
