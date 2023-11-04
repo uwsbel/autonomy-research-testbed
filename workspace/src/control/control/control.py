@@ -155,11 +155,11 @@ class ControlNode(Node):
         self.vel = 0.0
         self.heading = 0.0
         ## manual control single speed
-        self.model_mc =load_model('/home/art-ishaan/art-ishaan/workspace/src/control/control/keras_ml_learnMC_1la_0808.keras') 
+        self.model_mc =load_model('/home/art-harry/art-harry/workspace/src/control/control/keras_ml_learnMC_1la_0808.keras') 
         ## manual control multispeeds
         #self.model_mc =load_model('/home/art-ishaan/art-ishaan/workspace/src/control/control/keras_ml_learnMC_1la_0828.keras') 
         ## MPC single speed
-        self.model_mpc =load_model('/home/art-ishaan/art-ishaan/workspace/src/control/control/keras_ml_learnMPC_1la_0815.keras') 
+        self.model_mpc =load_model('/home/art-harry/art-harry/workspace/src/control/control/keras_ml_learnMPC_1la_0815.keras') 
         ## MPC multispeed
         #self.model_mpc =load_model('/home/art-ishaan/art-ishaan/workspace/src/control/control/keras_ml_learnMPC_1la_0828.keras') 
     # function to process data this class subscribes to
@@ -231,17 +231,17 @@ class ControlNode(Node):
         #self.throttle = sum([x * y for x, y in zip(e, [ 0.85433594 , 0.0537554  , 0.16293445 ,-0.1419279 ])])
         #self.steering = sum([x * y for x, y in zip(e, [ 0.01908044 , 0.36068382 , 0.60325371 ,-0.17265345])])
         
-        ### hardcode control
-        #self.throttle = 1.0
-        #self.steering = 0.0
+        ## hardcode control
+        self.throttle = 0.5
+        self.steering = 0.0
         
 
-        #Keras control, not clear if need steer_coeff....
-        err = np.array(e).reshape(1,-1)
-        #ctrl = self.model_mpc.predict(err)
-        ctrl = self.model_mc.predict(err)
-        self.throttle = ctrl[0,0]
-        self.steering = ctrl[0,1]*1.5 
+        # #Keras control, not clear if need steer_coeff....
+        # err = np.array(e).reshape(1,-1)
+        # #ctrl = self.model_mpc.predict(err)
+        # ctrl = self.model_mc.predict(err)
+        # self.throttle = ctrl[0,0]
+        # self.steering = ctrl[0,1]*1.5 
         #self.steering = ctrl[0,1]
         # steer_coeff = 0.7
         # self.steering = self.steering * steer_coeff

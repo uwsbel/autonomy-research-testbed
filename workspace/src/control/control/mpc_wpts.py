@@ -40,7 +40,9 @@ from scipy import sparse
 import time
 
 def mpc_wpts_solver(e,u,vel,vel_ref):
-    
+    """This function is the mpc solver for error based tracking problem
+        Use: [throttle, steering] = mpc_wpts_solver(error state, current control input, current velocity of the vehicle, reference velocity)
+    """
     x0 = np.array(e)
     u0 = np.array(u)
 
