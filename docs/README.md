@@ -6,11 +6,13 @@ information that may be useful to document as it relates to the
 
 ## Table of Contents
 
-1. [Repository Structure](./repository_structure.md)
-    1. [`atk.yml`](./atk.md)
-    2. [Dockerfiles](./dockerfiles.md)
-    3. [ROS Workspace](./ros_workspace.md)
-    4. [Launch System](./launch_system.md)
-2. [Development Workflow](./development_workflow.md)
-    1. [How to Run](./how-to-run.md)
-3. [Frequently Asked Questions](./faq.md)
+1. Design
+    1. [Repository Structure](./design/repository_structure.md)
+    2. [`atk.yml`](./design/atk.md)
+    3. [Dockerfiles](./design/dockerfiles.md)
+    4. [ROS Workspace](./design/ros_workspace.md)
+    5. [Launch System](./design/launch_system.md)
+2. Usage
+    1. [Development Workflow](./usage/development_workflow.md)
+    2. [How to Run](./usage/how-to-run.md)
+3. [Frequently Asked Questions](./misc/faq.md)
