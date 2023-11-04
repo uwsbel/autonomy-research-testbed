@@ -15,7 +15,8 @@ def main(args):
     DATA_DIR = "/opt/chrono/share/chrono/data"
     chrono.SetChronoDataPath(f"{DATA_DIR}/")
     veh.SetDataPath(f"{DATA_DIR}/vehicle/")
-    sens.SetSensorShaderDir("/opt/chrono/lib/sensor_ptx/")
+    # sens.SetSensorShaderDir("/opt/chrono/lib/sensor_ptx/")
+    # sens.SetSensorShaderDir("/home/art/chrono/build/lib/sensor_ptx")
 
     # Create the vehicle
     init_loc = chrono.ChVectorD(-2.2, 0.5, 0.2)
