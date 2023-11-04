@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from art_msgs.msg import VehicleState, VehicleInput
 from sensor_msgs.msg import Imu, NavSatFix, MagneticField
-from chrono_ros_msgs.msg import ChVehicle
+from  chrono_ros_interfaces.msg import Body as ChVehicle
 from ament_index_python.packages import get_package_share_directory
 import matplotlib.pyplot as plt
 import matplotlib

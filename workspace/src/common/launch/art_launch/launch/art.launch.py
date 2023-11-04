@@ -117,6 +117,6 @@ def generate_launch_description():
     IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
-    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld
