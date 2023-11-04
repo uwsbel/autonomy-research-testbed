@@ -18,3 +18,5 @@
 [submodule "workspace/src/simulation/chrono_ros_interfaces"]
 	path = workspace/src/simulation/chrono_ros_interfaces
 	url = https://github.com/projectchrono/chrono_ros_interfaces.git
+[submodule "bluespace_ai_xsens_ros_mti_driver"]
+	url = https://github.com/bluespace-ai/bluespace_ai_xsens_ros_mti_driver.git
