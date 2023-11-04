@@ -40,4 +40,4 @@ USER_GID=1001
 
 ## OptiX Install
 
-TODO
+Chrono currently builds against OptiX 7.7. In order to install OptiX in the container, you need to install the OptiX build script that you download from [their website](https://developer.nvidia.com/designworks/optix/downloads/legacy). Then place the script in the `docker/data/` directory. Files in this folder are ignored by git, so no worries there.

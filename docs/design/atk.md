@@ -10,7 +10,7 @@ are [Optionals](#optionals).
 
 > [!NOTE]
 > For information on how to actually run `atk` for this repo, refer to the
-> [How to Run](./how-to-run.md) page.
+> [How to Run](./how_to_run.md) page.
 
 ## Services
 
@@ -31,7 +31,7 @@ simulation. The `chrono` service should really only ever be run on a powerful wo
 
 The `vnc` service spins up a container that allows visualizing GUI windows in a browser
 while running commands in a container. It builds on top of NoVNC. Please see
-[How to Run](./how-to-run.md#vnc) for a detailed usage explanation.
+[How to Run](./how_to_run.md#visualizing-the-output) for a detailed usage explanation.
 
 ## Optionals
 
@@ -39,7 +39,7 @@ In addition to services, the `atk.yml` defines a few optional configurations. Op
 
 An example use case is the following. If someone is developing on a Mac (which doesn't have a NVIDIA gpu), attaching a gpu to the container will throw an error considering one doesn't exist. Optionals provide a helpful mechanism to only apply certain configurations when they are desired/supported.
 
-See [How to Run](./how-to-run.md#optionals) for a detailed usage explanation.
+See [How to Run](./how_to_run.md#optionals) for a detailed usage explanation.
 
 ## Networks
 

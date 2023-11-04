@@ -2,7 +2,7 @@
 
 This page describes the underlying philosophy of the ROS workspace for the
 `autonomy-research-testbed`. For details on how to spin up the ROS nodes, see the
-[How to Run](./how-to-run.md) page.
+[How to Run](./how_to_run.md) page.
 
 > [!NOTE]
 > This page assumes some underlying experience with ROS. Please ask a more experienced

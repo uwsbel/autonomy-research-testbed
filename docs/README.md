@@ -14,16 +14,26 @@ information that may be useful to document as it relates to the
     5. [Launch System](./design/launch_system.md)
 2. Usage
     1. [Development Workflow](./usage/development_workflow.md)
-    2. [How to Run](./usage/how-to-run.md)
+    2. [How to Run](./usage/how_to_run.md)
 3. [Frequently Asked Questions](./misc/faq.md)
 
 ## Quick Start
 
 This section provides the main commands necessary to launch various components. Please ensure you understand the previous topics in the [Table of Contents](#table-of-contents) before continuing.
 
+### Install dependencies
+
+Python dependencies are listed in the `requirements.txt` file and can be installed with the following command:
+
+```bash
+pip install -r requirements.txt
+```
+
+In addition, you will need to install docker and docker compose. Please refer to the [official documentation](https://www.docker.com/get-started/) for installation details.
+
 ### Start up vnc
 
-You'll probably want to visualize GUI windows, so start up vnc first.
+You'll probably want to visualize GUI windows, so start up vnc first. The first time around, the image will need to be build so this may take a little while.
 
 ```bash
 $ atk dev -u -s vnc
@@ -41,6 +51,8 @@ WARN[0000] The "DISPLAY" variable is not set. Defaulting to a blank string.
 > You can also use x11 if you're _not_ ssh'd to the host. Replace all `vnc` flags in the `--optionals` with `x11` to do this.
 
 ### Launch the simulation
+
+The first time you start up the chrono service, it will need to build the image. This may take a while.
 
 ```bash
 $ atk dev -ua -s chrono --optionals gpus vnc
@@ -61,6 +73,8 @@ Initialized ChROSInterface: chrono_ros_node.
 ```
 
 ### Run the autonomy stack
+
+The first time you start up the dev service, it will need to build the image. This may take a while.
 
 ```bash
 $ atk dev -ua -s dev --optionals gpus vnc
