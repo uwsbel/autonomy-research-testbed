@@ -90,7 +90,7 @@ Launch files for spinning up the vehicle platforms should be implemented here. F
 
 #### `workspace/src/common/meta`
 
-Vehicle platform metapackages are placed here. They should list all packages that should be built when using that specific vehicle platform in the `package.xml` file as an `<exec_depend>`. See []
+Vehicle platform metapackages are placed here. They should list all packages that should be built when using that specific vehicle platform in the `package.xml` file as an `<exec_depend>`. See [Metapackages](#metapackages) for more information.
 
 ### `workspace/src/external`
 
