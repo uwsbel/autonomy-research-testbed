@@ -23,6 +23,8 @@ This section provides the main commands necessary to launch various components. 
 
 ### Install dependencies
 
+The primarily dependency for `autonomy-research-testbed` is the `autonomy-toolkit`. See the [official documentation](https://projects.sbel.org/autonomy-toolkit/) for more details. It can be installed with `pip`, so see below.
+
 Python dependencies are listed in the `requirements.txt` file and can be installed with the following command:
 
 ```bash
@@ -30,6 +32,10 @@ pip install -r requirements.txt
 ```
 
 In addition, you will need to install docker and docker compose. Please refer to the [official documentation](https://www.docker.com/get-started/) for installation details.
+
+#### Download Optix
+
+To build the chrono image, you'll need to download the OptiX 7.7 build script from NVIDIA's website and place it in [`docker/data`](./../docker/data). You can find the download link [here](https://developer.nvidia.com/designworks/optix/download). See the [FAQs](./misc/faq.md#optix-install) for more details.
 
 ### Start up vnc
 
@@ -72,14 +78,25 @@ Initializing rclcpp.
 Initialized ChROSInterface: chrono_ros_node.
 ```
 
-### Run the autonomy stack
+### Build and run the autonomy stack
 
 The first time you start up the dev service, it will need to build the image. This may take a while.
+
+> [!NOTE]
+> The very first time you run `colcon build`, you may need to install the `bluespace_ai_xsens_ros_mti_driver` library. To do that, run the following:
+> ```bash
+> $ atk dev -ua -s dev --optionals gpus vnc
+> WARNING  | logger.set_verbosity :: Verbosity has been set to WARNING
+> [+] Running 1/1
+>  ✔ Container art-dev  Started
+> art@art-dev:~/art/workspace$ pushd src/sensing/bluespace_ai_xsens_ros_mti_driver/lib/xspublic && make && popd
+> ```
 
 ```bash
 $ atk dev -ua -s dev --optionals gpus vnc
 WARNING  | logger.set_verbosity :: Verbosity has been set to WARNING
 [+] Running 1/1
  ✔ Container art-dev  Started
+art@art-dev:~/art/workspace$ colcon build --symlink-install
 art@art-dev:~/art/workspace$ ros2 launch art_launch art.launch.py use_sim:=True
 ```
