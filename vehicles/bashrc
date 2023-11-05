@@ -3,11 +3,56 @@
 # This file should be sourced by the vehicle's .bashrc file
 # echo "source ~/sbel/autonomy-research-testbed/vehicles/bashrc" >> ~/.bashrc
 
-# Activate the virtual environment
-source ~/sbel/autonomy-research-testbed/venv/bin/activate
+# Activate the conda env
+conda activate ~/.conda/envs/sbel
 
 # Create a tmux session
-tmux new-session -d -s sbel
-if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-    exec tmux attach -t sbel
-fi
+alias sbel="tmux new -A -s sbel"
+
+# Create a function for adding ssh keygen
+_sbel_ssh_keygen() {
+    # Get args
+    read -p "Enter your NetID: " netid
+    [[ -z $netid ]] && { echo "NetID is required."; return; }
+    read -p "Enter name: " name
+    [[ -z $name ]] && { echo "Name is required."; return; }
+    read -p "Enter email: " email
+    [[ -z $email ]] && { echo "Email is required."; return; }
+    read -s -p "Enter passphrase (make sure you remember this): " passphrase; echo
+    [[ -z $passphrase ]] && { echo "Passphrase is required."; return; }
+
+    # Run ssh-keygen with the provided passphrase
+    ssh-keygen -f ~/.ssh/id_rsa_$netid -N "$passphrase" -C "${name// /_} $email"
+
+    # Echo the public key
+    echo "Run the following command to show your public key to be added to github:"
+    echo "cat ~/.ssh/id_rsa_$netid.pub"
+}
+alias sbel-ssh-keygen='_sbel_ssh_keygen'
+
+# Create a function for setting the ssh key
+_sbel_ssh_add() {
+    # Get required args
+    read -p "Enter NetID: " netid
+    [[ -z $netid ]] && { echo "NetID is required."; return; }
+
+    # Check file exists
+    id_rsa="$HOME/.ssh/id_rsa_$netid"
+    [[ ! -f "$id_rsa" ]] && { echo "id_rsa file '$id_rsa' doesn't exist. Ensure you have run 'sbel-ssh-keygen' and have entered your NetID correctly."; return; }
+
+    # Run ssh-agent in the background
+    eval "$(ssh-agent -s)"
+
+    # Add the key
+    ssh-add $id_rsa
+
+    # Update the git environment variables
+    name=$(awk '{print $3}' $id_rsa.pub)
+    email=$(awk '{print $4}' $id_rsa.pub)
+    name="${name//_/ }"
+    export GIT_AUTHOR_NAME="$name"
+    export GIT_AUTHOR_EMAIL="$email"
+    export GIT_COMMITTER_NAME="$name"
+    export GIT_COMMITTER_EMAIL="$email"
+}
+alias sbel-ssh-add="_sbel_ssh_add"

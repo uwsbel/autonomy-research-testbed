@@ -84,5 +84,6 @@ git clone https://github.com/uwsbel/autonomy-research-testbed.git ~/sbel/
 echo "source ~/sbel/autonomy-research-testbed/vehicles/bashrc" >> ~/.bashrc
 
 ~/.conda/bin/conda run --live-stream -p ~/.conda/envs/sbel pip install -r ~/sbel/autonomy-research-testbed/requirements.txt
+(cd ~/sbel/autonomy-research-testbed && ~/.conda/bin/conda run --live-stream -p ~/.conda/envs/sbel pre-commit install)
 
 echo "Done! You should logout and log back in to activate changes."
