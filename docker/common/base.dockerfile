@@ -3,7 +3,7 @@
 ARG IMAGE_BASE
 ARG IMAGE_TAG
 
-FROM ${IMAGE_BASE}:${IMAGE_TAG}
+FROM ${IMAGE_BASE}:${IMAGE_TAG} as base
 
 LABEL maintainer="UW Simulation-Based Engineeing Lab <negrut@wisc.edu>"
 

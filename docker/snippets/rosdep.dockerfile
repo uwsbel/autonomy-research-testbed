@@ -4,7 +4,7 @@
 
 # Install rosdep
 RUN apt-get update && \
-      apt-get install -y python3-rosdep && \
+      apt-get install -y --no-install-recommends python3-rosdep && \
       rosdep init && \
       rosdep update && \
       apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
