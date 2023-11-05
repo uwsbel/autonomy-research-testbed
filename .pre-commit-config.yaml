@@ -23,5 +23,4 @@ repos:
     rev: v3.11.2
     hooks:
       - id: markdown-link-check
-        args: [-q]
-        files: ^docs
+        files: \.md$
