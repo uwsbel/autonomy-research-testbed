@@ -97,6 +97,6 @@ $ atk dev -ua -s dev --optionals gpus vnc
 WARNING  | logger.set_verbosity :: Verbosity has been set to WARNING
 [+] Running 1/1
  ✔ Container art-dev  Started
-art@art-dev:~/art/workspace$ colcon build --symlink-install
+art@art-dev:~/art/workspace$ colcon build --symlink-install --packages-up-to art_dev_meta
 art@art-dev:~/art/workspace$ ros2 launch art_launch art.launch.py use_sim:=True
 ```

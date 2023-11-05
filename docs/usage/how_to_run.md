@@ -90,6 +90,30 @@ Initializing rclcpp.
 Initialized ChROSInterface: chrono_ros_node.
 ```
 
+### Building the autonomy stack
+
+We first need to build the autonomy stack before we use it. This can be done using `colcon build`. Furthermore, as noted in the [Workspace Structure doc](./../design/ros_workspace.md#workspacesrccommonmeta), we can use the `--packages-up-to` flag to only build the packages we need.
+
+> [!NOTE]
+> The very first time you run `colcon build`, you may need to install the `bluespace_ai_xsens_ros_mti_driver` library. To do that, run the following:
+> ```bash
+> $ atk dev -ua -s dev --optionals gpus vnc
+> WARNING  | logger.set_verbosity :: Verbosity has been set to WARNING
+> [+] Running 1/1
+>  ✔ Container art-dev  Started
+> art@art-dev:~/art/workspace$ pushd src/sensing/bluespace_ai_xsens_ros_mti_driver/lib/xspublic && make && popd
+> ```
+
+Here, we'll build the packages for the `art_dev_meta` vehicle, but you can replace `art_dev_meta` with any vehicle-specific metapackage.
+
+```bash
+$ atk dev -ua -s dev --optionals gpus vnc
+WARNING  | logger.set_verbosity :: Verbosity has been set to WARNING
+[+] Running 1/1
+ ✔ Container art-dev  Started
+art@art-dev:~/art/workspace$ colcon build --symlink-install --packages-up-to art_dev_meta
+```
+
 ### Run the autonomy stack
 
 To run the autonomy stack, we'll need to spin up and attach to the `dev` container. We'll then launch the system using the `art.launch.py` orchestrator (see the [Launch System doc](../design/launch_system.md) for more details). We'll also pass `use_sim:=True` to the launch command to disable the hardware drivers.

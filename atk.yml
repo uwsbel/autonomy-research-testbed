@@ -35,6 +35,8 @@ services:
         ROS_DISTRO: "${ROS_DISTRO}"
         USER_UID: "${USER_UID:-1000}"
         USER_GID: "${USER_GID:-1000}"
+        APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES:-}"
+        PIP_REQUIREMENTS: "${DEFAULT_APT_REQUIREMENTS:-}"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     volumes:
       - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
@@ -49,11 +51,19 @@ services:
       args:
         IMAGE_BASE: "ubuntu"
         IMAGE_TAG: "22.04"
-        APT_DEPENDENCIES: "bash zsh vim git git-lfs python3-pip python3-tk python3-opencv ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-tf-transformations ros-${ROS_DISTRO}-rqt-graph python3-pil.imagetk"
-        PIP_REQUIREMENTS: "pandas matplotlib numpy>=1.19 opencv-python tornado black Pillow torch torchvision pyserial nvidia-pyindex nvidia-tensorrt transforms3d scipy"
         USER_GROUPS: "dialout video"
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
+        PIP_REQUIREMENTS: "tensorrt"
+        ROSDEP_METAPACKAGE: "src/common/meta/art_dev_meta/"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
+  art-5:
+    extends: dev
+    image: "atk/${COMPOSE_PROJECT_NAME}:art-5"
+    hostname: "${COMPOSE_PROJECT_NAME}-art-5"
+    container_name: "${COMPOSE_PROJECT_NAME}-art-5"
+    build:
+      args:
+        ROSDEP_METAPACKAGE: "src/common/meta/art_art5_meta/"
   chrono:
     extends: common
     image: "atk/${COMPOSE_PROJECT_NAME}:chrono"

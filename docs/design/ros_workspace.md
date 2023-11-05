@@ -38,7 +38,10 @@ vehicle platform in use.
 
 First, [metapackages](https://wiki.ros.org/Metapackages) are a new-ish ROS construct which helps define the build dependencies for a specific package. Essentially, a metapackage has no nodes or code. It is an empty package except for a `package.xml` and `CMakeLists.txt` file which define build dependencies. These build dependencies can then be used to directly build nodes/packages for a specific vehicle platform by only using `colcon build` to build that package.
 
-For instance, if a certain vehicle requires packages named `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can specify all these packages as `<build_depend>` in the metapackage. When `colcon build --packages-select <metapackage>` is run, the `<build_depend>` packages are automatically built.
+For instance, if a certain vehicle requires packages named `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can specify all these packages as `<exec_depend>` in the metapackage. When `colcon build --packages-up-to <metapackage>` is run, the `<exec_depend>` packages are automatically built.
+
+> [!NOTE]
+> See the [Metapackages](#metapackages) section for more information.
 
 **TL;DR: Each vehicle platform should have a metapackage that defines it's nodes that are required to be built for it to run successfully.**
 
@@ -87,7 +90,7 @@ Launch files for spinning up the vehicle platforms should be implemented here. F
 
 #### `workspace/src/common/meta`
 
-Vehicle platform metapackages are placed here.
+Vehicle platform metapackages are placed here. They should list all packages that should be built when using that specific vehicle platform in the `package.xml` file as an `<exec_depend>`. See []
 
 ### `workspace/src/external`
 
@@ -108,3 +111,79 @@ These packages are used to interface with a simulation platform.
 This subfolder is similar to `sensing/`, but interfaces with the vehicle specifically
 and these packages may not have sensors. For instance, actuation drivers should be
 defined here.
+
+## Metapackages
+
+As mentioned earlier in [Principle 2](#principle-2-metapackages-and-launch-files-organize-vehicle-spin-uptear-down), metapackages are a powerful tool both at buildtime and at runtime. This section outlines how you should use metapackages, as well as how to leverage `<exec_depend>` in other packages.
+
+### Metapackage Structure
+
+A metapackage is simply a package that has no code, but defines build dependencies. Therefore, the structure of a metapackage is very simple.
+
+```
+metapackage/
+├── CMakeLists.txt
+└── package.xml
+```
+
+The CMakeLists.txt file is very simple. It should only contain the following:
+
+```cmake
+cmake_minimum_required(VERSION 3.5)
+project(metapackage)
+
+find_package(ament_cmake REQUIRED)
+ament_package()
+```
+
+The magic happens in the `package.xml` file, where we'll define the build dependencies. For instance, if we want to build the `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation` packages, we would define the following:
+
+```xml
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>metapackage</name>
+  <version>1.0.0</version>
+  <description>A package to aggregate all packages for the vehicle.</description>
+  <maintainer email="todo@todo.todo">TODO</maintainer>
+  <license>TODO: License declaration</license>
+
+  <exec_depend>camera_driver</exec_depend>
+  <exec_depend>lidar_driver</exec_depend>
+  <exec_depend>perception</exec_depend>
+  <exec_depend>control</exec_depend>
+  <exec_depend>actuation</exec_depend>
+</package>
+```
+
+### Using Metapackages
+
+Given the example `CMakeLists.txt` and `package.xml` files above, we can build the metapackage with `colcon build --packages-up-to metapackage`. This will build all the packages listed in the `<exec_depend>` tags.
+
+Furthermore, we can use the metapackage to run `rosdep` on all the packages listed in the `<exec_depend>` tags. For instance, if we want to install all the dependencies for the packages listed in the metapackage, we can run `rosdep install --from-paths src --ignore-src -y"`. However, this may cause issues if we have other packages in the workspace that we don't want to install dependencies for. Therefore, we want to extract the `--packages-up-to` info from `colcon` and only call `rosdep` on those paths. That can be done with the following command:
+
+```bash
+$ paths=$(colcon list --packages-up-to art_dev_meta | awk '{print $2}' | tr '\n' ' ') && \
+    rosdep install --from-paths $paths --ignore-src -y
+```
+
+### Finding `<exec_depend>` Packages
+
+The `<exec_depend>` tag is used by both `rosdep` and `colcon` to determine which packages to install/build. Therefore, it's important to know how to find the packages that should be listed in the `<exec_depend>` tag.
+
+For local packages (i.e. source packages with code being held locally), it's simply whatever the name of that package is (e.g. `camera_driver`, `control`, etc.). If it's an `apt` or `pip` package, you can use the following commands.
+
+> [!NOTE]
+> The first time you run `rosdep`, you may need to run `rosdep update`.
+
+```bash
+$ rosdep db --filter-for-installers "apt pip" | grep <package_name>
+```
+
+The output will appear like this:
+
+```
+<key> -> <value>
+```
+
+You should put `<key>` in the `<exec_depend>` tag.

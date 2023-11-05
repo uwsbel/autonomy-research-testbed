@@ -166,6 +166,8 @@ the ROS workspace located within the `autonomy-research-testbed` repository.
 **ROS_WORKSPACE** _(Default: `./workspace`)_: The directory location _on the host_ of
 the ROS workspace to run `rosdep` on.
 
+**ROSDEP_METAPACKAGE** _(Default: `""`)_: If provided, `colcon list --packages-up-to $ROSDEP_METAPACKAGE` will be run to determine the paths to run `rosdep` on (i.e. passed to `--from-paths`). If not provided, `--from-paths src` will be used.
+
 ## `docker/chrono.dockerfile`
 
 The dockerfile for the `chrono` service. It will do the following:
