@@ -21,3 +21,6 @@
 [submodule "workspace/src/sensing/sbg_ros2_driver"]
 	path = workspace/src/sensing/sbg_ros2_driver
 	url = git@github.com:SBG-Systems/sbg_ros2_driver.git
+[submodule "workspace/src/sensing/ros2_wheeltec_n100_imu"]
+	path = workspace/src/sensing/ros2_wheeltec_n100_imu
+	url = https://github.com/NDHANA94/ros2_wheeltec_n100_imu.git
