@@ -22,13 +22,17 @@ echo "# Custom config for sbel vehicles. DON'T CHANGE!!!" >> ~/.bashrc
 # ============
 # Jetson modes
 
-sudo /usr/sbin/nvpmodel -m 0 # Max power
+if [ -f /etc/nv_tegra_release ]; then
+  echo "Setting up Tegra device."
 
-# Set fan power mode to cool
-sudo sed -i '/FAN_DEFAULT_PROFILE/s/quiet/cool/' /etc/nvfancontrol.conf
-sudo systemctl stop nvfancontrol
-sudo rm /var/lib/nvfancontrol/status
-sudo systemctl start nvfancontrol
+  sudo /usr/sbin/nvpmodel -m 0 # Max power
+
+  # Set fan power mode to cool
+  sudo sed -i '/FAN_DEFAULT_PROFILE/s/quiet/cool/' /etc/nvfancontrol.conf
+  sudo systemctl stop nvfancontrol
+  sudo rm /var/lib/nvfancontrol/status
+  sudo systemctl start nvfancontrol
+fi
 
 # ======
 # Apt
@@ -45,7 +49,7 @@ sudo apt autoremove
 echo "Setting up Docker."
 
 # Docker compose
-sudo apt-get install  ca-certificates curl gnupg lsb-release
+sudo apt-get install ca-certificates curl gnupg lsb-release -y
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 echo \
