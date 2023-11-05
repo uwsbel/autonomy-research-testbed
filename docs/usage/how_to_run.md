@@ -1,6 +1,6 @@
 # How to Run
 
-This page describes how to run the system. Please review all pages in the [design folder](../design/) before continuing. This page assumes you already have read these pages and have knowledge regarding the system design. Furthermore, it is assumed you have reviewed the [`atk` documentation](projects.sbel.org/autonomy-toolkit) and are familiar with the `atk` commands.
+This page describes how to run the system. Please review all pages in the [design folder](../design/) before continuing. This page assumes you already have read these pages and have knowledge regarding the system design. Furthermore, it is assumed you have reviewed the [`atk` documentation](https://projects.sbel.org/autonomy-toolkit) and are familiar with the `atk` commands.
 
 ## Installing the dependencies
 

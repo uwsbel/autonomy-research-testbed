@@ -95,7 +95,7 @@ information.
 
 This is the `atk` configuration file. See [the ART/ATK documentation](./atk.md) for
 detailed information about how the `atk` file is configured. Additionally, please see
-[the official `autonomy-toolkit` documentation](projects.sbel.org/autonomy-toolkit) for more details regarding how `atk` works.
+[the official `autonomy-toolkit` documentation](https://projects.sbel.org/autonomy-toolkit) for more details regarding how `atk` works.
 
 ## `atk.env`
 

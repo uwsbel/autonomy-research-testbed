@@ -2,7 +2,7 @@
 
 This page describes the underlying philosophy of the ROS workspace for the
 `autonomy-research-testbed`. For details on how to spin up the ROS nodes, see the
-[How to Run](./how_to_run.md) page.
+[How to Run](./../usage/how_to_run.md) page.
 
 > [!NOTE]
 > This page assumes some underlying experience with ROS. Please ask a more experienced
@@ -20,13 +20,13 @@ Basically, the philosophy can be split into three main principles.
 This principle serves two purposes: it defines how the package folders are organized and
 what should be implemented in a package.
 
-The ROS packages should be organized in a hierarchy that separates the node directories by their overarching purpose. For instance, perception nodes should be placed in the [`perception/`](../workspace/src/perception/) subfolder. See [Workspace Structure](#workspace-structure) for a more detailed explanation of all the
+The ROS packages should be organized in a hierarchy that separates the node directories by their overarching purpose. For instance, perception nodes should be placed in the [`perception/`](./../../workspace/src/perception/) subfolder. See [Workspace Structure](#workspace-structure) for a more detailed explanation of all the
 subfolders.
 
 Additionally, this principle is meant to describe what goes in a package. Generally
 speaking, a package should implement either a single ROS node, a collection of
 like-nodes, or define shared utilities/helpers that are used by other packages. For
-instance, the [`launch_utils`](../workspace/src/common/launch/launch_utils/) package
+instance, the [`launch_utils`](./../../workspace/src/common/launch/launch_utils/) package
 does not have a node, but implements utilities used by other launch files.
 
 ### Principle 2: Metapackages and launch files organize vehicle spin up/tear down

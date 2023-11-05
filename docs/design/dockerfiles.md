@@ -3,7 +3,7 @@
 The `docker/` folder holds the dockerfiles and data files associated with docker
 image/container creation. Background regarding docker, images/containers, and
 dockerfiles is outside the scope of this document. For more information, please
-refer to the [official documentation](https://docs.docker.org).
+refer to the [official documentation](https://docs.docker.com).
 
 This folder is structured as follows:
 
@@ -24,7 +24,7 @@ docker/
 ```
 
 > [!NOTE]
-> This repository was built to accommodate [autonomy-toolkit](https://projects.sbel.org/autonomy-toolkit). For more information regarding specific commands, please see [Workflow](./02_workflow.md)
+> This repository was built to accommodate [autonomy-toolkit](https://projects.sbel.org/autonomy-toolkit). For more information regarding specific commands, please see [Workflow](./../usage/development_workflow.md)
 
 ## `docker/data/`
 
@@ -70,7 +70,7 @@ user's shell profile.
 **USER_UID** _(Default: 1000)_: The user id (User ID -> UID) that the created user is
 assigned. In Linux, this must match the system user with which you launch `atk` from.
 If it's not assigned correctly, you will have permission issues when trying to edit
-files from the host and/or the container. See the [FAQs](./faq.md#file-permissions)
+files from the host and/or the container. See the [FAQs](./../misc/faq.md#file-permissions)
 for more information.
 
 **USER_GID** _(Default: 1000)_: See **USER_UID** above.
@@ -121,7 +121,7 @@ Furthermore, it also builds [`chrono_ros_interfaces`](https://github.com/project
 
 **OPTIX_SCRIPT**: The location _on the host_ that the optix script is located at. This
 script can be found on NVIDIA's OptiX downloads page. For more information, see the
-[FAQs](./faq.md#optix-install).
+[FAQs](./../misc/faq.md#optix-install).
 
 **ROS_DISTRO**: The ROS distro to use.
 
@@ -196,4 +196,4 @@ Below is some additional information for people interested in the underlying wor
 
 ### `dockerfile-x`
 
-In order to be more extensible and general purpose, the dockerfiles mentioned below were built around `dockerfile-x`. [`dockerfile-x`](https://github.com/devthefuture/dockerfile-x.git) is a docker plugin that supports importing of other dockerfiles through the `INCLUDE` docker build action. Using `INCLUDE`, we can construct service dockerfiles that mix and match different [snippets](#dockersnippets) that we implement.
+In order to be more extensible and general purpose, the dockerfiles mentioned below were built around `dockerfile-x`. [`dockerfile-x`](https://github.com/devthefuture-org/dockerfile-x) is a docker plugin that supports importing of other dockerfiles through the `INCLUDE` docker build action. Using `INCLUDE`, we can construct service dockerfiles that mix and match different [snippets](#dockersnippets) that we implement.

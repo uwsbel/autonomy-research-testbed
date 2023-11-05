@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# This file should be sourced by the vehicle's .bashrc file
+# echo "source ~/sbel/autonomy-research-testbed/vehicles/bashrc" >> ~/.bashrc
+
+# Activate the virtual environment
+source ~/sbel/autonomy-research-testbed/venv/bin/activate
+
+# Create a tmux session
+tmux new-session -d -s sbel
+if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
+    exec tmux attach -t sbel
+fi
