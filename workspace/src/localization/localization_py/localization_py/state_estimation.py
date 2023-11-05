@@ -204,7 +204,11 @@ class StateEstimationNode(Node):
 
         x, y, z = self.graph.gps2cartesian(self.lat, self.lon, self.alt)
         if self.orig_heading_set:
-            self.x, self.y, self.z = self.graph.rotate(x, y, z)
+            newx, newy, newz = self.graph.rotate(x, y, z)
+            self.gtvx, self.gtvy = (newx - self.x) / self.dt_gps, (
+                newy - self.y
+            ) / self.dt_gps
+            self.x, self.y, self.z = newx, newy, newz
             self.x += self.init_x
             self.y += self.init_y
 
@@ -222,8 +226,8 @@ class StateEstimationNode(Node):
         msg = VehicleState()
         # pos and velocity are in meters, from the origin, [x, y, z]
         if self.estimation_alg == EstimationAlgorithmOption.GROUND_TRUTH:
-            msg.pose.position.x = float(self.gtx)
-            msg.pose.position.y = float(self.gty)
+            msg.pose.position.x = float(self.x)
+            msg.pose.position.y = float(self.y)
             # TODO: this should be a quat in the future, not the heading.
             msg.pose.orientation.z = np.deg2rad(self.D)
             msg.twist.linear.x = float(self.gtvx)
