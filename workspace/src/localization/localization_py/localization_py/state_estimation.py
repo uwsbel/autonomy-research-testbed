@@ -100,12 +100,9 @@ class StateEstimationNode(Node):
 
         self.gps_ready = False
 
-        # true X, True Y, velocity, z, heading(degrees)
+        # ground truth velocity
         self.gtvy = 0
-        self.gty = 0
         self.gtvx = 0
-        self.gtx = 0
-        self.gtz = 0
         self.D = 0
 
         # origin, and whether or not the origin has been set yet.
@@ -132,10 +129,6 @@ class StateEstimationNode(Node):
         self.sub_gps = self.create_subscription(
             NavSatFix, "~/input/gps", self.gps_callback, 1
         )
-        if self.use_sim_msg:
-            self.sub_groud_truth = self.create_subscription(
-                ChVehicle, "~/input/ground_truth", self.ground_truth_callback, 1
-            )
 
         self.sub_mag = self.create_subscription(
             MagneticField, "~/input/magnetometer", self.mag_callback, 1
@@ -154,12 +147,6 @@ class StateEstimationNode(Node):
         self.inputs = msg
         self.steering = self.inputs.steering
         self.throttle = self.inputs.throttle
-
-    def ground_truth_callback(self, msg):
-        self.gtx = msg.pose.position.x
-        self.gty = msg.pose.position.y
-        self.gtvx = msg.twist.linear.x
-        self.gtvy = msg.twist.linear.y
 
     def mag_callback(self, msg):
         self.mag = msg

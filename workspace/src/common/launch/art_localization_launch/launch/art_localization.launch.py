@@ -57,7 +57,6 @@ def generate_launch_description():
     AddLaunchArgument(
         ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs"
     )
-    AddLaunchArgument(ld, "art_localization/input/ground_truth", "/vehicle/state")
     AddLaunchArgument(
         ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
     )
@@ -94,10 +93,6 @@ def generate_launch_description():
             (
                 "~/input/vehicle_inputs",
                 GetLaunchArgument("art_localization/input/vehicle_inputs"),
-            ),
-            (
-                "~/input/ground_truth",
-                GetLaunchArgument("art_localization/input/ground_truth"),
             ),
             (
                 "~/output/filtered_state",
