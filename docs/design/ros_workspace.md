@@ -163,7 +163,7 @@ Given the example `CMakeLists.txt` and `package.xml` files above, we can build t
 Furthermore, we can use the metapackage to run `rosdep` on all the packages listed in the `<exec_depend>` tags. For instance, if we want to install all the dependencies for the packages listed in the metapackage, we can run `rosdep install --from-paths src --ignore-src -y"`. However, this may cause issues if we have other packages in the workspace that we don't want to install dependencies for. Therefore, we want to extract the `--packages-up-to` info from `colcon` and only call `rosdep` on those paths. That can be done with the following command:
 
 ```bash
-$ paths=$(colcon list --packages-up-to art_dev_meta | awk '{print $2}' | tr '\n' ' ') && \
+$ paths=$(colcon list --packages-up-to art_dev_meta | awk '{print $2}' | tr '\n' ' '); \
     rosdep install --from-paths $paths --ignore-src -y
 ```
 
