@@ -137,10 +137,12 @@ class ControlNode(Node):
 
             ratio = pt[1] / pt[0]
             steering = self.steering_gain * ratio
-            #ensure steering can't change too much between timesteps, smooth transition
-            delta_steering= steering-self.steering
-            if(abs(delta_steering)>0.1):
-                self.steering = self.steering+0.1*delta_steering/abs(delta_steering)
+            # ensure steering can't change too much between timesteps, smooth transition
+            delta_steering = steering - self.steering
+            if abs(delta_steering) > 0.1:
+                self.steering = self.steering + 0.1 * delta_steering / abs(
+                    delta_steering
+                )
             else:
                 self.steering = steering
             # self.get_logger().info('Target steering = %s' % self.steering)
