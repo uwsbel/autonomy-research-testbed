@@ -36,7 +36,7 @@ class StateEstimationNode(Node):
         self.declare_parameter(
             "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value
         )
-        self.estimation_alg = (
+        self.estimation_alg = EstimationAlgorithmOption(
             self.get_parameter("estimation_alg").get_parameter_value().string_value
         )
 
