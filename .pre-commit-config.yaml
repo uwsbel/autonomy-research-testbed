@@ -19,3 +19,8 @@ repos:
     rev: v17.0.2
     hooks:
       - id: clang-format
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.11.2
+    hooks:
+      - id: markdown-link-check
+        args: [-q]
