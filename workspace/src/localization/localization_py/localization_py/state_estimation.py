@@ -36,7 +36,7 @@ class StateEstimationNode(Node):
         self.declare_parameter(
             "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value
         )
-        self.estimation_alg = (
+        self.estimation_alg = EstimationAlgorithmOption(
             self.get_parameter("estimation_alg").get_parameter_value().string_value
         )
 
@@ -100,12 +100,9 @@ class StateEstimationNode(Node):
 
         self.gps_ready = False
 
-        # true X, True Y, velocity, z, heading(degrees)
+        # ground truth velocity
         self.gtvy = 0
-        self.gty = 0
         self.gtvx = 0
-        self.gtx = 0
-        self.gtz = 0
         self.D = 0
 
         # origin, and whether or not the origin has been set yet.
@@ -132,10 +129,6 @@ class StateEstimationNode(Node):
         self.sub_gps = self.create_subscription(
             NavSatFix, "~/input/gps", self.gps_callback, 1
         )
-        if self.use_sim_msg:
-            self.sub_groud_truth = self.create_subscription(
-                ChVehicle, "~/input/ground_truth", self.ground_truth_callback, 1
-            )
 
         self.sub_mag = self.create_subscription(
             MagneticField, "~/input/magnetometer", self.mag_callback, 1
@@ -154,12 +147,6 @@ class StateEstimationNode(Node):
         self.inputs = msg
         self.steering = self.inputs.steering
         self.throttle = self.inputs.throttle
-
-    def ground_truth_callback(self, msg):
-        self.gtx = msg.pose.position.x
-        self.gty = msg.pose.position.y
-        self.gtvx = msg.twist.linear.x
-        self.gtvy = msg.twist.linear.y
 
     def mag_callback(self, msg):
         self.mag = msg
@@ -204,7 +191,11 @@ class StateEstimationNode(Node):
 
         x, y, z = self.graph.gps2cartesian(self.lat, self.lon, self.alt)
         if self.orig_heading_set:
-            self.x, self.y, self.z = self.graph.rotate(x, y, z)
+            newx, newy, newz = self.graph.rotate(x, y, z)
+            self.gtvx, self.gtvy = (newx - self.x) / self.dt_gps, (
+                newy - self.y
+            ) / self.dt_gps
+            self.x, self.y, self.z = newx, newy, newz
             self.x += self.init_x
             self.y += self.init_y
 
@@ -222,8 +213,8 @@ class StateEstimationNode(Node):
         msg = VehicleState()
         # pos and velocity are in meters, from the origin, [x, y, z]
         if self.estimation_alg == EstimationAlgorithmOption.GROUND_TRUTH:
-            msg.pose.position.x = float(self.gtx)
-            msg.pose.position.y = float(self.gty)
+            msg.pose.position.x = float(self.x)
+            msg.pose.position.y = float(self.y)
             # TODO: this should be a quat in the future, not the heading.
             msg.pose.orientation.z = np.deg2rad(self.D)
             msg.twist.linear.x = float(self.gtvx)

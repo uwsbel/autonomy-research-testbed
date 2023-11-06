@@ -52,7 +52,7 @@ class ParticleFilter:
         self.particle_distr_head = []
 
         self.dist_distr = [abs(np.random.normal(0, 0.8)) for _ in range(100)]
-        self.head_distr = [abs(np.random.normals(0, 0.1)) for _ in range(100)]
+        self.head_distr = [abs(np.random.normal(0, 0.1)) for _ in range(100)]
         # counts, bins = np.histogram(points, bins = 30)
 
         for i in range(0, self.num_particles):
@@ -63,7 +63,7 @@ class ParticleFilter:
             # self.particles.append(np.zeros((4,1)))
             self.particles.append(
                 np.array(
-                    [[np.random.normals(0, 0.8)], [np.random.normals(0, 0.8)], [0], [0]]
+                    [[np.random.normal(0, 0.8)], [np.random.normal(0, 0.8)], [0], [0]]
                 )
             )
             self.particle_weights.append(0.02)
@@ -166,8 +166,8 @@ class ParticleFilter:
                 new_particles.append(
                     np.array(
                         [
-                            [self.particles[i][0, 0] + np.random.normals(0, 0.1)],
-                            [self.particles[i][1, 0] + np.random.normals(0, 0.1)],
+                            [self.particles[i][0, 0] + np.random.normal(0, 0.1)],
+                            [self.particles[i][1, 0] + np.random.normal(0, 0.1)],
                             [self.particles[i][2, 0]],
                             [self.particles[i][3, 0]],
                         ]
