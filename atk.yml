@@ -9,6 +9,10 @@ x-optionals:
     environment:
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: all
+  
+  sbgimu:
+    devices:
+      - "/dev/ttyUSB0"
   devices:
     devices:
       - "/dev/video0"
