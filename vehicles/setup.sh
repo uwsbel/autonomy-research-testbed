@@ -60,7 +60,7 @@ sudo apt install docker-compose-plugin -y
 
 # Add nvidia as the default runtime
 if [ -f /etc/nv_tegra_release ]; then
-  sed -i '/"data-root"/a \    "default-runtime": "nvidia",' /etc/docker/daemon.json
+  grep -q '"default-runtime": "nvidia"' /etc/docker/daemon.json || sudo sed -i '/"data-root"/a \    "default-runtime": "nvidia",' /etc/docker/daemon.json
 fi
 
 # Create the docker group
