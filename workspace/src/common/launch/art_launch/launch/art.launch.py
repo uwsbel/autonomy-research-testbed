@@ -84,16 +84,45 @@ def generate_launch_description():
     )
     ld.add_action(container)
 
+    move_broly_node = Node(
+        package='control',  # Replace with your actual package
+        executable='control',       # Replace with your actual node executable
+        name='move_robot',
+        output='screen',
+        parameters=[{'throttle': 1.0}]  # Replace with actual parameters for throttle
+    )
+    ld.add_action(move_broly_node)
+
+    # Timer action to stop the robot after 20 seconds
+    stop_robot_timer = TimerAction(
+        period=30.0,
+        actions=[Shutdown()]
+    )
+    ld.add_action(stop_robot_timer)
+
+    # Include the sbg_driver launch file
+    sbg_driver_launch_file = FindPackageShare('sbg_ros2_driver').find('sbg_ros2_driver') + '/launch/sbg_device_launch.py'
+    sbg_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(sbg_driver_launch_file),
+        launch_arguments={'param': 'value'}.items()  # Replace with actual parameters
+    )
+    ld.add_action(sbg_driver_launch)
+
+    # Node for the nmea_navsat_driver
+    nmea_navsat_driver_node = Node(
+        package='nmea_navsat_driver',
+        executable='nmea_serial_driver',
+        name='nmea_serial_driver',
+        output='screen'
+    )
+    ld.add_action(nmea_navsat_driver_node)
+
     # ---------------
     # Launch Includes
     # ---------------
 
-    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
-    IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "art_localization")
-    IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
-    IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
-    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
-    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld 
