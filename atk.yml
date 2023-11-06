@@ -56,13 +56,19 @@ services:
         PIP_REQUIREMENTS: "tensorrt"
         ROSDEP_METAPACKAGE: "src/common/meta/art_dev_meta/"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
-  art-5:
+  art5:
     extends: dev
-    image: "atk/${COMPOSE_PROJECT_NAME}:art-5"
-    hostname: "${COMPOSE_PROJECT_NAME}-art-5"
-    container_name: "${COMPOSE_PROJECT_NAME}-art-5"
+    image: "atk/${COMPOSE_PROJECT_NAME}:art5"
+    hostname: "${COMPOSE_PROJECT_NAME}-art5"
+    container_name: "${COMPOSE_PROJECT_NAME}-art5"
     build:
+      dockerfile: "./docker/art5.dockerfile"
       args:
+        IMAGE_BASE: "dustynv/ros"
+        IMAGE_TAG: "humble-pytorch-l4t-r35.3.1"
+        ROS_INSTALL_PREFIX: /opt/ros/${ROS_DISTRO}/install
+        APT_DEPENDENCIES: "${DEV_APT_DEPENDENCIES}"
+        PIP_REQUIREMENTS: "${DEV_PIP_REQUIREMENTS}"
         ROSDEP_METAPACKAGE: "src/common/meta/art_art5_meta/"
   chrono:
     extends: common

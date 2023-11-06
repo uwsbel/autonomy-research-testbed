@@ -13,7 +13,7 @@ RUN apt-config dump | grep -we Recommends -e Suggests | sed s/1/0/ | sudo tee /e
 
 # Install python packages
 ARG PIP_REQUIREMENTS=""
-RUN [ -z "${PIP_REQUIREMENTS}" ] || pip install ${PIP_REQUIREMENTS}
+RUN [ -z "${PIP_REQUIREMENTS}" ] || pip install --no-cache-dir ${PIP_REQUIREMENTS}
 
 # Update shell config
 ARG DEFAULT_SHELL_ADD_ONS="export TERM=xterm-256color"
