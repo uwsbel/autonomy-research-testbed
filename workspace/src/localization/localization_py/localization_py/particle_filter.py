@@ -40,7 +40,7 @@ class ParticleFilter:
             dynamics: the parameters for the dynamics
         """
         self.dt = dt
-        self.dyn = Dynamics(dt, dynamics)
+        self.dyn = dynamics
 
         self.show_animation = False
         self.num_particles = 100

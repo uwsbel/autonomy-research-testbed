@@ -16,6 +16,7 @@ from enum import Enum
 from localization_py.EKF import EKF
 from localization_py.particle_filter import ParticleFilter as PF
 from localization_py.chrono_coordinate_transfer import Graph
+from localization_py.dynamics import Dynamics
 
 
 class EstimationAlgorithmOption(Enum):
@@ -116,11 +117,13 @@ class StateEstimationNode(Node):
         # time between imu updates, sec
         self.dt_gps = 1 / self.freq
 
+        # the ROM
+        self.dynamics_model = Dynamics(self.dt_gps, dyn)
         # filter
         if self.estimation_alg == EstimationAlgorithmOption.EXTENDED_KALMAN_FILTER:
-            self.ekf = EKF(self.dt_gps, dyn, Q, R)
+            self.ekf = EKF(self.dt_gps, self.dynamics_model, Q, R)
         elif self.estimation_alg == EstimationAlgorithmOption.PARTICLE_FILTER:
-            self.pf = PF(self.dt_gps, dyn)
+            self.pf = PF(self.dt_gps, self.dynamics_model)
 
         # our graph object, for reference frame
         self.graph = Graph()
