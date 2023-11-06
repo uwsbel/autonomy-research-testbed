@@ -38,7 +38,7 @@ vehicle platform in use.
 
 First, [metapackages](https://wiki.ros.org/Metapackages) are a new-ish ROS construct which helps define the build dependencies for a specific package. Essentially, a metapackage has no nodes or code. It is an empty package except for a `package.xml` and `CMakeLists.txt` file which define build dependencies. These build dependencies can then be used to directly build nodes/packages for a specific vehicle platform by only using `colcon build` to build that package.
 
-For instance, if a certain vehicle requires packages named `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can specify all these packages as `<exec_depend>` in the metapackage. When `colcon build --packages-up-to <metapackage>` is run, the `<exec_depend>` packages are automatically built.
+For instance, if a hypothetical vehicle platform requires packages named `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can specify all these packages as `<exec_depend>` in the metapackage. When `colcon build --packages-up-to <metapackage>` is run, the `<exec_depend>` packages are automatically built.
 
 > [!NOTE]
 > See the [Metapackages](#metapackages) section for more information.
@@ -160,12 +160,14 @@ The magic happens in the `package.xml` file, where we'll define the build depend
 
 Given the example `CMakeLists.txt` and `package.xml` files above, we can build the metapackage with `colcon build --packages-up-to metapackage`. This will build all the packages listed in the `<exec_depend>` tags.
 
-Furthermore, we can use the metapackage to run `rosdep` on all the packages listed in the `<exec_depend>` tags. For instance, if we want to install all the dependencies for the packages listed in the metapackage, we can run `rosdep install --from-paths src --ignore-src -y"`. However, this may cause issues if we have other packages in the workspace that we don't want to install dependencies for. Therefore, we want to extract the `--packages-up-to` info from `colcon` and only call `rosdep` on those paths. That can be done with the following command:
+Furthermore, we can use the metapackage to run `rosdep` on all the packages listed in the `<exec_depend>` tags. For instance, if we want to install all the dependencies for the packages listed in the metapackage, we will extract the `--packages-up-to` info from `colcon` and only call `rosdep` on those paths. That can be done with the following command:
 
 ```bash
 $ paths=$(colcon list --packages-up-to art_dev_meta | awk '{print $2}' | tr '\n' ' '); \
     rosdep install --from-paths $paths --ignore-src -y
 ```
+
+In the command above, the `colcon list --packages-up-to art_dev_meta` part simply searches through the metapackage and then lists out the paths to those packages. The rest will just postprocesses the paths to fit in the `rosdep` command on the next line.
 
 ### Finding `<exec_depend>` Packages
 
