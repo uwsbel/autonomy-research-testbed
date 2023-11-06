@@ -154,6 +154,8 @@ snippet will install ROS here.
 
 **ROS_DISTRO**: The ROS distro to use.
 
+**ROS_INSTALL_PREFIX** _(Default: `/opt/ros/${ROS_DISTRO}`)_: The install prefix that ROS is installed to. This should be the folder location of the `setup.bash` file. By default, if installed through `apt` it will be `/opt/ros/${ROS_DISTRO}`. If it's pre-installed for tegra images, it's at `/opt/ros/${ROS_DISTRO}/install`.
+
 ### `docker/snippets/rosdep.dockerfile`
 
 `rosdep` is a useful tool in ROS that parses nested packages, looks inside each
@@ -167,6 +169,8 @@ the ROS workspace located within the `autonomy-research-testbed` repository.
 the ROS workspace to run `rosdep` on.
 
 **ROSDEP_METAPACKAGE** _(Default: `""`)_: If provided, `colcon list --packages-up-to $ROSDEP_METAPACKAGE` will be run to determine the paths to run `rosdep` on (i.e. passed to `--from-paths`). If not provided, `--from-paths src` will be used.
+
+**ROS_INSTALL_PREFIX** _(Default: `/opt/ros/${ROS_DISTRO}`)_: The install prefix that ROS is installed to. This should be the folder location of the `setup.bash` file. By default, if installed through `apt` it will be `/opt/ros/${ROS_DISTRO}`. If it's pre-installed for tegra images, it's at `/opt/ros/${ROS_DISTRO}/install`.
 
 ## `docker/chrono.dockerfile`
 
