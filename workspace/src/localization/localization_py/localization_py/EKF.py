@@ -28,7 +28,7 @@ class EKF:
         """
 
         self.dt = dt
-        self.dyn = Dynamics(dt, dynamics)
+        self.dyn = dynamics
 
         self.Q = (
             np.diag(
