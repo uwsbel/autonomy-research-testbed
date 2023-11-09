@@ -23,7 +23,6 @@ x-optionals:
      devices:
        - "/dev/ttyUSB0"
 
->>>>>>> 1de52e7dbc25b8c24491e906f4f65a06e8dacd32
   devices:
     devices:
       - "/dev/video0"
