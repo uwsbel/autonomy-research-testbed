@@ -52,8 +52,6 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            'imu_publisher = localization_py.imu_publisher:main'
-        ],
+        "console_scripts": ["pid = control.control:main"],
     },
 )
