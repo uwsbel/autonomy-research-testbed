@@ -12,7 +12,7 @@ x-optionals:
   devices:
     devices:
       - "/dev/video0"
-      # - "/dev/ttyACM0"
+      - "/dev/ttyACM0"
         #- "/dev/ttyUSB0"
   network_mode_host:
     network_mode: "host"
@@ -24,7 +24,7 @@ x-optionals:
   vnc:
     environment:
       DISPLAY: "vnc:0.0"
-name: art-walle
+name: art
 services:
   common:
     env_file:

@@ -171,13 +171,13 @@ class ControlNode(Node):
         msg.braking = 0.0
 
         if self.aruco_flag and self.aruco_poses.poses[0].position.z > 0.14:
-            msg.throttle = 0.5
+            msg.throttle = 0.7
 
         if self.aruco_flag and (self.aruco_poses.poses[0].position.x > 0.01 or self.aruco_poses.poses[0].position.x < -0.01):
             if self.aruco_poses.poses[0].position.x > 0:
-                msg.steering = 0.3
+                msg.steering = -1.0
             else:
-                msg.steering = -0.3
+                msg.steering = 1.0
 
         # msg.steering = 0.0
         msg.braking = 0.0

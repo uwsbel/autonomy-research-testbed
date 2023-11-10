@@ -89,8 +89,8 @@ class MotorDriver:
         # === CONSTANTS ===
         # Pulse width as measured from the RC car receiver in milliseconds
         self.TRIM = 0
-        self.PW_BRAKE = 1600 + self.TRIM  # absolute full brake = 1980
-        self.PW_FULL_THROTTLE = 1400 + self.TRIM  # absolute full throttle = 1000
+        self.PW_BRAKE = 1200 + self.TRIM  # absolute full brake = 1980
+        self.PW_FULL_THROTTLE = 1590 + self.TRIM  # absolute full throttle = 1000
         self.PW_NEUTRAL = 1500 + self.TRIM
 
         # clamp response to achieve target
@@ -196,6 +196,15 @@ class MotorDriverNode(Node):
         target = self.motor.setTargetThrottle(
             self.vehicle_cmd.throttle, self.vehicle_cmd.braking
         )
+        
+        # self.servo.setTargetSteering(float(self.vehicle_cmd.throttle))
+        # # self.servo.setTargetSteering(0.7)
+
+        # target = self.motor.setTargetThrottle(
+        #     self.vehicle_cmd.steering, 0.0
+        # )
+
+
         # self.get_logger().info("target throttle='%s (%s - %s)'" % (target,self.vehicle_cmd.throttle,self.vehicle_cmd.braking))
         servo_pw = int(self.servo.step())
         esc_pw = int(self.motor.step())
