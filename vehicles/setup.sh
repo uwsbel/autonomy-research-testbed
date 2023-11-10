@@ -94,5 +94,6 @@ echo "source ~/sbel/autonomy-research-testbed/vehicles/bashrc" >> ~/.bashrc
 
 ~/.conda/bin/conda run --live-stream -p ~/.conda/envs/sbel pip install -r ~/sbel/autonomy-research-testbed/requirements.txt
 (cd ~/sbel/autonomy-research-testbed && ~/.conda/bin/conda run --live-stream -p ~/.conda/envs/sbel pre-commit install)
+(cd ~/sbel/autonomy-research-testbed && git remote set-url origin git@github.com:uwsbel/autonomy-research-testbed.git)
 
 echo "Done! You should logout and log back in to activate changes."
