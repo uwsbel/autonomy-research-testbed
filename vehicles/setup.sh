@@ -88,7 +88,7 @@ rm -rf ~/.conda/miniconda.sh
 
 echo "Cloning autonomy-research-testbed."
 
-git clone https://github.com/uwsbel/autonomy-research-testbed.git ~/sbel/
+git clone https://github.com/uwsbel/autonomy-research-testbed.git ~/sbel/autonomy-research-testbed
 
 echo "source ~/sbel/autonomy-research-testbed/vehicles/bashrc" >> ~/.bashrc
 
