@@ -31,11 +31,12 @@
 import rclpy
 from rclpy.node import Node
 from art_msgs.msg import VehicleState, VehicleInput
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PoseArray
 from nav_msgs.msg import Path
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
 import os
+
 
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
@@ -91,6 +92,8 @@ class ControlNode(Node):
 
         # data that will be used by this class
         self.state = ""
+        self.aruco_poses = ""
+        self.aruco_flag = False
         self.path = Path()
         self.vehicle_cmd = VehicleInput()
 
@@ -107,7 +110,18 @@ class ControlNode(Node):
         self.pub_vehicle_cmd = self.create_publisher(
             VehicleInput, "~/output/vehicle_inputs", 10
         )
+
+        self.pub_aruco = self.create_subscription(
+            PoseArray, "~/input/aruco", self.aruco_callback, qos_profile
+        )
+
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
+    def aruco_callback(self, msg):
+        self.aruco_poses = msg
+        self.aruco_flag = True
+        # print(type(msg))
+        # self.get_logger().info(str(msg))
+        # self.get_logger().info("Received '%s'" % msg.poses[0].position.z)
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
@@ -121,7 +135,7 @@ class ControlNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
-        self.get_logger().info("control callback")
+        # self.get_logger().info("control callback")
         #if not self.go:
         #    return
         
@@ -151,9 +165,23 @@ class ControlNode(Node):
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
         '''
-        msg.steering = 0.5
-        msg.throttle = 0.7
+
+        msg.steering = 0.0
+        msg.throttle = 0.0
         msg.braking = 0.0
+
+        if self.aruco_flag and self.aruco_poses.poses[0].position.z > 0.14:
+            msg.throttle = 0.5
+
+        if self.aruco_flag and (self.aruco_poses.poses[0].position.x > 0.01 or self.aruco_poses.poses[0].position.x < -0.01):
+            if self.aruco_poses.poses[0].position.x > 0:
+                msg.steering = 0.3
+            else:
+                msg.steering = -0.3
+
+        # msg.steering = 0.0
+        msg.braking = 0.0
+        
         msg.header.stamp = self.get_clock().now().to_msg()
 
         self.pub_vehicle_cmd.publish(msg)

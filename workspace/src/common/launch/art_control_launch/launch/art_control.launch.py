@@ -46,6 +46,7 @@ def generate_launch_description():
 
     AddLaunchArgument(ld, "art_control/input/path", "/path_planning/path")
     AddLaunchArgument(ld, "art_control/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_control/input/aruco", "/aruco_poses")
     AddLaunchArgument(
         ld, "art_control/output/vehicle_inputs", "/control/vehicle_inputs"
     )
@@ -66,6 +67,7 @@ def generate_launch_description():
         name="pid",
         remappings=[
             ("~/input/path", GetLaunchArgument("art_control/input/path")),
+            ("~/input/aruco", GetLaunchArgument("art_control/input/aruco")),
             (
                 "~/input/vehicle_state",
                 GetLaunchArgument("art_control/input/vehicle_state"),
