@@ -17,3 +17,6 @@
 [submodule "workspace/src/ros2_aruco"]
 	path = workspace/src/ros2_aruco
 	url = git@github.com:srirama02/ros2_aruco
+[submodule "workspace/src/sensing/unilidar_sdk"]
+	path = workspace/src/sensing/unilidar_sdk
+	url = https://github.com/unitreerobotics/unilidar_sdk.git
