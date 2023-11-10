@@ -169,17 +169,18 @@ class ControlNode(Node):
         msg.steering = 0.0
         msg.throttle = 0.0
         msg.braking = 0.0
+        if self.aruco_flag:
+            if self.aruco_poses.poses[0].position.z > 0.14:
+                msg.throttle = 0.42
 
-        if self.aruco_flag and self.aruco_poses.poses[0].position.z > 0.14:
-            msg.throttle = 0.7
+            if self.aruco_poses.poses[0].position.x > 0.01 or self.aruco_poses.poses[0].position.x < -0.01:
+                self.get_logger().info("here")
+                msg.steering =  np.clip((self.aruco_poses.poses[0].position.x * 10) * -1.3, -1.0, 1.0)
+            self.aruco_flag = False
 
-        if self.aruco_flag and (self.aruco_poses.poses[0].position.x > 0.01 or self.aruco_poses.poses[0].position.x < -0.01):
-            if self.aruco_poses.poses[0].position.x > 0:
-                msg.steering = -1.0
-            else:
-                msg.steering = 1.0
 
         # msg.steering = 0.0
+        # msg.throttle = 0.0
         msg.braking = 0.0
         
         msg.header.stamp = self.get_clock().now().to_msg()
