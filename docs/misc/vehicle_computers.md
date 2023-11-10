@@ -30,7 +30,7 @@ This section outlines the general setup for each vehicle computer. Each vehicle 
 A setup script was written to automate the setup process. To run the script, run the following command:
 
 ```bash
-wget -O - https://raw.githubusercontent.com/uwsbel/autonomy-research-testbed/tree/master/vehicles/setup.sh | bash
+wget -O - https://raw.githubusercontent.com/uwsbel/autonomy-research-testbed/master/vehicles/setup.sh | bash
 
 ```
 
