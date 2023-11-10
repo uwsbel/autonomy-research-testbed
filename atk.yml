@@ -24,7 +24,7 @@ x-optionals:
   vnc:
     environment:
       DISPLAY: "vnc:0.0"
-name: art
+name: art-walle
 services:
   common:
     env_file:
