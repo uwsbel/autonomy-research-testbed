@@ -18,3 +18,6 @@
 [submodule "workspace/src/simulation/chrono_ros_interfaces"]
 	path = workspace/src/simulation/chrono_ros_interfaces
 	url = https://github.com/projectchrono/chrono_ros_interfaces.git
+[submodule "workspace/src/ros2_aruco"]
+	path = workspace/src/ros2_aruco
+	url = git@github.com:srirama02/ros2_aruco
