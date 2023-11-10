@@ -13,7 +13,7 @@ x-optionals:
     devices:
       - "/dev/video0"
       - "/dev/ttyACM0"
-      - "/dev/ttyUSB0"
+        #- "/dev/ttyUSB0"
   network_mode_host:
     network_mode: "host"
   x11:
