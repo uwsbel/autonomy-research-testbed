@@ -20,7 +20,7 @@ RUN . ${ROS_INSTALL_PREFIX}/setup.sh && \
     if [ -z "$ROSDEP_METAPACKAGE" ]; then \
         ROSDEP_FROM_PATHS="src"; \
     else \
-        ROSDEP_FROM_PATHS=$(colcon list --packages-up-to art_dev_meta | awk '{print $2}' | tr '\n' ' '); \
+        ROSDEP_FROM_PATHS=$(colcon list --packages-up-to $ROSDEP_METAPACKAGE | awk '{print $2}' | tr '\n' ' '); \
     fi && \
     rosdep install --from-paths $ROSDEP_FROM_PATHS --ignore-src -r -y && \
     rm -rf /tmp/workspace && \
