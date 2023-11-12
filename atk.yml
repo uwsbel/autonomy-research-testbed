@@ -70,6 +70,7 @@ services:
         APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES}"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS}"
         ROSDEP_METAPACKAGE: "art_art5_meta"
+        ROSDEP_SKIP_KEYS: "python3-torchvision tf_transformations"
   chrono:
     extends: common
     image: "atk/${COMPOSE_PROJECT_NAME}:chrono"
