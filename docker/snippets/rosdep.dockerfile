@@ -20,7 +20,7 @@ COPY ${ROS_WORKSPACE}/src /tmp/workspace/src
 RUN . ${ROS_INSTALL_PREFIX}/setup.sh && \
     cd /tmp/workspace && \
     apt-get update && \
-    if [[ -z "${ROSDEP_METAPACKAGE}" ]]; then \
+    if [ -z "${ROSDEP_METAPACKAGE}" ]; then \
         ROSDEP_FROM_PATHS="src"; \
     else \
         ROSDEP_FROM_PATHS=$(colcon list --packages-up-to ${ROSDEP_METAPACKAGE} | awk '{print $2}' | tr '\n' ' '); \
