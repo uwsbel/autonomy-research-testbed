@@ -53,7 +53,11 @@ services:
         IMAGE_TAG: "22.04"
         USER_GROUPS: "dialout video"
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
+<<<<<<< HEAD
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS} tensorrt"
+=======
+        PIP_REQUIREMENTS: "${DEFAULT_APT_DEPENDENCIES} tensorrt"
+>>>>>>> 7d33467 (pull latest master into art-oak (#88))
         ROSDEP_METAPACKAGE: "art_dev_meta"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
   agx:
