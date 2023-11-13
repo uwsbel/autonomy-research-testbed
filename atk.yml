@@ -66,6 +66,7 @@ services:
         APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES}"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS}"
         ROSDEP_SKIP_KEYS: "python3-torchvision tf_transformations"
+<<<<<<< HEAD
   art5:
     extends: agx
     image: "atk/${COMPOSE_PROJECT_NAME}:art5"
@@ -77,13 +78,27 @@ services:
         ROSDEP_METAPACKAGE: "art_art5_meta"
   oak:
     extends: agx
+=======
+  oak:
+    extends: dev
+>>>>>>> 46ea470 (74/art oak/metapackages (#89))
     image: "atk/${COMPOSE_PROJECT_NAME}:oak"
     hostname: "${COMPOSE_PROJECT_NAME}-oak"
     container_name: "${COMPOSE_PROJECT_NAME}-oak"
     build:
       dockerfile: "./docker/oak.dockerfile"
       args:
+<<<<<<< HEAD
         ROSDEP_METAPACKAGE: "art_oak_meta"
+=======
+        IMAGE_BASE: "dustynv/ros"
+        IMAGE_TAG: "humble-pytorch-l4t-r35.3.1"
+        ROS_INSTALL_PREFIX: "/opt/ros/${ROS_DISTRO}/install"
+        APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES}"
+        PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS}"
+        ROSDEP_METAPACKAGE: "art_oak_meta"
+        ROSDEP_SKIP_KEYS: "python3-torchvision tf_transformations"
+>>>>>>> 46ea470 (74/art oak/metapackages (#89))
   chrono:
     extends: common
     image: "atk/${COMPOSE_PROJECT_NAME}:chrono"
