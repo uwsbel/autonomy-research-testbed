@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>art_oak_meta</name>
+  <version>1.0.0</version>
+  <description>A package to aggregate all packages for the ART-Oak vehicle.</description>
+  <maintainer email="todo@todo.todo">TODO</maintainer>
+  <license>TODO: License declaration</license>
+
+  <exec_depend>art_common_meta</exec_depend>
+
+  <exec_depend>art_launch</exec_depend>
+  <exec_depend>localization_py</exec_depend>
+  <exec_depend>path_planning</exec_depend>
+  <exec_depend>control</exec_depend>
+  <exec_depend>chrono_ros_interfaces</exec_depend>
+  <!-- add sensing -->
+</package>
