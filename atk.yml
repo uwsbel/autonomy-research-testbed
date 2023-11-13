@@ -36,7 +36,7 @@ services:
         USER_UID: "${USER_UID:-1000}"
         USER_GID: "${USER_GID:-1000}"
         APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES:-}"
-        PIP_REQUIREMENTS: "${DEFAULT_APT_REQUIREMENTS:-}"
+        PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS:-}"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     volumes:
       - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
@@ -53,7 +53,7 @@ services:
         IMAGE_TAG: "22.04"
         USER_GROUPS: "dialout video"
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
-        PIP_REQUIREMENTS: "tensorrt"
+        PIP_REQUIREMENTS: "${DEFAULT_APT_DEPENDENCIES} tensorrt"
         ROSDEP_METAPACKAGE: "art_dev_meta"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
   art5:
@@ -70,6 +70,7 @@ services:
         APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES}"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS}"
         ROSDEP_METAPACKAGE: "art_art5_meta"
+        ROSDEP_SKIP_KEYS: "python3-torchvision tf_transformations"
   chrono:
     extends: common
     image: "atk/${COMPOSE_PROJECT_NAME}:chrono"

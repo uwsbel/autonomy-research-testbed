@@ -169,6 +169,8 @@ $ paths=$(colcon list --packages-up-to art_dev_meta | awk '{print $2}' | tr '\n'
 
 In the command above, the `colcon list --packages-up-to art_dev_meta` part simply searches through the metapackage and then lists out the paths to those packages. The rest will just postprocesses the paths to fit in the `rosdep` command on the next line.
 
+You may need to specify `--os=${OS_NAME}:${OS_VERSION}` (e.g. `--os=ubuntu:jammy`) to get `rosdep` to read the right packages. You may also want to pass `-r` to ignore packages that `rosdep` can't find and/or use `--skip-keys` to ignore packages that don't exist (like in some thirdparty packages). Please run `rosdep -h` to read more about the options.
+
 ### Finding `<exec_depend>` Packages
 
 The `<exec_depend>` tag is used by both `rosdep` and `colcon` to determine which packages to install/build. Therefore, it's important to know how to find the packages that should be listed in the `<exec_depend>` tag.

@@ -6,6 +6,7 @@
 INCLUDE ./docker/common/base.dockerfile
 
 # Snippets
+INCLUDE ./docker/snippets/agx.dockerfile
 INCLUDE ./docker/snippets/rosdep.dockerfile
 
 # Will copy in other common configurations for this build
