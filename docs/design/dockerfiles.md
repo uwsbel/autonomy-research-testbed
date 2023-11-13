@@ -170,6 +170,12 @@ the ROS workspace to run `rosdep` on.
 
 **ROSDEP_METAPACKAGE** _(Default: `""`)_: If provided, `colcon list --packages-up-to $ROSDEP_METAPACKAGE` will be run to determine the paths to run `rosdep` on (i.e. passed to `--from-paths`). If not provided, `--from-paths src` will be used.
 
+**ROSDEP_OS_NAME** _(Default: `"ubuntu"`)_: This is passed (together with `ROSDEP_OS_VERSION`) to `rosdep` at build time. On systems where it is required to build a ros distribution from source (e.g. Humble on AGX), we need to tell `rosdep` explicitly to use the os version which corresponds to the ROS build. The `--os` is passed as follows: `--os ${ROSDEP_OS_NAME}:${ROSDEP_OS_VERSION}`.
+
+**ROSDEP_OS_VERSION** _(Default: `"jammy"`)_: This is passed (together with `ROSDEP_OS_NAME`) to `rosdep` at build time. On systems where it is required to build a ros distribution from source (e.g. Humble on AGX), we need to tell `rosdep` explicitly to use the os version which corresponds to the ROS build. The `--os` is passed as follows: `--os ${ROSDEP_OS_NAME}:${ROSDEP_OS_VERSION}`.
+
+**ROSDEP_SKIP_KEYS** _(Default: `""`)_: The keys to ignore when attempting to run `rosdep`. Some packages may require being built from source and/or are not available through rosdep, so although we still want to specify them as dependencies in the package, we'll ignore them in the build. This is passed to `rosdep` as follows: `rosdep ... --skip-keys "${ROSDEP_SKIP_KEYS}"`.
+
 **ROS_INSTALL_PREFIX** _(Default: `/opt/ros/${ROS_DISTRO}`)_: The install prefix that ROS is installed to. This should be the folder location of the `setup.bash` file. By default, if installed through `apt` it will be `/opt/ros/${ROS_DISTRO}`. If it's pre-installed for tegra images, it's at `/opt/ros/${ROS_DISTRO}/install`.
 
 ## `docker/chrono.dockerfile`
