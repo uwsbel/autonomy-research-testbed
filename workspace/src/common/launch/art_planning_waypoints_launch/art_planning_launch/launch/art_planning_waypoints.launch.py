@@ -73,7 +73,6 @@ def generate_launch_description():
         ],
         parameters=[
             {"lookahead": GetLaunchArgument("lookahead")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")},
         ],
     )
     ld.add_action(node)

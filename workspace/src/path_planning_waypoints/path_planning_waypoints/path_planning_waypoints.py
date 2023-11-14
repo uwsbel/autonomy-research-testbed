@@ -49,8 +49,25 @@ import os
 import json
 
 
-class PathPlanningNode(Node):
+class PathPlanningWaypointsNode(Node):
+    """A path planning node based on reading waypoints from a csv file.
+
+    This path planner reads a desired path from a csv file. It then subscribes to the current state of the vehicle, and computes an error state between the desired path and the current state. The path is defined by coordinates, as well as a desired speed and heading for each waypoint defined.
+
+    Attributes:
+        lookahead: How far ahead of the car the target waypoint should be.
+        state: The current state of the vehicle.
+        error_state: The error between the vehicles current state and the target state.
+
+
+    """
+
     def __init__(self):
+        """initialize the Path planning Node.
+
+        Initialize the path planning node, and set up the publishers / subscribers.
+
+        """
         super().__init__("path_planning_waypoints_node")
 
         # update frequency of this node
@@ -66,11 +83,6 @@ class PathPlanningNode(Node):
 
         # data that will be used by this class
         self.state = VehicleState()
-        self.path = Path()
-        # self.objects = ObjectArray()
-
-        self.green_cones = np.array([])
-        self.red_cones = np.array([])
 
         # subscribers
         qos_profile = QoSProfile(depth=1)
@@ -85,10 +97,26 @@ class PathPlanningNode(Node):
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
+        """The state Callback.
+
+        The callback to read the current state of the vehicle.
+
+        Args:
+            msg: The message received from the vehicle state topic
+
+        """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
 
     def wpts_path_plan(self):
+        """The Waypoints path planner.
+
+        Computes the error state between the target state and the current state and the target state. First, get the target point which is closest ot the current state (plus the lookahead distance in the x direction). Then, get the error state by subtracting the current state from the target state (modular subtraction for the heading).
+
+        Returns:
+             The error state, and the target reference waypoint we are currently going to.
+
+        """
         x_current = self.state.pose.position.x
         y_current = self.state.pose.position.y
         # theta_current = np.arctan2( 2*(x*w+z*y), x**2-w**2+y**2-z**2 )
@@ -155,6 +183,11 @@ class PathPlanningNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
+        """The Publisher.
+
+        Calls the waypoint path planner, and publishes the current error state.
+
+        """
         msg = VehicleState()
         error_state, ref_vel = self.wpts_path_plan()
 
