@@ -49,7 +49,7 @@ import os
 import json
 
 
-class PathPlanningWaypointsNode(Node):
+class PathPlanningNode(Node):
     def __init__(self):
         super().__init__("path_planning_waypoints_node")
 
@@ -66,10 +66,11 @@ class PathPlanningWaypointsNode(Node):
 
         # data that will be used by this class
         self.state = VehicleState()
+        self.path = Path()
+        # self.objects = ObjectArray()
 
-        # The path
-        file = open("path.csv")
-        self.ref_traj = np.loadtxt(file, delimiter=",")
+        self.green_cones = np.array([])
+        self.red_cones = np.array([])
 
         # subscribers
         qos_profile = QoSProfile(depth=1)
@@ -168,7 +169,7 @@ class PathPlanningWaypointsNode(Node):
 def main(args=None):
     # print("=== Starting Path Planning Node ===")
     rclpy.init(args=args)
-    planner = PathPlanningWaypointsNode()
+    planner = PathPlanningNode()
     rclpy.spin(planner)
     planner.destroy_node()
     rclpy.shutdown()
