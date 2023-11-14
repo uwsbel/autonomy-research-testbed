@@ -48,7 +48,6 @@ from scipy.interpolate import interp1d, splev, splprep
 import os
 import json
 
-
 class PathPlanningWaypointsNode(Node):
     def __init__(self):
         super().__init__("path_planning_waypoints_node")
@@ -169,6 +168,7 @@ def main(args=None):
     # print("=== Starting Path Planning Node ===")
     rclpy.init(args=args)
     planner = PathPlanningWaypointsNode()
+
     rclpy.spin(planner)
     planner.destroy_node()
     rclpy.shutdown()
