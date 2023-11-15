@@ -32,7 +32,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = "control"
+package_name = "PID_controller"
 
 setup(
     name=package_name,
@@ -51,6 +51,6 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["pid = control.control:main"],
+        "console_scripts": ["pid = PID_controller.PID_controller:main"],
     },
 )

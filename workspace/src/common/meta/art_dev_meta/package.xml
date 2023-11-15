@@ -13,6 +13,6 @@
   <exec_depend>cone_detector</exec_depend>
   <exec_depend>localization_py</exec_depend>
   <exec_depend>cone_path_planner</exec_depend>
-  <exec_depend>control</exec_depend>
+  <exec_depend>PID_controller</exec_depend>
   <exec_depend>chrono_ros_interfaces</exec_depend>
 </package>

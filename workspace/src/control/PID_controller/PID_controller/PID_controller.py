@@ -41,13 +41,13 @@ from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
 
 
-class ControlNode(Node):
+class PIDControllerNode(Node):
     def __init__(self):
-        super().__init__("control_node")
+        super().__init__("PID_controller_node")
 
         # DEFAULT SETTINGS
 
-        # control node mode
+        # PID_controller node mode
         self.mode = "PID"  # "PID", "File"
         self.file = ""
         self.recorded_inputs = np.array([])
@@ -58,7 +58,7 @@ class ControlNode(Node):
         self.t_start = self.get_clock().now().nanoseconds / 1e9
 
         # READ IN SHARE DIRECTORY LOCATION
-        package_share_directory = get_package_share_directory("control")
+        package_share_directory = get_package_share_directory("PID_controller")
 
         # ROS PARAMETERS
         self.declare_parameter("control_mode", "PID")
@@ -182,7 +182,7 @@ class ControlNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    control = ControlNode()
+    control = PIDControllerNode()
     rclpy.spin(control)
 
     control.destroy_node()
