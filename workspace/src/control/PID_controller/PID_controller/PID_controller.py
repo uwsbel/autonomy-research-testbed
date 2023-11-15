@@ -55,11 +55,11 @@ class PIDControllerNode(Node):
     """
 
     def __init__(self):
-        super().__init__("PID_controller_node")
+        super().__init__("pid_controller_node")
 
         # DEFAULT SETTINGS
 
-        # PID_controller node mode
+        # pid_controller node mode
         self.mode = "PID"  # "PID", "File"
         self.file = ""
         self.recorded_inputs = np.array([])
@@ -70,7 +70,7 @@ class PIDControllerNode(Node):
         self.t_start = self.get_clock().now().nanoseconds / 1e9
 
         # READ IN SHARE DIRECTORY LOCATION
-        package_share_directory = get_package_share_directory("PID_controller")
+        package_share_directory = get_package_share_directory("pid_controller")
 
         # ROS PARAMETERS
         self.declare_parameter("control_mode", "PID")
