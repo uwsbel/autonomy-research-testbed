@@ -42,6 +42,18 @@ from rclpy.qos import QoSProfile
 
 
 class PIDControllerNode(Node):
+    """A PID controller.
+
+    This node subscribes to a path which is the data type published by the Cone Path Planner node, and publishes vehicle inputs to follow the path.
+
+    Attributes:
+        mode: The control mode to be used (currently only PID)
+        file: Where to read predifined inputs from
+        recorded_inputs: The inputs read from the file
+        steering_gain: The gain for the steering input
+        throttle_gain: The gain for the throttle input
+    """
+
     def __init__(self):
         super().__init__("PID_controller_node")
 
@@ -111,16 +123,34 @@ class PIDControllerNode(Node):
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
+        """Callback for the vehicle state subscriber.
+
+        Read the state of the vehicle from the subscriber.
+
+        Args:
+            msg: The message received from the subscriber.
+        """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
 
     def path_callback(self, msg):
+        """Callback for the path subscriber.
+
+        Read the path from the subscriber.
+
+        Args:
+            msg: The message received from the subscriber.
+        """
         self.go = True
         # self.get_logger().info("Received '%s'" % msg)
         self.path = msg
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
+        """Callback for the publisher.
+
+        Publish the vehicle inputs to follow the path.
+        """
         if not self.go:
             return
 
@@ -163,6 +193,10 @@ class PIDControllerNode(Node):
         self.pub_vehicle_cmd.publish(msg)
 
     def calc_inputs_from_file(self):
+        """Calculate the inputs from a given file.
+
+        Defines steering, throttle, and braking based on the given file.
+        """
         t = self.get_clock().now().nanoseconds / 1e9 - self.t_start
 
         self.throttle = np.interp(
