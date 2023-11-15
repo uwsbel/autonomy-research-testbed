@@ -14,7 +14,7 @@
 
   <exec_depend>python3-matplotlib</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
-  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend version_gte="1.8">python3-scipy</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
