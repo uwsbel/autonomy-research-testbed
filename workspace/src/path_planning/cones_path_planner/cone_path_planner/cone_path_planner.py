@@ -50,7 +50,22 @@ import json
 
 
 class ConePathPlannerNode(Node):
+    """A path planning node based on navigating a path defined by cones on either side.
+
+    This path planner receives a list of green and red cone locations on either side of the vehicle. It then defines a short-term local path (visualizable) for the control node to follow.
+
+    Attributes:
+        lookahead: How far ahead of the car the target point should be.
+        vis: Whether or not to visualize the path planning.
+        green_cones: A list of green cone locations, to be kept to the left of the vehicle.
+        red_cones: A list of red cone locations, to be kept to the right of the vehicle.
+    """
+
     def __init__(self):
+        """initialize the Path planning Node.
+
+        Initialize the path planning node, and set up the publishers / subscribers.
+        """
         super().__init__("cone_path_planner_node")
 
         # update frequency of this node
@@ -102,10 +117,24 @@ class ConePathPlannerNode(Node):
 
     # function to process data this class subscribes to
     def state_callback(self, msg):
+        """Callback for the vehicle state subscriber.
+
+        Read the state of the vehicle from the subscriber.
+
+        Args:
+            msg: The message received from the subscriber.
+        """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
 
     def objects_callback(self, msg):
+        """Callback for the object subscriber.
+
+        Read the object locations from the subscriber.
+
+        Args:
+            msg: The message received from the subscriber. Contains red cones and green cones.
+        """
         # self.get_logger().info("Received '%s'" % msg)
         # self.objects = msg
 
@@ -132,6 +161,17 @@ class ConePathPlannerNode(Node):
                     )
 
     def order_cones(self, cones, start):
+        """Orders the cones in a path.
+
+        Orders the cones in a path, and then return them, along with the total distance.
+
+        Args:
+            cones: The cones to be ordered.
+            start: The starting position.
+        Returns:
+            ordered_cones: The ordered cones.
+            total_dist: The total distance.
+        """
         ordered_cones = [start]
 
         ego = start
@@ -149,6 +189,14 @@ class ConePathPlannerNode(Node):
         return ordered_cones, total_dist
 
     def plan_path(self):
+        """Plans the path.
+
+        Plans the path based on the cone locations.
+
+        Returns:
+            target_pt: The target point we should drive towards.
+
+        """
         self.red_cones = np.asarray(self.red_cones)
         self.green_cones = np.asarray(self.green_cones)
 
@@ -224,6 +272,10 @@ class ConePathPlannerNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
+        """Callback for the publisher.
+
+        Publishes the path to the subscriber.
+        """
         if not self.go:
             return
         msg = Path()
