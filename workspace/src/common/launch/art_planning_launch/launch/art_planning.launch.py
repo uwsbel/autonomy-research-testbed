@@ -56,9 +56,9 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package="path_planning",
-        executable="path_planning",
-        name="path_planning",
+        package="cone_path_planner",
+        executable="cone_path_planner",
+        name="cone_path_planner",
         remappings=[
             ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
             (

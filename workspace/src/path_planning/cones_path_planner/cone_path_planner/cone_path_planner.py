@@ -49,15 +49,15 @@ import os
 import json
 
 
-class PathPlanningNode(Node):
+class ConePathPlannerNode(Node):
     def __init__(self):
-        super().__init__("path_planning_node")
+        super().__init__("cone_path_planner_node")
 
         # update frequency of this node
         self.freq = 10.0
 
         # READ IN SHARE DIRECTORY LOCATION
-        package_share_directory = get_package_share_directory("path_planning")
+        package_share_directory = get_package_share_directory("cone_path_planner")
 
         # READ IN PARAMETERS
         self.declare_parameter("vis", False)
@@ -246,7 +246,7 @@ class PathPlanningNode(Node):
 def main(args=None):
     # print("=== Starting Path Planning Node ===")
     rclpy.init(args=args)
-    planner = PathPlanningNode()
+    planner = ConePathPlannerNode()
     rclpy.spin(planner)
     planner.destroy_node()
     rclpy.shutdown()
