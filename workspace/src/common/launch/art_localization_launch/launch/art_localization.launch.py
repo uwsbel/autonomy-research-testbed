@@ -36,7 +36,6 @@ from launch_ros.actions import Node
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
 from enum import Enum
-from localization_py.state_estimation import EstimationAlgorithmOption
 
 
 def generate_launch_description():
@@ -61,21 +60,14 @@ def generate_launch_description():
         ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
     )
 
-    AddLaunchArgument(
-        ld,
-        "estimation_alg",
-        EstimationAlgorithmOption.GROUND_TRUTH.value,
-        choices=[o.value for o in EstimationAlgorithmOption.__members__.values()],
-    )
-
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package="localization_py",
-        executable="state_estimation",
-        name="state_estimation",
+        package="ekf_estimation",
+        executable="ekf_estimation",
+        name="ekf_estimation",
         remappings=[
             ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
             (
@@ -105,7 +97,6 @@ def generate_launch_description():
             ),
             GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
-            {"estimation_alg": GetLaunchArgument("estimation_alg")},
         ],
     )
     ld.add_action(node)
