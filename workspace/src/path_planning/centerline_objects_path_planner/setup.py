@@ -32,7 +32,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = "cone_path_planner"
+package_name = "centerline_objects_path_planner"
 
 setup(
     name=package_name,
@@ -52,7 +52,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "cone_path_planner = cone_path_planner.cone_path_planner:main"
+            "centerline_objects_path_planner = centerline_objects_path_planner.centerline_objects_path_planner:main"
         ],
     },
 )

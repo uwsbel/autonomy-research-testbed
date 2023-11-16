@@ -66,13 +66,15 @@ class ConePathPlannerNode(Node):
 
         Initialize the path planning node, and set up the publishers / subscribers.
         """
-        super().__init__("cone_path_planner_node")
+        super().__init__("centerline_objects_path_planner_node")
 
         # update frequency of this node
         self.freq = 10.0
 
         # READ IN SHARE DIRECTORY LOCATION
-        package_share_directory = get_package_share_directory("cone_path_planner")
+        package_share_directory = get_package_share_directory(
+            "centerline_objects_path_planner"
+        )
 
         # READ IN PARAMETERS
         self.declare_parameter("vis", False)

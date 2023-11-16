@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>cone_path_planner</name>
+  <name>centerline_objects_path_planner</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="amelmquist@wisc.edu">asher</maintainer>
