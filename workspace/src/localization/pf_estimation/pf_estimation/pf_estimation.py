@@ -12,32 +12,18 @@ import numpy as np
 import sys
 import os
 from enum import Enum
-from ekf_estimation.EKF import EKF
+from localization_py.particle_filter import ParticleFilter as PF
 from shared_utils import get_dynamics, get_coordinate_transfer
 
 
-class EKFEstimationNode(Node):
+class StateEstimationNode(Node):
     def __init__(self):
-        super().__init__("ekf_estimation_node")
+        super().__init__("state_estimation_node")
 
         # ROS PARAMETERS
         self.use_sim_msg = (
             self.get_parameter("use_sim_time").get_parameter_value().bool_value
         )
-
-        # EKF parameters
-        self.declare_parameter("Q1", 0.1)
-        Q1 = self.get_parameter("Q1").get_parameter_value().double_value
-        self.declare_parameter("Q3", 3)
-        Q3 = self.get_parameter("Q3").get_parameter_value().double_value
-        self.declare_parameter("Q4", 0.1)
-        Q4 = self.get_parameter("Q4").get_parameter_value().double_value
-        self.declare_parameter("R1", 0.0)
-        R1 = self.get_parameter("R1").get_parameter_value().double_value
-        self.declare_parameter("R3", 0.3)
-        R3 = self.get_parameter("R3").get_parameter_value().double_value
-        Q = [Q1, Q1, Q3, Q4]
-        R = [R1, R1, R3]
 
         # dynamics parameters
         self.declare_parameter("c_1", 0.0001)
@@ -104,7 +90,7 @@ class EKFEstimationNode(Node):
         # the ROM
         self.dynamics_model = get_dynamics(self.dt_gps, dyn)
         # filter
-        self.ekf = EKF(self.dt_gps, self.dynamics_model, Q, R)
+        self.pf = PF(self.dt_gps, self.dynamics_model)
 
         # our graph object, for reference frame
         self.graph = get_coordinate_transfer()
@@ -189,10 +175,9 @@ class EKFEstimationNode(Node):
 
         z = np.array([[self.x], [self.y], [np.deg2rad(self.D)]])
 
-        self.EKFstep(u, z)
+        self.PFstep(u, z)
 
         msg = VehicleState()
-        # pos and velocity are in meters, from the origin, [x, y, z]
 
         msg.pose.position.x = float(self.state[0, 0])
         msg.pose.position.y = float(self.state[1, 0])
@@ -203,17 +188,14 @@ class EKFEstimationNode(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)
 
-    def EKFstep(self, u, z):
-        self.state = self.ekf.predict(self.state, u)
-        if self.gps_ready:
-            self.state = self.ekf.correct(self.state, z)
-            self.gps_ready = False
+    def PFstep(self, u, z):
+        self.state = self.pf.update(u, z)
 
 
 def main(args=None):
     print("=== Starting State Estimation Node ===")
     rclpy.init(args=args)
-    estimator = EKFEstimationNode()
+    estimator = StateEstimationNode()
     rclpy.spin(estimator)
     estimator.destroy_node()
     rclpy.shutdown()

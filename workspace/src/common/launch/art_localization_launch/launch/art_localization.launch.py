@@ -65,9 +65,9 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package="ekf_estimation",
-        executable="ekf_estimation",
-        name="ekf_estimation",
+        package="pf_estimation",
+        executable="pf_estimation",
+        name="pf_estimation",
         remappings=[
             ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
             (
