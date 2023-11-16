@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ekf_estimation</name>
+  <name>shared_utils</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="art@todo.todo">art</maintainer>
@@ -15,7 +15,6 @@
   <exec_depend>python3-matplotlib</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend version_gte="1.8">python3-scipy</exec_depend>
-  <exec_depend>shared_utils</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

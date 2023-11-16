@@ -13,8 +13,7 @@ import sys
 import os
 from enum import Enum
 from ekf_estimation.EKF import EKF
-from shared_utils.chrono_coordinate_transfer import Graph
-from shared_utils.dynamics import Dynamics
+from shared_utils import get_dynamics, get_coordinate_transfer
 
 
 class EKFEstimationNode(Node):
@@ -103,12 +102,12 @@ class EKFEstimationNode(Node):
         self.dt_gps = 1 / self.freq
 
         # the ROM
-        self.dynamics_model = Dynamics(self.dt_gps, dyn)
+        self.dynamics_model = get_dynamics(self.dt_gps, dyn)
         # filter
         self.ekf = EKF(self.dt_gps, self.dynamics_model, Q, R)
 
         # our graph object, for reference frame
-        self.graph = Graph()
+        self.graph = get_coordinate_transfer()
 
         # subscribers
         self.sub_gps = self.create_subscription(
