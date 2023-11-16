@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import yaml
-from localization_py.dynamics import Dynamics
+from utils.dynamics.four_dof import Dynamics
 
 
 class EKF:
