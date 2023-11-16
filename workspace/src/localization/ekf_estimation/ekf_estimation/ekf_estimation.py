@@ -122,7 +122,7 @@ class EKFEstimationNode(Node):
         )
         # publishers
         self.pub_objects = self.create_publisher(
-            VehicleState, "~/output/vehicle/filtered_state", 1
+            VehicleState, "~/output/filtered_state", 1
         )
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
 

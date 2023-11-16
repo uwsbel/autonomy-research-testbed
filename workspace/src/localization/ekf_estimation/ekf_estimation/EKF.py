@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import yaml
-from shared_utils import get_dynamics
 
 
 class EKF:
