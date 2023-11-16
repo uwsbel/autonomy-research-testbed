@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import random
 from scipy.stats import wasserstein_distance
 import yaml
-from utils.dynamics.four_dof import Dynamics
+from localization_py.dynamics import Dynamics
 
 
 class ParticleFilter:

@@ -14,8 +14,8 @@ import os
 from enum import Enum
 from localization_py.EKF import EKF
 from localization_py.particle_filter import ParticleFilter as PF
-from utils.coordinate_transfer.chrono_coordinate_transfer import Graph
-from utils.dynamics.four_dof import Dynamics
+from localization_py.chrono_coordinate_transfer import Graph
+from localization_py.dynamics import Dynamics
 
 
 class EstimationAlgorithmOption(Enum):
