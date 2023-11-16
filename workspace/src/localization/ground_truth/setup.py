@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "localization_py"
+package_name = "ground_truth"
 
 setup(
     name=package_name,
@@ -18,6 +18,6 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["state_estimation = localization_py.state_estimation:main"],
+        "console_scripts": ["ground_truth = ground_truth.ground_truth:main"],
     },
 )

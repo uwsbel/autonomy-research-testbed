@@ -12,19 +12,10 @@ import numpy as np
 import sys
 import os
 from enum import Enum
-from localization_py.EKF import EKF
-from localization_py.particle_filter import ParticleFilter as PF
 from localization_py.chrono_coordinate_transfer import Graph
-from localization_py.dynamics import Dynamics
 
 
-class EstimationAlgorithmOption(Enum):
-    GROUND_TRUTH = "ground_truth"
-    EXTENDED_KALMAN_FILTER = "extended_kalman_filter"
-    PARTICLE_FILTER = "particle_filter"
-
-
-class StateEstimationNode(Node):
+class GroundTruthNode(Node):
     def __init__(self):
         super().__init__("state_estimation_node")
 
@@ -32,47 +23,6 @@ class StateEstimationNode(Node):
         self.use_sim_msg = (
             self.get_parameter("use_sim_time").get_parameter_value().bool_value
         )
-
-        self.declare_parameter(
-            "estimation_alg", EstimationAlgorithmOption.GROUND_TRUTH.value
-        )
-        self.estimation_alg = EstimationAlgorithmOption(
-            self.get_parameter("estimation_alg").get_parameter_value().string_value
-        )
-
-        # EKF parameters
-        self.declare_parameter("Q1", 0.1)
-        Q1 = self.get_parameter("Q1").get_parameter_value().double_value
-        self.declare_parameter("Q3", 3)
-        Q3 = self.get_parameter("Q3").get_parameter_value().double_value
-        self.declare_parameter("Q4", 0.1)
-        Q4 = self.get_parameter("Q4").get_parameter_value().double_value
-        self.declare_parameter("R1", 0.0)
-        R1 = self.get_parameter("R1").get_parameter_value().double_value
-        self.declare_parameter("R3", 0.3)
-        R3 = self.get_parameter("R3").get_parameter_value().double_value
-        Q = [Q1, Q1, Q3, Q4]
-        R = [R1, R1, R3]
-
-        # dynamics parameters
-        self.declare_parameter("c_1", 0.0001)
-        c_1 = self.get_parameter("c_1").get_parameter_value().double_value
-        self.declare_parameter("c_0", 0.02)
-        c_0 = self.get_parameter("c_0").get_parameter_value().double_value
-        self.declare_parameter("l", 0.5)
-        l = self.get_parameter("l").get_parameter_value().double_value
-        self.declare_parameter("r_wheel", 0.08451952624)
-        r_wheel = self.get_parameter("r_wheel").get_parameter_value().double_value
-        self.declare_parameter("i_wheel", 0.001)
-        i_wheel = self.get_parameter("i_wheel").get_parameter_value().double_value
-        self.declare_parameter("gamma", 0.33333333)
-        gamma = self.get_parameter("gamma").get_parameter_value().double_value
-        self.declare_parameter("tau_0", 0.3)
-        tau_0 = self.get_parameter("tau_0").get_parameter_value().double_value
-        self.declare_parameter("omega_0", 30.0)
-        omega_0 = self.get_parameter("omega_0").get_parameter_value().double_value
-        dyn = [c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0]
-        self.get_logger().info(str(dyn))
 
         # update frequency of this node
         self.freq = 10.0
@@ -115,14 +65,6 @@ class StateEstimationNode(Node):
 
         # time between imu updates, sec
         self.dt_gps = 1 / self.freq
-
-        # the ROM
-        self.dynamics_model = Dynamics(self.dt_gps, dyn)
-        # filter
-        if self.estimation_alg == EstimationAlgorithmOption.EXTENDED_KALMAN_FILTER:
-            self.ekf = EKF(self.dt_gps, self.dynamics_model, Q, R)
-        elif self.estimation_alg == EstimationAlgorithmOption.PARTICLE_FILTER:
-            self.pf = PF(self.dt_gps, self.dynamics_model)
 
         # our graph object, for reference frame
         self.graph = Graph()
@@ -203,48 +145,22 @@ class StateEstimationNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
-        u = np.array([[self.throttle], [self.steering / 2.2]])
-
-        z = np.array([[self.x], [self.y], [np.deg2rad(self.D)]])
-
-        if self.estimation_alg == EstimationAlgorithmOption.EXTENDED_KALMAN_FILTER:
-            self.EKFstep(u, z)
-        elif self.estimation_alg == EstimationAlgorithmOption.PARTICLE_FILTER:
-            self.PFstep(u, z)
-
         msg = VehicleState()
-        # pos and velocity are in meters, from the origin, [x, y, z]
-        if self.estimation_alg == EstimationAlgorithmOption.GROUND_TRUTH:
-            msg.pose.position.x = float(self.x)
-            msg.pose.position.y = float(self.y)
-            # TODO: this should be a quat in the future, not the heading.
-            msg.pose.orientation.z = np.deg2rad(self.D)
-            msg.twist.linear.x = float(self.gtvx)
-            msg.twist.linear.y = float(self.gtvy)
-        else:
-            msg.pose.position.x = float(self.state[0, 0])
-            msg.pose.position.y = float(self.state[1, 0])
-            msg.pose.orientation.z = float(self.state[2, 0])
-            msg.twist.linear.x = float(self.state[3, 0] * math.cos(self.state[2, 0]))
-            msg.twist.linear.y = float(self.state[3, 0] * math.sin(self.state[2, 0]))
+        msg.pose.position.x = float(self.x)
+        msg.pose.position.y = float(self.y)
+        # TODO: this should be a quat in the future, not the heading.
+        msg.pose.orientation.z = np.deg2rad(self.D)
+        msg.twist.linear.x = float(self.gtvx)
+        msg.twist.linear.y = float(self.gtvy)
 
         msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)
-
-    def EKFstep(self, u, z):
-        self.state = self.ekf.predict(self.state, u)
-        if self.gps_ready:
-            self.state = self.ekf.correct(self.state, z)
-            self.gps_ready = False
-
-    def PFstep(self, u, z):
-        self.state = self.pf.update(u, z)
 
 
 def main(args=None):
     print("=== Starting State Estimation Node ===")
     rclpy.init(args=args)
-    estimator = StateEstimationNode()
+    estimator = GroundTruthNode()
     rclpy.spin(estimator)
     estimator.destroy_node()
     rclpy.shutdown()

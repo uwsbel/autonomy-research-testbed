@@ -63,7 +63,6 @@ class EKFEstimationNode(Node):
         self.freq = 10.0
 
         self.gps = ""
-        self.ground_truth = ""
         self.mag = ""
 
         # x, y, from measurements
