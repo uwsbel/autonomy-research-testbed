@@ -41,7 +41,7 @@ from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
 
 
-class PIDControllerNode(Node):
+class PIDLateralControllerNode(Node):
     """A PID controller.
 
     This node subscribes to a path which is the data type published by the Cone Path Planner node, and publishes vehicle inputs to follow the path.
@@ -55,11 +55,11 @@ class PIDControllerNode(Node):
     """
 
     def __init__(self):
-        super().__init__("pid_controller_node")
+        super().__init__("pid_lateral_controller_node")
 
         # DEFAULT SETTINGS
 
-        # pid_controller node mode
+        # pid_lateral_controller node mode
         self.mode = "PID"  # "PID", "File"
         self.file = ""
         self.recorded_inputs = np.array([])
@@ -70,7 +70,7 @@ class PIDControllerNode(Node):
         self.t_start = self.get_clock().now().nanoseconds / 1e9
 
         # READ IN SHARE DIRECTORY LOCATION
-        package_share_directory = get_package_share_directory("pid_controller")
+        package_share_directory = get_package_share_directory("pid_lateral_controller")
 
         # ROS PARAMETERS
         self.declare_parameter("control_mode", "PID")
@@ -216,7 +216,7 @@ class PIDControllerNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    control = PIDControllerNode()
+    control = PIDLateralControllerNode()
     rclpy.spin(control)
 
     control.destroy_node()
