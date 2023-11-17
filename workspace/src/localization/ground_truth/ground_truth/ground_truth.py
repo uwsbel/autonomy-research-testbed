@@ -12,7 +12,7 @@ import numpy as np
 import sys
 import os
 from enum import Enum
-from localization_py.chrono_coordinate_transfer import Graph
+from localization_shared_utils import get_dynamics, get_coordinate_transfer
 
 
 class GroundTruthNode(Node):
@@ -67,7 +67,7 @@ class GroundTruthNode(Node):
         self.dt_gps = 1 / self.freq
 
         # our graph object, for reference frame
-        self.graph = Graph()
+        self.graph = get_coordinate_transfer()
 
         # subscribers
         self.sub_gps = self.create_subscription(

@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "shared_utils"
+package_name = "localization_shared_utils"
 
 setup(
     name=package_name,
@@ -18,6 +18,8 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["shared_utils = shared_utils.shared_utils:main"],
+        "console_scripts": [
+            "localization_shared_utils = localization_shared_utils.localization_shared_utils:main"
+        ],
     },
 )

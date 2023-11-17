@@ -13,7 +13,7 @@ import sys
 import os
 from enum import Enum
 from ekf_estimation.EKF import EKF
-from shared_utils import get_dynamics, get_coordinate_transfer
+from localization_shared_utils import get_dynamics, get_coordinate_transfer
 
 
 class EKFEstimationNode(Node):

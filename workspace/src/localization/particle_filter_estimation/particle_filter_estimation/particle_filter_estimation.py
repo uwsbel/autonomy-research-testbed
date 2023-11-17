@@ -13,7 +13,7 @@ import sys
 import os
 from enum import Enum
 from localization_py.particle_filter import ParticleFilter as PF
-from shared_utils import get_dynamics, get_coordinate_transfer
+from localization_shared_utils import get_dynamics, get_coordinate_transfer
 
 
 class ParticleFilterEstimationNode(Node):
