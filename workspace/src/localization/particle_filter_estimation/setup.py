@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = "pf_estimation"
+package_name = "particle_filter_estimation"
 
 setup(
     name=package_name,
@@ -18,6 +18,8 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["pf_estimation = pf_estimation.pf_estimation:main"],
+        "console_scripts": [
+            "particle_filter_estimation = particle_filter_estimation.particle_filter_estimation:main"
+        ],
     },
 )

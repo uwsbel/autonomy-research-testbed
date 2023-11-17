@@ -16,9 +16,9 @@ from localization_py.particle_filter import ParticleFilter as PF
 from shared_utils import get_dynamics, get_coordinate_transfer
 
 
-class StateEstimationNode(Node):
+class ParticleFilterEstimationNode(Node):
     def __init__(self):
-        super().__init__("state_estimation_node")
+        super().__init__("particle_filter_estimation_node")
 
         # ROS PARAMETERS
         self.use_sim_msg = (
@@ -195,7 +195,7 @@ class StateEstimationNode(Node):
 def main(args=None):
     print("=== Starting State Estimation Node ===")
     rclpy.init(args=args)
-    estimator = StateEstimationNode()
+    estimator = ParticleFilterEstimationNode()
     rclpy.spin(estimator)
     estimator.destroy_node()
     rclpy.shutdown()

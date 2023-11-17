@@ -65,9 +65,9 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package="pf_estimation",
-        executable="pf_estimation",
-        name="pf_estimation",
+        package="particle_filter_estimation",
+        executable="particle_filter_estimation",
+        name="particle_filter_estimation",
         remappings=[
             ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
             (
