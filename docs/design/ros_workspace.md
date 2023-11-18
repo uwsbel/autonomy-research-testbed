@@ -25,14 +25,14 @@ subfolders.
 
 Additionally, this principle is meant to describe what goes in a package. Generally
 speaking, a package should implement either a single ROS node, a collection of
-like-nodes, or define shared utilities/helpers that are used by other packages. For
+like-nodes (often only one of which is launched at a time), or define shared utilities/helpers that are used by other packages. For
 instance, the [`launch_utils`](./../../workspace/src/common/launch/launch_utils/) package
 does not have a node, but implements utilities used by other launch files.
 
 ### Principle 2: Metapackages and launch files organize vehicle spin up/tear down
 
 It is certainly possible that there exists multiple ART vehicles each with a different
-setup (i.e. different sensors, computational hardware, etc.). Therefore, this principle
+setup (i.e. different sensors, computational hardware, mission tasks etc.). Therefore, this principle
 helps to define which nodes are created and/or built as it depends on the specific
 vehicle platform in use.
 
