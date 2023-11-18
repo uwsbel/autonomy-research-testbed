@@ -38,7 +38,7 @@ vehicle platform in use.
 
 First, [metapackages](https://wiki.ros.org/Metapackages) are a new-ish ROS construct which helps define the build dependencies for a specific package. Essentially, a metapackage has no nodes or code. It is an empty package except for a `package.xml` and `CMakeLists.txt` file which define build dependencies. These build dependencies can then be used to directly build nodes/packages for a specific vehicle platform by only using `colcon build` to build that package.
 
-For instance, if a hypothetical vehicle platform requires packages named `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation`, you can specify all these packages as `<exec_depend>` in the metapackage. When `colcon build --packages-up-to <metapackage>` is run, the `<exec_depend>` packages are automatically built.
+For instance, if a hypothetical vehicle platform requires packages named `art_launch`, `object_detection`, `centerline_objects_path_planner`, and `pid_lateral_controller`, you can specify all these packages as `<exec_depend>` in the metapackage. When `colcon build --packages-up-to <metapackage>` is run, the `<exec_depend>` packages are automatically built.
 
 > [!NOTE]
 > See the [Metapackages](#metapackages) section for more information.
@@ -136,7 +136,7 @@ find_package(ament_cmake REQUIRED)
 ament_package()
 ```
 
-The magic happens in the `package.xml` file, where we'll define the build dependencies. For instance, if we want to build the `camera_driver`, `lidar_driver`, `perception`, `control`, and `actuation` packages, we would define the following:
+The magic happens in the `package.xml` file, where we'll define the build dependencies. For instance, if we want to build the `art_launch`, `object_detection`, `centerline_objects_path_planner`, and `pid_lateral_controller` packages, we would define the following:
 
 ```xml
 <?xml version="1.0"?>
@@ -148,13 +148,18 @@ The magic happens in the `package.xml` file, where we'll define the build depend
   <maintainer email="todo@todo.todo">TODO</maintainer>
   <license>TODO: License declaration</license>
 
-  <exec_depend>camera_driver</exec_depend>
+  <exec_depend>art_launch</exec_depend>
+  <exec_depend>object_detection</exec_depend>
   <exec_depend>lidar_driver</exec_depend>
-  <exec_depend>perception</exec_depend>
-  <exec_depend>control</exec_depend>
-  <exec_depend>actuation</exec_depend>
+  <exec_depend>centerline_objects_path_planner</exec_depend>
+  <exec_depend>pid_lateral_controller</exec_depend>
 </package>
 ```
+
+> [!NOTE]
+> Utilities and specific sensing dependencies should likely not be included in the metapackages. Rather, they should be included as a dependency within the
+> specific package that requires them. For example, `art_launch` is included as a dependency for this metapackage. `art_launch` has it's own dependency on
+> `launch_utils`, defined [here](../../workspace/src/common/launch/art_launch/package.xml#L19)
 
 ### Using Metapackages
 
