@@ -1,6 +1,6 @@
 """Main entry point for the `shared_utils` package"""
 
-from .shared_utils import (
+from .localization_shared_utils import (
     get_dynamics,
     get_coordinate_transfer,
 )

@@ -37,7 +37,6 @@ class GroundTruthNode(Node):
 
         # what we will be using for our state vector. (x, y, theta yaw, v vel)
         self.state = np.zeros((4, 1))
-        np.vstack(self.state)
 
         self.init_x = 0.0
         self.init_y = 0.0

@@ -57,7 +57,6 @@ class EKFEstimationNode(Node):
         self.declare_parameter("omega_0", 30.0)
         omega_0 = self.get_parameter("omega_0").get_parameter_value().double_value
         dyn = [c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0]
-        self.get_logger().info(str(dyn))
 
         # update frequency of this node
         self.freq = 10.0
@@ -71,7 +70,6 @@ class EKFEstimationNode(Node):
 
         # what we will be using for our state vector. (x, y, theta yaw, v vel)
         self.state = np.zeros((4, 1))
-        np.vstack(self.state)
 
         self.init_x = 0.0
         self.init_y = 0.0
