@@ -77,7 +77,7 @@ def generate_launch_description():
         ld,
         "disable_art_simulation",
         "True",
-        condition=UnlessCondition(GetLaunchArgument("use_sim")),
+        condition=UnlessCondition(GetLaunchArgument("art_oak")),
     )
     SetLaunchArgument(
         ld,
