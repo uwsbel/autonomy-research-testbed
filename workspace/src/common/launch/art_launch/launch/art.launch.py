@@ -90,6 +90,12 @@ def generate_launch_description():
         "True",
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
+    SetLaunchArgument(
+        ld,
+        "disable_waypoints_path_planner",
+        "True",
+        condition=IfCondition(GetLaunchArgument("use_sim")),
+    )
 
     # -------------
     # Composability
