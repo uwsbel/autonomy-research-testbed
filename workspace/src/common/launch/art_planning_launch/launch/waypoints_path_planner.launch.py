@@ -44,9 +44,15 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
+<<<<<<< HEAD
     AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/filtered_state")
     AddLaunchArgument(
         ld, "art_planning/output/error_state", "/path_planning/error_state"
+=======
+    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(
+        ld, "art_planning_waypoints/output/error_state", "/path_planning/error_state"
+>>>>>>> d6ffe47 (add waypoints path planner)
     )
     AddLaunchArgument(ld, "vis", "False")
     AddLaunchArgument(ld, "lookahead", ".75")
