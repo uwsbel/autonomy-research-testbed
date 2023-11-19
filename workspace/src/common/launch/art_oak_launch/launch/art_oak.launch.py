@@ -52,6 +52,7 @@ def generate_launch_description():
     # ----------------
 
     AddLaunchArgument(ld, "use_sim", "False")
+    AddLaunchArgument(ld, "art_oak", "True")
     AddLaunchArgument(ld, "use_sim_time", "False")
     AddLaunchArgument(ld, "art_oak", "True")
     SetLaunchArgument(
@@ -74,19 +75,25 @@ def generate_launch_description():
         ld,
         "disable_art_simulation",
         "True",
-        condition=UnlessCondition(GetLaunchArgument("use_sim")),
+        condition=UnlessCondition(GetLaunchArgument("art_oak")),
     )
     SetLaunchArgument(
         ld,
         "disable_ekf_estimation",
         "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
+        condition=IfCondition(GetLaunchArgument("art_oak")),
     )
     SetLaunchArgument(
         ld,
         "disable_particle_filter_estimation",
         "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
+        condition=IfCondition(GetLaunchArgument("art_oak")),
+    )
+    SetLaunchArgument(
+        ld,
+        "disable_centerline_objects_path_planner",
+        "True",
+        condition=IfCondition(GetLaunchArgument("art_oak")),
     )
 
     IncludeLaunchDescriptionWithCondition(ld, "art_launch", "art")
