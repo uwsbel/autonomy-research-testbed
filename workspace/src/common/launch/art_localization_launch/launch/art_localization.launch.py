@@ -12,9 +12,11 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
-    # IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "ekf_estimation")
+    IncludeLaunchDescriptionWithCondition(
+        ld, "art_localization_launch", "ekf_estimation"
+    )
     IncludeLaunchDescriptionWithCondition(
         ld, "art_localization_launch", "particle_filter_estimation"
     )
-    # IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "ground_truth")
+    IncludeLaunchDescriptionWithCondition(ld, "art_localization_launch", "ground_truth")
     return ld
