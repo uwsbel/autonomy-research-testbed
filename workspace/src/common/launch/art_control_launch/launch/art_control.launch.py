@@ -61,7 +61,7 @@ def generate_launch_description():
     # -----
 
     node = Node(
-        package="control",
+        package="pid_lateral_controller",
         executable="pid",
         name="pid",
         remappings=[

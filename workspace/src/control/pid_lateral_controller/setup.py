@@ -28,51 +28,29 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+from setuptools import setup
+import os
+from glob import glob
 
-# ros imports
-from launch import LaunchDescription
-from launch_ros.actions import Node
+package_name = "pid_lateral_controller"
 
-# internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument
-
-
-def generate_launch_description():
-    ld = LaunchDescription()
-
-    # ----------------
-    # Launch Arguments
-    # ----------------
-
-    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument(ld, "art_planning/input/objects", "/perception/objects")
-    AddLaunchArgument(ld, "art_planning/output/path", "/path_planning/path")
-
-    AddLaunchArgument(ld, "vis", "False")
-    AddLaunchArgument(ld, "lookahead", ".75")
-
-    # -----
-    # Nodes
-    # -----
-
-    node = Node(
-        package="centerline_objects_path_planner",
-        executable="centerline_objects_path_planner",
-        name="centerline_objects_path_planner",
-        remappings=[
-            ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
-            (
-                "~/input/vehicle_state",
-                GetLaunchArgument("art_planning/input/vehicle_state"),
-            ),
-            ("~/output/path", GetLaunchArgument("art_planning/output/path")),
-        ],
-        parameters=[
-            {"vis": GetLaunchArgument("vis")},
-            {"lookahead": GetLaunchArgument("lookahead")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")},
-        ],
-    )
-    ld.add_action(node)
-
-    return ld
+setup(
+    name=package_name,
+    version="0.0.0",
+    packages=[package_name],
+    data_files=[
+        ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
+        ("share/" + package_name, ["package.xml"]),
+        (os.path.join("share", package_name, "data/"), glob("data/*")),
+    ],
+    install_requires=["setuptools"],
+    zip_safe=True,
+    maintainer="asher",
+    maintainer_email="amelmquist@wisc.edu",
+    description="TODO: Package description",
+    license="TODO: License declaration",
+    tests_require=["pytest"],
+    entry_points={
+        "console_scripts": ["pid = pid_lateral_controller.pid_lateral_controller:main"],
+    },
+)

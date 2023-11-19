@@ -34,7 +34,8 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument
+from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
+from enum import Enum
 
 
 def generate_launch_description():
@@ -44,34 +45,53 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/state")
-    AddLaunchArgument(ld, "art_planning/input/objects", "/perception/objects")
-    AddLaunchArgument(ld, "art_planning/output/path", "/path_planning/path")
-
-    AddLaunchArgument(ld, "vis", "False")
-    AddLaunchArgument(ld, "lookahead", ".75")
+    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
+    AddLaunchArgument(
+        ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data"
+    )
+    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(
+        ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data"
+    )
+    AddLaunchArgument(
+        ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs"
+    )
+    AddLaunchArgument(
+        ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
+    )
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package="centerline_objects_path_planner",
-        executable="centerline_objects_path_planner",
-        name="centerline_objects_path_planner",
+        package="ground_truth",
+        executable="ground_truth",
+        name="ground_truth",
         remappings=[
-            ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
+            ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
             (
-                "~/input/vehicle_state",
-                GetLaunchArgument("art_planning/input/vehicle_state"),
+                "~/input/magnetometer",
+                GetLaunchArgument("art_localization/input/magnetometer"),
             ),
-            ("~/output/path", GetLaunchArgument("art_planning/output/path")),
+            (
+                "~/input/gyroscope",
+                GetLaunchArgument("art_localization/input/gyroscope"),
+            ),
+            (
+                "~/input/accelerometer",
+                GetLaunchArgument("art_localization/input/accelerometer"),
+            ),
+            (
+                "~/input/vehicle_inputs",
+                GetLaunchArgument("art_localization/input/vehicle_inputs"),
+            ),
+            (
+                "~/output/filtered_state",
+                GetLaunchArgument("art_localization/output/filtered_state"),
+            ),
         ],
-        parameters=[
-            {"vis": GetLaunchArgument("vis")},
-            {"lookahead": GetLaunchArgument("lookahead")},
-            {"use_sim_time": GetLaunchArgument("use_sim_time")},
-        ],
+        parameters=[],
     )
     ld.add_action(node)
 

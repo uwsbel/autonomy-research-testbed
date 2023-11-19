@@ -78,6 +78,18 @@ def generate_launch_description():
         "True",
         condition=UnlessCondition(GetLaunchArgument("use_sim")),
     )
+    SetLaunchArgument(
+        ld,
+        "disable_ekf_estimation",
+        "True",
+        condition=IfCondition(GetLaunchArgument("use_sim")),
+    )
+    SetLaunchArgument(
+        ld,
+        "disable_particle_filter_estimation",
+        "True",
+        condition=IfCondition(GetLaunchArgument("use_sim")),
+    )
 
     # -------------
     # Composability
