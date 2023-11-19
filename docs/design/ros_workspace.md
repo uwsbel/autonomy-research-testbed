@@ -32,7 +32,7 @@ does not have a node, but implements utilities used by other launch files.
 ### Principle 2: Metapackages and launch files organize vehicle spin up/tear down
 
 It is certainly possible that there exists multiple ART vehicles each with a different
-setup (i.e. different sensors, computational hardware, mission tasks etc.). Therefore, this principle
+setup (i.e. different sensors, computational hardware, mission tasks, etc.). Therefore, this principle
 helps to define which nodes are created and/or built as it depends on the specific
 vehicle platform in use.
 
