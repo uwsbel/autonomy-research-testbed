@@ -33,8 +33,6 @@ This is where the main launch file is held: [`art.launch.py`](../../workspace/sr
 1. It will create a [composable node container](https://docs.ros.org/en/galactic/How-To-Guides/Launching-composable-nodes.html).
 2. It will include all other orchestration launch files.
 
-The only purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.). This will allow all orchestrators to know which specific packages to launch, and which to ignore. Following this, ther remainder of the general setup is left to the `art_shared_launch`.
-
 ## `art_dev_launch/`
 
 The purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.) for the `dev` service. This will allow all orchestrators to know which specific packages to launch, and which to ignore. This is currently set up to run a cone-based path following demo, but can be used to test any other packages.
