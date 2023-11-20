@@ -57,9 +57,6 @@ def generate_launch_description():
         ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
     )
 
-    AddLaunchArgument(ld, "container", "")
-    container_name = AddLaunchArgument(ld, "container_name", "art_container")
-
     SetLaunchArgument(
         ld,
         "disable_art_sensing",
@@ -90,6 +87,7 @@ def generate_launch_description():
         "True",
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
-    IncludeLaunchDescription(ld, "art_shared_launch")
+
+    IncludeLaunchDescriptionWithCondition(ld, "art_shared_launch", "art_shared")
 
     return ld
