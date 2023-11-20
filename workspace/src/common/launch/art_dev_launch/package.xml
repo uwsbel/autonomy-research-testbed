@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>art_oak_launch</name>
+  <name>art_launch</name>
   <version>0.1.0</version>
-  <description>The art_oak_launch package</description>
+  <description>The art_dev_launch package</description>
 
   <maintainer email="TODO@TODO.com">TODO</maintainer>
   <license>Apache License 2.0</license>

@@ -89,6 +89,6 @@ def generate_launch_description():
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
 
-    IncludeLaunchDescriptionWithCondition(ld, "art_shared_launch", "art_shared")
+    IncludeLaunchDescriptionWithCondition(ld, "art_launch", "art")
 
     return ld
