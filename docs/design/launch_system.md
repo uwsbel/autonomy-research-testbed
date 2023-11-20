@@ -28,14 +28,16 @@ All launch files end in `.launch.py`. Furthermore, all launch files specific to 
 
 ## `art_launch/`
 
-This is where the main launch file is held: [`art.launch.py`](../../workspace/src/common/launch/art_launch/launch/art.launch.py). The only purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.). This will allow all orchestrators to know which specific packages to launch, and which to ignore. Following this, ther remainder of the general setup is left to the `art_shared_launch`.
-
-## `art_shared_launch/`
-
-This is where common conigurations are made. The `art_shared_launch` accomplishes a few things, which will be common across all vehicles.
+This is where the main launch file is held: [`art.launch.py`](../../workspace/src/common/launch/art_launch/launch/art.launch.py). This is a common launch file through which most services will go through. `art_launch` accomplishes two tasks:
 
 1. It will create a [composable node container](https://docs.ros.org/en/galactic/How-To-Guides/Launching-composable-nodes.html).
 2. It will include all other orchestration launch files.
+
+The only purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.). This will allow all orchestrators to know which specific packages to launch, and which to ignore. Following this, ther remainder of the general setup is left to the `art_shared_launch`.
+
+## `art_dev_launch/`
+
+The purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.) for the `dev` service. This will allow all orchestrators to know which specific packages to launch, and which to ignore. This is currently set up to run a cone-based path following demo, but can be used to test any other packages.
 
 ## `launch_utils/`
 
@@ -43,7 +45,7 @@ The `launch_utils` folder contains helper functions for creating launch files. T
 
 ## `art_<vehicle name>_launch/`
 
-Vehicle-specific launch files should be named following the above naming convention (`art_<vehicle name>_launch`), and should be structured in a similar way to `art_launch`. This means they should only define launch arguments, leaving the process of actually launching modules to the `art_shared_launch`. This is defined to allow for multiple vehicles with various missions, sensor suites, etc. to all be launched in similar ways and all live in the same repository.
+Vehicle-specific launch files should be named following the above naming convention (`art_<vehicle name>_launch`), and should be structured in a similar way to `art_dev_launch`. This means they should only define launch arguments, leaving the process of actually launching modules to `art_launch`. This is defined to allow for multiple vehicles with various missions, sensor suites, etc. to all be launched in similar ways and all live in the same repository.
 
 ## `art_<module>_launch/`
 
