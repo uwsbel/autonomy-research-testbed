@@ -2,14 +2,20 @@
 <package format="3">
   <name>art_launch</name>
   <version>0.1.0</version>
-  <description>The art_launch package</description>
+  <description>The art packages that always get launched.</description>
 
   <maintainer email="TODO@TODO.com">TODO</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
-  <exec_depend>art_shared_launch</exec_depend>
+  <exec_depend>art_perception_launch</exec_depend>
+  <exec_depend>art_localization_launch</exec_depend>
+  <exec_depend>art_control_launch</exec_depend>
+  <exec_depend>art_planning_launch</exec_depend>
+  <exec_depend>art_sensing_launch</exec_depend>
+  <exec_depend>art_vehicle_launch</exec_depend>
+  <exec_depend>art_simulation_launch</exec_depend>
   <exec_depend>launch_utils</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>

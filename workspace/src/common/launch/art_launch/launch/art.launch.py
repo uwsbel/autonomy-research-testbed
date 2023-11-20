@@ -47,47 +47,45 @@ from launch_utils import (
 def generate_launch_description():
     ld = LaunchDescription()
 
-    # ----------------
-    # Launch Arguments
-    # ----------------
+    # -------------
+    # Composability
+    # -------------
+    AddLaunchArgument(ld, "container", "")
+    container_name = AddLaunchArgument(ld, "container_name", "art_container")
+    # If composability is desired, all included launch descriptions should attach to this container and use intraprocess communication
 
-    AddLaunchArgument(ld, "use_sim", "False")
-    AddLaunchArgument(ld, "use_sim_time", "False")
-    SetLaunchArgument(
-        ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
-    )
+    use_composability = IfCondition(AddLaunchArgument(ld, "use_composability", "False"))
 
-    SetLaunchArgument(
-        ld,
-        "disable_art_sensing",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
+    # If a container name is not provided,
+    # set the name of the container launched above for image_proc nodes
+    set_container_name = SetLaunchConfiguration(
+        condition=use_composability, name="container", value=container_name
     )
-    SetLaunchArgument(
-        ld,
-        "disable_art_vehicle",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_art_simulation",
-        "True",
-        condition=UnlessCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_ekf_estimation",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_particle_filter_estimation",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
+    ld.add_action(set_container_name)
 
-    IncludeLaunchDescriptionWithCondition(ld, "art_shared_launch", "art_shared")
+    container = ComposableNodeContainer(
+        name=container_name,
+        namespace="",
+        package="rclcpp_components",
+        executable="component_container",
+        composable_node_descriptions=[],
+        condition=use_composability,
+        output="screen",
+    )
+    ld.add_action(container)
+
+    # ---------------
+    # Launch Includes
+    # ---------------
+
+    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
+    IncludeLaunchDescriptionWithCondition(
+        ld, "art_localization_launch", "art_localization"
+    )
+    IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
+    IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
+    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
+    IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
+    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld
