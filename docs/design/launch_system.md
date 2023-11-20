@@ -1,6 +1,6 @@
 # Launch System
 
-The launch system is used to help spin up all the nodes associated with a given experiement (e.g. simulation, reality). This page describes the file structure and how files are designed.
+The launch system is used to help spin up all the nodes associated with a given experiement (e.g. simulation, reality). This page describes the file structure and how files are designed, as well as how new launch dependencies should be added.
 
 > [!NOTE]
 > The term "orchestrator" is going to be used to describe a launch file that includes other launch files or does house keeping (defines `LaunchConfigurations`, etc.).
@@ -12,6 +12,7 @@ The file structure is as follows:
 ```
 autonomy-research-testbed/
 ├── art_launch/
+├── art_shared_launch/
 ├── launch_utils/
 └── art_<module>_launch/
 ```
@@ -22,15 +23,21 @@ Each folder contains a `launch/` folder where all the launch files should be pla
 
 ### File Naming Convention
 
-All launch files end in `.launch.py`. Furthermore, all launch files specific to the a vehicle platform or orchastrator launch files are prefixed with `art_`.
+All launch files end in `.launch.py`. Furthermore, all launch files specific to a vehicle platform or orchastrator launch files are prefixed with `art_`.
 
 ## `art_launch/`
 
-This is where the main launch file is held: [`art.launch.py`](../../workspace/src/common/launch/art_launch/launch/art.launch.py). This file will do a few things.
+This is where the main launch file is held: [`art.launch.py`](../../workspace/src/common/launch/art_launch/launch/art.launch.py). The only purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.). This will allow all orchestrators to know which specific packages to launch, and which to ignore. Following this, ther remainder of the general setup is left to the `art_shared_launch`.
 
-1. It will first define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.).
-2. It will create a [composable node container](https://docs.ros.org/en/galactic/How-To-Guides/Launching-composable-nodes.html).
-3. It will include all other orchestration launch files.
+> [!NOTE]
+> Vehicle-specific launch fies should be named following the above naming convention (`art_<name>_launch`), and should be structured in a similar way to `art_launch`. This means they should only define launch arguments, leaving the process of actually launching modules to the `art_shared_launch`.
+
+## `art_shared_launch/`
+
+This is where the actual modules get launched from. the `art_shared_launch` acomplishes a few things, which will be common across all vehicles.
+
+1. It will create a [composable node container](https://docs.ros.org/en/galactic/How-To-Guides/Launching-composable-nodes.html).
+2. It will include all other orchestration launch files.
 
 ## `launch_utils/`
 
