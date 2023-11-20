@@ -12,7 +12,7 @@ The file structure is as follows:
 ```
 autonomy-research-testbed/
 ├── art_launch/
-├── art_shared_launch/
+├── art_dev_launch/
 ├── launch_utils/
 ├── art_<vehice name>_launch/
 └── art_<module>_launch/
