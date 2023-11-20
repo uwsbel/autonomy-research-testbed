@@ -14,6 +14,7 @@ autonomy-research-testbed/
 ├── art_launch/
 ├── art_shared_launch/
 ├── launch_utils/
+├── art_<vehice name>_launch/
 └── art_<module>_launch/
 ```
 
@@ -29,12 +30,9 @@ All launch files end in `.launch.py`. Furthermore, all launch files specific to 
 
 This is where the main launch file is held: [`art.launch.py`](../../workspace/src/common/launch/art_launch/launch/art.launch.py). The only purpose of this file is to define system wide parameters (e.g. `LaunchConfigurations`, `LaunchDescriptions`, etc.). This will allow all orchestrators to know which specific packages to launch, and which to ignore. Following this, ther remainder of the general setup is left to the `art_shared_launch`.
 
-> [!NOTE]
-> Vehicle-specific launch fies should be named following the above naming convention (`art_<name>_launch`), and should be structured in a similar way to `art_launch`. This means they should only define launch arguments, leaving the process of actually launching modules to the `art_shared_launch`.
-
 ## `art_shared_launch/`
 
-This is where the actual modules get launched from. the `art_shared_launch` acomplishes a few things, which will be common across all vehicles.
+This is where common conigurations are made. The `art_shared_launch` accomplishes a few things, which will be common across all vehicles.
 
 1. It will create a [composable node container](https://docs.ros.org/en/galactic/How-To-Guides/Launching-composable-nodes.html).
 2. It will include all other orchestration launch files.
@@ -42,6 +40,10 @@ This is where the actual modules get launched from. the `art_shared_launch` acom
 ## `launch_utils/`
 
 The `launch_utils` folder contains helper functions for creating launch files. These helpers should be used throughout the launch system.
+
+## `art_<vehicle name>_launch/`
+
+Vehicle-specific launch files should be named following the above naming convention (`art_<vehicle name>_launch`), and should be structured in a similar way to `art_launch`. This means they should only define launch arguments, leaving the process of actually launching modules to the `art_shared_launch`. This is defined to allow for multiple vehicles with various missions, sensor suites, etc. to all be launched in similar ways and all live in the same repository.
 
 ## `art_<module>_launch/`
 
