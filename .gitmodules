@@ -26,3 +26,6 @@
 	path = workspace/src/sensing/serial-ros2
 	url = https://github.com/RoverRobotics-forks/serial-ros2.git
 
+[submodule "workspace/src/sensing/path/to/submodule"]
+	path = workspace/src/sensing/path/to/submodule
+	url = https://github.com/Carpediem324/WHEELTEC_N100_IMU_ROS2.git

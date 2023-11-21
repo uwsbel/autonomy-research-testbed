@@ -25,7 +25,8 @@ x-optionals:
 
   devices:
     devices:
-      - "/dev/video0"
+            #- "/dev/ttyACM1"
+      - "/dev/ttyUSB1"
       - "/dev/ttyACM0"
       - "/dev/ttyUSB0"
   network_mode_host:
