@@ -27,6 +27,7 @@ x-optionals:
 name: art
 services:
   common:
+    env_file: "atk.env"
     build:
       context: "./"
       network: "host"
@@ -43,7 +44,7 @@ services:
     tty: true
   dev:
     extends: common
-    image: "atk/${COMPOSE_PROJECT_NAME}:dev"
+    image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:dev"
     hostname: "${COMPOSE_PROJECT_NAME}-dev"
     container_name: "${COMPOSE_PROJECT_NAME}-dev"
     build:
@@ -55,6 +56,15 @@ services:
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS} tensorrt"
         ROSDEP_METAPACKAGE: "art_dev_meta"
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
+          - darwin/amd64
+          - darwin/arm64
+          - windows/amd64
+          - windows/arm64
+        no-cache: true
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
   agx:
     extends: dev
@@ -68,7 +78,7 @@ services:
         ROSDEP_SKIP_KEYS: "python3-torchvision tf_transformations"
   art5:
     extends: agx
-    image: "atk/${COMPOSE_PROJECT_NAME}:art5"
+    image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:art5"
     hostname: "${COMPOSE_PROJECT_NAME}-art5"
     container_name: "${COMPOSE_PROJECT_NAME}-art5"
     build:
@@ -77,7 +87,7 @@ services:
         ROSDEP_METAPACKAGE: "art_art5_meta"
   oak:
     extends: agx
-    image: "atk/${COMPOSE_PROJECT_NAME}:oak"
+    image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:oak"
     hostname: "${COMPOSE_PROJECT_NAME}-oak"
     container_name: "${COMPOSE_PROJECT_NAME}-oak"
     build:
@@ -86,7 +96,7 @@ services:
         ROSDEP_METAPACKAGE: "art_oak_meta"
   chrono:
     extends: common
-    image: "atk/${COMPOSE_PROJECT_NAME}:chrono"
+    image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:chrono"
     hostname: "${COMPOSE_PROJECT_NAME}-chrono"
     container_name: "${COMPOSE_PROJECT_NAME}-chrono"
     build:
@@ -100,7 +110,7 @@ services:
         CHRONO_BRANCH: "feature/ros"
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/sim"
   vnc:
-    image: "atk/${COMPOSE_PROJECT_NAME}:vnc"
+    image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:vnc"
     hostname: "${COMPOSE_PROJECT_NAME}-vnc"
     container_name: "${COMPOSE_PROJECT_NAME}-vnc"
     build:
