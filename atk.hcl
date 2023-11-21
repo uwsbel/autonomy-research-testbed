@@ -11,3 +11,10 @@
 group "atk" {
    targets = ["dev", "chrono", "vnc"]
 }
+
+target "chrono" {
+   target = "chrono"
+   args = {
+      REMOVE_OPTIX = "true"
+   }
+}

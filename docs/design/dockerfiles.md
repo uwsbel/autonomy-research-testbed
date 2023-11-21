@@ -15,7 +15,9 @@ docker/
 │   ├── common.dockerfile
 │   └── final.dockerfile
 ├── snippets/
-│   ├── chrono.dockerfile
+│   ├── agx.dockerfile
+│   ├── chrono-build.dockerfile
+│   ├── optix.dockerfile
 │   ├── ros.dockerfile
 │   └── rosdep.dockerfile
 ├── chrono.dockerfile
@@ -29,7 +31,7 @@ docker/
 ## `docker/data/`
 
 This folder holds data files that may be used by dockerfile snippets. For example,
-the [`docker/snippets/chrono.dockerfile`](../../docker/snippets/chrono.dockerfile) requires the OptiX build script; this file should go here.
+the [`docker/snippets/optix.dockerfile`](../../docker/snippets/optix.dockerfile) requires the OptiX build script; this file should go here.
 
 ## `docker/common/`
 
@@ -104,7 +106,7 @@ set the `CMD` to be `${USERSHELLPATH}`.
 This folder contains dockerfile "snippets", or small scripts that are included in
 service dockerfiles to build specific packages, such as Chrono or ROS.
 
-### `docker/snippets/chrono.dockerfile`
+### `docker/snippets/chrono-build.dockerfile`
 
 This file builds Chrono from source. It currently builds a non-configurable list of
 chrono modules that is listed below:
@@ -118,10 +120,6 @@ chrono modules that is listed below:
 - `Chrono::ROS`
 
 Furthermore, it also builds [`chrono_ros_interfaces`](https://github.com/projectchrono/chrono_ros_interfaces). This is required to build `Chrono::ROS`.
-
-**OPTIX_SCRIPT**: The location _on the host_ that the optix script is located at. This
-script can be found on NVIDIA's OptiX downloads page. For more information, see the
-[FAQs](./../misc/faq.md#optix-install).
 
 **ROS_DISTRO**: The ROS distro to use.
 
@@ -146,6 +144,8 @@ as this is _not_ a volume.
 The user profile is updated to add the python binary directory to `PYTHONPATH` and
 the lib directory is appended to `LD_LIBRARY_PATH`.
 
+**REMOVE_OPTIX** _(Default: `false`)_: Whether to remove the optix library after building chrono. This should be `'true'` if you plan to push the image to some public repository.
+
 ### `docker/snippets/ros.dockerfile`
 
 To decrease image size and allow easy customization, ROS is installed separately (as
@@ -155,6 +155,14 @@ snippet will install ROS here.
 **ROS_DISTRO**: The ROS distro to use.
 
 **ROS_INSTALL_PREFIX** _(Default: `/opt/ros/${ROS_DISTRO}`)_: The install prefix that ROS is installed to. This should be the folder location of the `setup.bash` file. By default, if installed through `apt` it will be `/opt/ros/${ROS_DISTRO}`. If it's pre-installed for tegra images, it's at `/opt/ros/${ROS_DISTRO}/install`.
+
+### `docker/snippets/optix.dockerfile`
+
+This snippet installs optix in the image. It expects an optix script to be present on the host.
+
+**OPTIX_SCRIPT**: The location _on the host_ that the optix script is located at. This
+script can be found on NVIDIA's OptiX downloads page. For more information, see the
+[FAQs](./../misc/faq.md#optix-install).
 
 ### `docker/snippets/rosdep.dockerfile`
 
@@ -209,3 +217,9 @@ Below is some additional information for people interested in the underlying wor
 ### `dockerfile-x`
 
 In order to be more extensible and general purpose, the dockerfiles mentioned below were built around `dockerfile-x`. [`dockerfile-x`](https://github.com/devthefuture-org/dockerfile-x) is a docker plugin that supports importing of other dockerfiles through the `INCLUDE` docker build action. Using `INCLUDE`, we can construct service dockerfiles that mix and match different [snippets](#dockersnippets) that we implement.
+
+### Docker Hub
+
+To expedite start up time, multi-platform builds have been made available on [uwsbel's Docker Hub profile](https://hub.docker.com/repository/docker/uwsbel/art/general). These are automatically built using [Github Actions](https://github.com/features/actions) (see the [workflow file](./../../.github/workflows/build-docker-images.yml)).
+
+Leveraging `docker buildx bake`, images can be built on a specific architecture for other achitectures. What this means is that we can use a basic Github runner to build images that can be used on multiple OS's and/or hardware (e.g. MacOS, arm, x86, etc.). This means that when spinning up the images on our system, building the images locally is no longer required. Furthermore, when an update is pushed to the repository, because Github Actions are automated on pushes to `master`, new images will be built and pushed to Docker Hub; retrieving the new images is as easy as `atk dev -c pull -s <service with new image>`.
