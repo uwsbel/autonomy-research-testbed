@@ -170,8 +170,8 @@ class ControlNode(Node):
         msg.throttle = 0.0
         msg.braking = 0.0
         if self.aruco_flag:
-            if self.aruco_poses.poses[0].position.z > 0.14:
-                msg.throttle = 0.42
+            if self.aruco_poses.poses[0].position.z > 0.35:
+                msg.throttle = 0.6
 
             if self.aruco_poses.poses[0].position.x > 0.01 or self.aruco_poses.poses[0].position.x < -0.01:
                 self.get_logger().info("here")
