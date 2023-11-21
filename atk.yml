@@ -27,6 +27,7 @@ x-optionals:
 name: art
 services:
   common:
+    env_file: "atk.env"
     build:
       context: "./"
       network: "host"
@@ -55,6 +56,15 @@ services:
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS} tensorrt"
         ROSDEP_METAPACKAGE: "art_dev_meta"
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
+          - darwin/amd64
+          - darwin/arm64
+          - windows/amd64
+          - windows/arm64
+        no-cache: true
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
   agx:
     extends: dev
