@@ -21,12 +21,8 @@
 [submodule "workspace/src/sensing/sbg_ros2_driver"]
 	path = workspace/src/sensing/sbg_ros2_driver
 	url = https://github.com/SBG-Systems/sbg_ros2_driver.git
-[submodule "workspace/src/sensing/ros2_wheeltec_n100_imu"]
-	path = workspace/src/sensing/ros2_wheeltec_n100_imu
-	url = https://github.com/NDHANA94/ros2_wheeltec_n100_imu.git
+
 [submodule "workspace/src/serial-ros2"]
 	path = workspace/src/sensing/serial-ros2
 	url = https://github.com/RoverRobotics-forks/serial-ros2.git
-[submodule "workspace/src/sensing/WHEELTEC_N100_IMU_ROS2"]
-	path = workspace/src/sensing/WHEELTEC_N100_IMU_ROS2
-	url = https://github.com/Carpediem324/WHEELTEC_N100_IMU_ROS2.git
+
