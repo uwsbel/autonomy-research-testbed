@@ -59,10 +59,6 @@ services:
         platforms:
           - linux/amd64
           - linux/arm64
-          - darwin/amd64
-          - darwin/arm64
-          - windows/amd64
-          - windows/arm64
         no-cache: true
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
   agx:
