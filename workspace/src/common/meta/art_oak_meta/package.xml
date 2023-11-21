@@ -15,5 +15,6 @@
   <exec_depend>waypoints_path_planner</exec_depend>
   <exec_depend>pid_lateral_controller</exec_depend>
   <exec_depend>chrono_ros_interfaces</exec_depend>
+  <exec_depend>arduino_driver</exec_depend>
   <!-- add sensing -->
 </package>

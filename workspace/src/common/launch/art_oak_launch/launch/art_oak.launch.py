@@ -95,23 +95,15 @@ def generate_launch_description():
         "True",
         condition=IfCondition(GetLaunchArgument("art_oak")),
     )
-
-    # -------------
-    # Composability
-    # -------------
-
-    # If composability is desired, all included launch descriptions should attach to this container and use intraprocess communication
-
-    use_composability = IfCondition(AddLaunchArgument(ld, "use_composability", "False"))
-
-    # If a container name is not provided,
-    # set the name of the container launched above for image_proc nodes
-    set_container_name = SetLaunchConfiguration(
-        condition=use_composability, name="container", value=container_name
+    SetLaunchArgument(
+        ld,
+        "disable_usb_cam",
+        "True",
+        condition=IfCondition(GetLaunchArgument("art_oak")),
     )
     SetLaunchArgument(
         ld,
-        "disable_centerline_objects_path_planner",
+        "disable_xsens",
         "True",
         condition=IfCondition(GetLaunchArgument("art_oak")),
     )
