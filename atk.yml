@@ -41,6 +41,11 @@ services:
     volumes:
       - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     tty: true
+    x-bake:
+      platforms:
+        - linux/amd64
+        - linux/arm64
+      no-cache: true
   dev:
     extends: common
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:dev"
@@ -55,11 +60,6 @@ services:
         USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS} tensorrt"
         ROSDEP_METAPACKAGE: "art_dev_meta"
-      x-bake:
-        platforms:
-          - linux/amd64
-          - linux/arm64
-        no-cache: true
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
   agx:
     extends: dev
@@ -71,6 +71,9 @@ services:
         APT_DEPENDENCIES: "${DEFAULT_APT_DEPENDENCIES}"
         PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS}"
         ROSDEP_SKIP_KEYS: "python3-torchvision tf_transformations"
+      x-bake:
+        platforms:
+          - linux/arm64
   art5:
     extends: agx
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:art5"
@@ -114,6 +117,11 @@ services:
       network: "host"
       args:
         VNC_PASSWORD: "${COMPOSE_PROJECT_NAME}"
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
+        no-cache: true
     ports:
       - "127.0.0.1:8080-8099:8080"
       - "127.0.0.1:5900-5999:5900"
