@@ -10,11 +10,14 @@ ekf_filter_node:
     transform_timeout: 0.0
     two_d_mode: true
 
-    base_link_frame: "imu"
+    base_link_frame: "imu_link" #simulation
+    #base_link_frame: "imu" #reality
 
-    imu0: "/imu"
+    
+    imu0: "/sensing/imu/data"
+    #imu0: "/imu"
     imu0_config: [false, false, false,
-              false, false, false,
+              false, false, true,
               false, false, false,  # Set velocity components to false
               false, false, true,
               true, true, false]

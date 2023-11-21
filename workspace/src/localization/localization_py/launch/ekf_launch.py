@@ -10,7 +10,7 @@ def generate_launch_description():
             output='screen',
             parameters=['/home/art/art/workspace/src/localization/localization_py/config/ekf_config.yaml'],
             remappings=[
-                ('/imu/data', '/imu')
+                ('/imu/data', '/sensing/imu/data')
             ]
         ),
         Node(
