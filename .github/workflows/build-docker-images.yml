@@ -1,6 +1,7 @@
 name: build-docker-images
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'master'
@@ -11,11 +12,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [vnc, dev, chrono]
+        target: [vnc]
     steps:
       -
         name: Checkout
         uses: actions/checkout@v4
+      -
+        name: Copy atk.env to .env
+        run: cp atk.env .env
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
