@@ -102,7 +102,7 @@ class NeuralNetworkControllerNode(Node):
         self.heading = 0.0
 
         self.model_mc = load_model(
-            "/home/art/art/workspace/src/control/control/keras_ml.keras"
+            "/home/art/art/workspace/src/control/neural_network_controller/neural_network_controller/keras_ml.keras"
         )
 
     # function to process data this class subscribes to
