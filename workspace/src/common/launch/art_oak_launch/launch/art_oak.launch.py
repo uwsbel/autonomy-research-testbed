@@ -95,6 +95,24 @@ def generate_launch_description():
         "True",
         condition=IfCondition(GetLaunchArgument("art_oak")),
     )
+    SetLaunchArgument(
+        ld,
+        "disable_usb_cam",
+        "True",
+        condition=IfCondition(GetLaunchArgument("art_oak")),
+    )
+    SetLaunchArgument(
+        ld,
+        "disable_xsens",
+        "True",
+        condition=IfCondition(GetLaunchArgument("art_oak")),
+    )
+    SetLaunchArgument(
+        ld,
+        "disable_cone_detector",
+        "True",
+        condition=IfCondition(GetLaunchArgument("art_oak")),
+    )
 
     IncludeLaunchDescriptionWithCondition(ld, "art_launch", "art")
 

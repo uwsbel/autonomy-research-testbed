@@ -81,6 +81,12 @@ class WaypointsPathPlannerNode(Node):
             self.get_parameter("lookahead").get_parameter_value().double_value
         )
 
+        # READ IN WAYPOINTS
+        self.file = open(
+            "/home/art/art/workspace/src/path_planning/waypoints_path_planner/waypoints_path_planner/path.csv"
+        )
+        self.ref_traj = np.loadtxt(self.file, delimiter=",")
+
         # data that will be used by this class
         self.state = VehicleState()
 
@@ -92,7 +98,9 @@ class WaypointsPathPlannerNode(Node):
         )
 
         # publishers
-        self.pub_path = self.create_publisher(VehicleState, "~/output/error_state", 10)
+        self.pub_err_state = self.create_publisher(
+            VehicleState, "~/output/error_state", 10
+        )
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
 
     # function to process data this class subscribes to
