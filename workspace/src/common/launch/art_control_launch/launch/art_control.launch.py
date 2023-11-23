@@ -15,5 +15,8 @@ def generate_launch_description():
     IncludeLaunchDescriptionWithCondition(
         ld, "art_control_launch", "pid_lateral_controller"
     )
+    IncludeLaunchDescriptionWithCondition(
+        ld, "art_control_launch", "neural_network_controller"
+    )
 
     return ld

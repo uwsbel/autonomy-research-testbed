@@ -113,6 +113,12 @@ def generate_launch_description():
         "True",
         condition=IfCondition(GetLaunchArgument("art_oak")),
     )
+    SetLaunchArgument(
+        ld,
+        "disable_pid_lateral_controller",
+        "True",
+        condition=IfCondition(GetLaunchArgument("art_oak")),
+    )
 
     IncludeLaunchDescriptionWithCondition(ld, "art_launch", "art")
 
