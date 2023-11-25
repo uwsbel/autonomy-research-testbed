@@ -11,7 +11,8 @@ x-optionals:
       NVIDIA_DRIVER_CAPABILITIES: all
   devices:
     devices:
-      - "/dev/video0"
+      - "/dev/ttyUSB1"
+      - "/dev/ttyUSB2"
       - "/dev/ttyACM0"
       - "/dev/ttyUSB0"
   network_mode_host:
