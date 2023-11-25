@@ -10,7 +10,6 @@
   <exec_depend>art_common_meta</exec_depend>
 
   <exec_depend>art_oak_launch</exec_depend>
-  <exec_depend>cone_detector</exec_depend>
   <exec_depend>ground_truth</exec_depend>
   <exec_depend>waypoints_path_planner</exec_depend>
   <exec_depend>neural_network_controller</exec_depend>
