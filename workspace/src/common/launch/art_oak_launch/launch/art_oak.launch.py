@@ -63,7 +63,7 @@ def generate_launch_description():
         ld,
         "disable_art_sensing",
         "True",
-        condition=IfCondition(GetLaunchArgument("art_oak")),
+        condition=IfCondition(GetLaunchArgument("use_sim")),
     )
     SetLaunchArgument(
         ld,

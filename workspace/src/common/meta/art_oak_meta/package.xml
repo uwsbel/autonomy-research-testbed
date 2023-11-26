@@ -15,5 +15,9 @@
   <exec_depend>neural_network_controller</exec_depend>
   <exec_depend>chrono_ros_interfaces</exec_depend>
   <exec_depend>arduino_driver</exec_depend>
+  <exec_depend>sllidar_ros2</exec_depend>
+  <exec_depend>wheeltec_n100_imu</exec_depend>
+  <exec_depend>nmea_navsat_driver</exec_depend>
+  <exec_depend>serial</exec_depend>
   <!-- add sensing -->
 </package>
