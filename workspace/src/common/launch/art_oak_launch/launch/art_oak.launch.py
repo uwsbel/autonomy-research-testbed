@@ -79,7 +79,7 @@ def generate_launch_description():
     )
     SetLaunchArgument(
         ld,
-        "disable_ekf_estimation",
+        "disable_ground_truth",
         "True",
         condition=IfCondition(GetLaunchArgument("art_oak")),
     )

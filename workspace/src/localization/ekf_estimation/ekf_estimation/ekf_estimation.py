@@ -191,11 +191,11 @@ class EKFEstimationNode(Node):
         msg = VehicleState()
         # pos and velocity are in meters, from the origin, [x, y, z]
 
-        msg.pose.position.x = float(self.state[0, 0])
-        msg.pose.position.y = float(self.state[1, 0])
-        msg.pose.orientation.z = float(self.state[2, 0])
-        msg.twist.linear.x = float(self.state[3, 0] * math.cos(self.state[2, 0]))
-        msg.twist.linear.y = float(self.state[3, 0] * math.sin(self.state[2, 0]))
+        msg.pose.position.x = float(self.x)
+        msg.pose.position.y = float(self.y)
+        msg.pose.orientation.z = float(np.deg2rad(self.D))
+        msg.twist.linear.x = float(self.state[3, 0] * math.cos(np.deg2rad(self.D)))
+        msg.twist.linear.y = float(self.state[3, 0] * math.sin(np.deg2rad(self.D)))
 
         msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)
