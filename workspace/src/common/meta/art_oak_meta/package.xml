@@ -11,7 +11,7 @@
 
   <exec_depend>art_oak_launch</exec_depend>
   <exec_depend>lidar_scan_2d</exec_depend>
-  <exec_depend>ekf_localization</exec_depend>
+  <exec_depend>ekf_estimation</exec_depend>
   <exec_depend>waypoints_path_planner</exec_depend>
   <exec_depend>neural_network_controller</exec_depend>
   <exec_depend>chrono_ros_interfaces</exec_depend>
