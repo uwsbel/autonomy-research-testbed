@@ -39,6 +39,7 @@ from rclpy.node import Node
 from art_msgs.msg import VehicleState
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Float32MultiArray
 
 import numpy as np
 import os
@@ -77,6 +78,7 @@ class NeuralNetworkControllerNode(Node):
         # data that will be used by this class
         self.state = VehicleState()
         self.error_state = VehicleState()
+        self.lidar_scan = []
         if use_sim_msg:
             global VehicleInput
             from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
@@ -94,6 +96,9 @@ class NeuralNetworkControllerNode(Node):
         self.sub_err_state = self.create_subscription(
             VehicleState, "~/input/error_state", self.err_state_callback, qos_profile
         )
+        self.sub_lidar_scan = self.create_subscription(
+            Float32MultiArray, "/reduced_scan", self.lidar_scan_callback, qos_profile
+        )
         self.pub_vehicle_cmd = self.create_publisher(
             VehicleInput, "~/output/vehicle_inputs", 10
         )
@@ -102,30 +107,15 @@ class NeuralNetworkControllerNode(Node):
         self.heading = 0.0
 
         self.model_mc = load_model(
-            "/home/art/art/workspace/src/control/neural_network_controller/neural_network_controller/keras_ml.keras"
-        )
-
-    # function to process data this class subscribes to
-    def state_callback(self, msg):
-        self.state = msg
-        # TODO: We need to fix the -0.248
-        self.heading = msg.pose.orientation.z - 0.24845347641462115
-        while self.heading < -np.pi:
-            self.heading = self.heading + 2 * np.pi
-        while self.heading > np.pi:
-            self.heading = self.heading - 2 * np.pi
-        self.vel = np.sqrt(
-            self.state.twist.linear.x**2 + self.state.twist.linear.y**2
+            "/home/art/art/workspace/src/control/neural_network_controller/neural_network_controller/nn_oatracking.keras"
         )
 
     def err_state_callback(self, msg):
         self.go = True
         self.error_state = msg
 
-    def HarryInputs_callback(self, msg):
-        self.get_logger().info("received harry's inputs: %s" % msg)
-        self.throttle += msg.linear.x
-        self.steering += msg.angular.z
+    def lidar_scan_callback(self, msg):
+        self.lidar_scan = msg.data
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
@@ -141,17 +131,16 @@ class NeuralNetworkControllerNode(Node):
             self.error_state.pose.orientation.z,
             self.error_state.twist.linear.x,
         ]
-        ref_vel = self.error_state.twist.linear.y
+        error_input = np.array(e)
+        self.get_logger().info(str(error))
+        ##read lidar scan
+        lidar_input = np.array(self.lidar_scan)
+        ##concatenate error and lidar input as nn input
+        nn_input = np.concatenate((error_input, lidar_input)).reshape(1, 22)
 
-        err = np.array(e).reshape(1, -1)
-        self.get_logger().info(str(err))
-
-        ctrl = self.model_mc.predict(err)
-        self.throttle = ctrl[0, 0]
-        self.steering = ctrl[0, 1]
-
-        self.steering = self.steering * 1.6
-
+        self.steering = self.model_mc.predict(nn_input)[0][0]
+        self.throttle = 0.75
+        self.get_logger().info("control input: %s" % [self.steering, self, throttle])
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
