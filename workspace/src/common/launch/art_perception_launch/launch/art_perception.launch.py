@@ -13,5 +13,5 @@ def generate_launch_description():
     # ---------------
 
     IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "cone_detector")
-
+    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "lidar_scan_2d")
     return ld

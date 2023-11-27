@@ -1,4 +1,15 @@
 #
+# BSD 3-Clause License
+#
+# Copyright (c) 2022 University of Wisconsin - Madison
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
 # * Redistributions in binary form must reproduce the above copyright notice,
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
@@ -23,22 +34,25 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 # internal imports
-from launch_utils import AddLaunchArgument, IncludeLaunchDescriptionWithCondition
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 
 
 def generate_launch_description():
     ld = LaunchDescription()
 
-    # ---------------
-    # Launch Includes
-    # ---------------
+    # ----------------
+    # Launch Arguments
+    # ----------------
 
-    nmea_navsat_driver_node = Node(
-        package="nmea_navsat_driver",
-        executable="nmea_serial_driver",
-        name="nmea_serial_driver",
-        output="screen",
+    # -----
+    # Nodes
+    # -----
+
+    node = Node(
+        package="lidar_scan_2d",
+        executable="lidar_scan_2d",
+        name="lidar_scan_2d",
     )
-    ld.add_action(nmea_navsat_driver_node)
+    ld.add_action(node)
 
     return ld
