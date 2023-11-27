@@ -2,7 +2,7 @@ import csv
 import rclpy
 from rclpy.node import Node
 from art_msgs.msg import VehicleState
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from art_msgs.msg import VehicleInput
 from sensor_msgs.msg import Imu, NavSatFix, MagneticField
 from chrono_ros_interfaces.msg import Body as ChVehicle
 import matplotlib.pyplot as plt
