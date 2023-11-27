@@ -38,6 +38,7 @@ import csv
 from rclpy.node import Node
 from art_msgs.msg import VehicleState
 from geometry_msgs.msg import PoseStamped
+from art_msgs.msg import VehicleInput
 from geometry_msgs.msg import Twist
 
 import numpy as np
@@ -77,12 +78,6 @@ class NeuralNetworkControllerNode(Node):
         # data that will be used by this class
         self.state = VehicleState()
         self.error_state = VehicleState()
-        if use_sim_msg:
-            global VehicleInput
-            from chrono_ros_msgs.msg import ChDriverInputs as VehicleInput
-        else:
-            global VehicleInput
-            from art_msgs.msg import VehicleInput
         self.vehicle_cmd = VehicleInput()
 
         # waits for first path if using PID, otherwise runs right away
