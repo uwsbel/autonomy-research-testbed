@@ -173,7 +173,7 @@ class MotorDriverNode(Node):
         self.servo = SteeringServoDriver()
 
         BAUD_RATE = 250000
-        PORT = "/dev/ttyACM0"
+        PORT = "/dev/ttyUSB0"
         TIMEOUT = 0.1
         self.arduino = serial.Serial(port=PORT, baudrate=BAUD_RATE, timeout=TIMEOUT)
 

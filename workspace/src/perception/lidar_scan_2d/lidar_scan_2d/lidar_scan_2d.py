@@ -94,7 +94,7 @@ class lidar_scan_2d(Node):
         # self.get_logger().info("received lidar data")
         self.lidar_data = msg
         self.raw_lidar_data = msg.ranges
-        self.get_logger().info("original size: %s" % len(self.raw_lidar_data))
+        # self.get_logger().info("original size: %s" % len(self.raw_lidar_data))
         self.reduced_lidar_data = self.reduce_lidar()
 
     def reduce_lidar(self):

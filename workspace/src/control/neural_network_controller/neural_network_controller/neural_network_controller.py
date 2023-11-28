@@ -88,7 +88,10 @@ class NeuralNetworkControllerNode(Node):
         qos_profile = QoSProfile(depth=1)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_err_state = self.create_subscription(
-            VehicleState, "~/input/error_state", self.err_state_callback, qos_profile
+            VehicleState,
+            "/path_planning/error_state",
+            self.err_state_callback,
+            qos_profile,
         )
         self.sub_lidar_scan = self.create_subscription(
             Float32MultiArray, "/reduced_scan", self.lidar_scan_callback, qos_profile
@@ -126,7 +129,7 @@ class NeuralNetworkControllerNode(Node):
             self.error_state.twist.linear.x,
         ]
         error_input = np.array(e)
-        self.get_logger().info(str(error))
+        # self.get_logger().info(str(error_input))
         ##read lidar scan
         lidar_input = np.array(self.lidar_scan)
         ##concatenate error and lidar input as nn input
@@ -134,11 +137,21 @@ class NeuralNetworkControllerNode(Node):
 
         self.steering = self.model_mc.predict(nn_input)[0][0]
         self.throttle = 0.75
-        self.get_logger().info("control input: %s" % [self.steering, self, throttle])
+        # self.get_logger().info("control input: %s" % [self.steering, self.throttle])
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)
         msg.braking = np.clip(self.braking, 0, 1)
         self.pub_vehicle_cmd.publish(msg)
+
+        ## record data
+        lidar_data_str = ",".join(map(str, self.lidar_scan))
+        with open("nn_input_.csv", "a", encoding="UTF8") as csvfile:
+            mywriter = csv.writer(csvfile, quoting=csv.QUOTE_NONE, escapechar=" ")
+            # mywriter.writerow([self.x, self.y, self.D-self.orig_heading])
+            mywriter.writerow(
+                [e[0], e[1], e[2], e[3], lidar_data_str, self.throttle, self.steering]
+            )
+            csvfile.close()
 
 
 def main(args=None):

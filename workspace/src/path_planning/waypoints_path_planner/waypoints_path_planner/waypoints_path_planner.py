@@ -83,7 +83,7 @@ class WaypointsPathPlannerNode(Node):
 
         # READ IN WAYPOINTS
         self.file = open(
-            "/home/art/art/workspace/src/path_planning/waypoints_path_planner/waypoints_path_planner/path.csv"
+            "/home/art/art/workspace/src/path_planning/waypoints_path_planner/waypoints_path_planner/CampRandall.csv"
         )
         self.ref_traj = np.loadtxt(self.file, delimiter=",")
 
@@ -128,7 +128,7 @@ class WaypointsPathPlannerNode(Node):
         x_current = self.state.pose.position.x
         y_current = self.state.pose.position.y
         # theta_current = np.arctan2( 2*(x*w+z*y), x**2-w**2+y**2-z**2 )
-        theta_current = self.state.pose.orientation.z - 0.24845347641462115
+        theta_current = self.state.pose.orientation.z
         while theta_current < -np.pi:
             theta_current = theta_current + 2 * np.pi
         while theta_current > np.pi:

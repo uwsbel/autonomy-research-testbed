@@ -37,3 +37,9 @@ _version.py
 *.jpg
 *.png
 *.gif
+
+#path files
+*.csv
+
+# NN models
+*.keras

@@ -67,7 +67,9 @@ class EKFEstimationNode(Node):
         # x, y, from measurements
         self.x = 0
         self.y = 0
-
+        self.bu_x = 0
+        self.bu_y = 0
+        self.count_bu = 0
         # what we will be using for our state vector. (x, y, theta yaw, v vel)
         self.state = np.zeros((4, 1))
 
@@ -107,13 +109,12 @@ class EKFEstimationNode(Node):
         self.graph = get_coordinate_transfer()
 
         # subscribers
-        self.sub_gps = self.create_subscription(
-            NavSatFix, "~/input/gps", self.gps_callback, 1
-        )
+        self.sub_gps = self.create_subscription(NavSatFix, "/fix", self.gps_callback, 1)
 
         self.sub_mag = self.create_subscription(
             MagneticField, "~/input/magnetometer", self.mag_callback, 1
         )
+        self.sub_imu = self.create_subscription(Imu, "/imu", self.imu_callback, 1)
         self.sub_control = self.create_subscription(
             VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1
         )
@@ -153,32 +154,53 @@ class EKFEstimationNode(Node):
             self.graph.set_rotation(np.deg2rad(self.D) - self.init_theta)
             self.state[2, 0] = self.init_theta
 
-    def gps_callback(self, msg):
-        self.gps = msg
-        self.gps_ready = True
-        if math.isnan(self.gps.latitude):
-            # arbitrary values for when we don't get any data (in reality)
-            self.lat = -10
-            self.lon = -10
-            self.alt = -10
-        else:
-            self.lat = self.gps.latitude
-            self.lon = self.gps.longitude
-            self.alt = self.gps.altitude
+    def imu_callback(self, msg):
+        time_step = 1 / 100
+        ang_vel_x = msg.angular_velocity.x
+        ang_vel_y = msg.angular_velocity.y
+        ang_vel_z = msg.angular_velocity.z
+        # getting heading angle (yaw angle)
+        if abs(ang_vel_z) > 0.005:
+            ang_vel_z = ang_vel_z
+        elif abs(ang_vel_z) < 0.005:
+            ang_vel_z = 0.0
+        self.D -= time_step * ang_vel_z
+        # self.get_logger().info("THE HEADING IS: " + str(self.D))
+        if not self.orig_heading_set:
+            self.orig_heading_set = True
+            self.orig_heading = self.D  # TODO: bug here.....
+            if self.D > 0:
+                self.graph.set_rotation(self.D - np.pi)
+            else:
+                self.graph.set_rotation(self.D + np.pi)
+            self.state[2, 0] = 0  # self.init_theta
 
+    def gps_callback(self, msg):
+        self.get_logger().info(
+            "getting ground truth, with back up times: " + str(self.count_bu)
+        )
+        self.gps = msg
+        lat = self.gps.latitude
+        lon = self.gps.longitude
+        alt = self.gps.altitude
         if not self.origin_set:
             self.origin_set = True
-            self.graph.set_graph(self.lat, self.lon, self.alt)
-
-        x, y, z = self.graph.gps2cartesian(self.lat, self.lon, self.alt)
+            self.graph.set_graph(lat, lon, alt)
+        x, y, z = self.graph.gps2cartesian(lat, lon, alt)
         if self.orig_heading_set:
-            newx, newy, newz = self.graph.rotate(x, y, z)
-            self.gtvx, self.gtvy = (newx - self.x) / self.dt_gps, (
-                newy - self.y
-            ) / self.dt_gps
-            self.x, self.y, self.z = newx, newy, newz
-            self.x += self.init_x
-            self.y += self.init_y
+            self.x, self.y, self.gtz = self.graph.rotate(x, y, z)
+            self.x = self.x + self.init_x
+            self.y = self.y + self.init_y
+        if str(self.x) == "nan":
+            # use back up ground truth position
+            self.x = self.bu_x
+            self.y = self.bu_y
+            self.count_bu = self.count_bu + 1
+        else:
+            ## assign back up ground truth data
+            self.bu_x = self.x
+            self.bu_y = self.y
+            # self.get_logger().info("back up data for ground truth")
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
@@ -189,11 +211,20 @@ class EKFEstimationNode(Node):
         self.EKFstep(u, z)
 
         msg = VehicleState()
+
+        with open("state_output_.csv", "a", encoding="UTF8") as csvfile:
+            mywriter = csv.writer(csvfile)
+            # mywriter.writerow([self.x, self.y, self.D-self.orig_heading])
+            mywriter.writerow(
+                [self.x, self.y, self.D, self.state[3][0], self.throttle, self.steering]
+            )
+            csvfile.close()
+
         # pos and velocity are in meters, from the origin, [x, y, z]
 
         msg.pose.position.x = float(self.x)
         msg.pose.position.y = float(self.y)
-        msg.pose.orientation.z = float(np.deg2rad(self.D))
+        msg.pose.orientation.z = float(self.D)
         msg.twist.linear.x = float(self.state[3, 0] * math.cos(np.deg2rad(self.D)))
         msg.twist.linear.y = float(self.state[3, 0] * math.sin(np.deg2rad(self.D)))
 
