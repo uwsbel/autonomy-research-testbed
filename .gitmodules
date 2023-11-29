@@ -23,6 +23,6 @@
 [submodule "workspace/src/sensing/sllidar_ros2"]
 	path = workspace/src/sensing/sllidar_ros2
 	url = git@github.com:Slamtec/sllidar_ros2.git
-[submodule "workspace/src/sensing/ros2_wheeltec_n100_imu"]
-	path = workspace/src/sensing/ros2_wheeltec_n100_imu
-	url = git@github.com:NDHANA94/ros2_wheeltec_n100_imu.git
+[submodule "workspace/src/sensing/serial-ros2"]
+	path = workspace/src/sensing/serial-ros2
+	url = https://github.com/RoverRobotics-forks/serial-ros2.git
