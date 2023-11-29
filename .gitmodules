@@ -20,3 +20,6 @@
 [submodule "workspace/src/sensing/unilidar_sdk"]
 	path = workspace/src/sensing/unilidar_sdk
 	url = https://github.com/unitreerobotics/unilidar_sdk.git
+[submodule "workspace/src/slam_toolbox"]
+	path = workspace/src/slam_toolbox
+	url = git@github.com:zzhou292/slam_toolbox.git
