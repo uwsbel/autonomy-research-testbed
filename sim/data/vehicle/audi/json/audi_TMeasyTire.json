@@ -1,0 +1,53 @@
+{
+  "Name": "audi TMeasy Tire",
+  "Type": "Tire",
+  "Template": "TMeasyTire",
+
+  // ------------------------------------------------
+  // Tire design (REQUIRED)
+
+  "Design": {
+    "Unloaded Radius [m]": 0.336423,
+    "Mass [kg]": 37.6,
+    "Inertia [kg.m2]": [3.84, 6.69, 3.84 ],
+    "Width [m]": 0.204978,
+    "Rim Radius [m]": 0.2032,
+    "Roundness of Cross Section": 0.1
+  },
+
+  "Coefficient of Friction": 0.9,
+
+  "Rolling Resistance Coefficients": [ 0.01, 0.01 ],
+
+  // ------------------------------------------------
+  // Vehicle type.
+  // Required only if tire specified with "load index" or "bearing capacity".
+  // Must be one of "Truck" or "Passenger"
+
+  "Vehicle Type": "Passenger",
+
+  // ------------------------------------------------
+  // Load index specification.
+  // Takes priority over "bearing capacity" (used only if a full parameterization not provided)
+
+  "Load Index": 108,
+
+  // ------------------------------------------------
+  // Bearing capacity specification.
+  // Lowest priority (used only if no other specification provided)
+
+  "Maximum Bearing Capacity [N]": 10000,
+
+  // ------------------------------------------------
+  // Full parameter specification.
+  // Takes priority over both "Load Index" and "bearing capacity".
+
+  // ------------------------------------------------
+  // Visualization mesh (OPTIONAL)
+
+    "Visualization": {
+        "Mesh Filename Left": "audi/audi_tire.obj",
+        "Mesh Filename Right": "audi/audi_tire.obj"
+    }
+
+}

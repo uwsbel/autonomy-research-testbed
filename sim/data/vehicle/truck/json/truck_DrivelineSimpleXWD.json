@@ -1,0 +1,7 @@
+{
+  "Name": "Truck 6x4 Offroad Truck XWD Driveline",
+  "Type": "Driveline",
+  "Template": "SimpleDrivelineXWD",
+
+  "Differential Max Bias": 2.0
+}

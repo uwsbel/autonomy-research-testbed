@@ -72,9 +72,9 @@ using namespace chrono::sensor;
 using namespace chrono::vehicle::artcar;
 // =============================================================================
 // Initial vehicle location and orientation
-ChVector<> initLoc(-1.0, -0.5, 0.5);
+ChVector<> initLoc(-1.0, -1.0, 0.5);
 ChVector<> initLoc_flw(0, 0.0, 0.5);
-ChQuaternion<> initRot = Q_from_AngZ(0.0f);
+ChQuaternion<> initRot = Q_from_AngZ(0.4f);
 // Rigid terrain
 RigidTerrain::PatchType terrain_model = RigidTerrain::PatchType::BOX;
 double terrainHeight = 0;      // terrain height (FLAT terrain only)
@@ -122,9 +122,9 @@ int main(int argc, char* argv[]) {
     vehicle.SetInitPosition(ChCoordsys<>(initLoc, initRot));
     vehicle.SetTireType(tire_model);
     vehicle.SetTireStepSize(step_size);
-    vehicle.SetMaxMotorVoltageRatio(0.12f);
+    vehicle.SetMaxMotorVoltageRatio(0.09f);
     vehicle.SetStallTorque(0.3f);
-    vehicle.SetTireRollingResistance(0.015f);
+    vehicle.SetTireRollingResistance(0.05f);
     vehicle.Initialize();
 
     VisualizationType tire_vis_type = VisualizationType::MESH;
@@ -139,25 +139,6 @@ int main(int argc, char* argv[]) {
     // Containing system
     auto system = vehicle.GetSystem();
 
-    // add follow vehicle
-    ARTcar vehicle_flw(system);
-    vehicle_flw.SetContactMethod(contact_method);
-    vehicle_flw.SetChassisCollisionType(chassis_collision_type);
-    vehicle_flw.SetChassisFixed(false);
-    vehicle_flw.SetInitPosition(ChCoordsys<>(initLoc_flw, initRot));
-    vehicle_flw.SetTireType(tire_model);
-    vehicle_flw.SetTireStepSize(step_size);
-    vehicle_flw.SetMaxMotorVoltageRatio(0.12f);
-    vehicle_flw.SetStallTorque(0.3f);
-    vehicle_flw.SetTireRollingResistance(0.015f);
-    vehicle_flw.Initialize();
-
-    vehicle_flw.SetChassisVisualizationType(chassis_vis_type);
-    vehicle_flw.SetSuspensionVisualizationType(suspension_vis_type);
-    vehicle_flw.SetSteeringVisualizationType(steering_vis_type);
-    vehicle_flw.SetWheelVisualizationType(wheel_vis_type);
-    vehicle_flw.SetTireVisualizationType(tire_vis_type);
-
     // Add box in front of the car
     auto vis_mat = chrono_types::make_shared<ChVisualMaterial>();
     vis_mat->SetAmbientColor({0.f, 0.f, 0.f});
@@ -168,17 +149,11 @@ int main(int argc, char* argv[]) {
     vis_mat->SetClassID(30000);
     vis_mat->SetInstanceID(50000);
 
-    //
-    // Create a random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dist_x(2.0, 6.0);
-    std::uniform_real_distribution<double> dist_y(2.0, 9.0);
-    
     // Add path to follow:
     // Function to read and parse the CSV file
     std::vector<std::tuple<double, double, double, double>> positions;
-    std::string csvFile = "/home/art/art/sim/data_art/autonomy-toolkit/paths/path2.csv"; // Replace with CSV file path
+    std::string directoryPath = "/home/art/art/sim/data_art/autonomy-toolkit/paths/";
+    std::string csvFile = directoryPath + argv[1];; // Replace with CSV file path
     std::ifstream file(csvFile);
     if (!file.is_open()) {
         std::cerr << "Error: Unable to open CSV file." << std::endl;
@@ -217,39 +192,29 @@ int main(int argc, char* argv[]) {
         system->Add(box_body);
     }
 
-    // Loop to add obstacle boxes with random positions
-    for (int i = 0; i < 1; ++i) {
-    double x = dist_x(gen);
-    double y = dist_y(gen);
+    // Randomly shuffle the positions vector to select n unique positions
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(positions.begin(), positions.end(), gen);
+    int n = std::atoi(argv[2]); // Number of boxes to add
+    for (int i = 0; i < n; ++i) {
+        double x = std::get<0>(positions[i]);
+        double y = std::get<1>(positions[i]);
 
-    auto box_body = chrono_types::make_shared<ChBodyEasyBox>(1.0, 1.0, 2.0, 1000, true, false);
-    //box_body->SetPos({x, y, 0});
-    box_body->SetPos({5, 5 , 0});
-    box_body->SetBodyFixed(true);
-    system->Add(box_body);
+        // Create and add a box at the (x, y) position
+        auto box_body = chrono_types::make_shared<ChBodyEasyBox>(1.0, 1.0, 2.0, 1000, true, false);
+        box_body->SetPos({x, y, 0});
+        box_body->SetBodyFixed(true);
+        system->Add(box_body);
 
-    // Set visual material for the box
-    auto shape = box_body->GetVisualModel()->GetShapes()[0].first;
-    if (shape->GetNumMaterials() == 0) {
-        shape->AddMaterial(vis_mat);
-    } else {
-        shape->GetMaterials()[0] = vis_mat;
+        // Set visual material for the box
+        auto shape = box_body->GetVisualModel()->GetShapes()[0].first;
+        if (shape->GetNumMaterials() == 0) {
+            shape->AddMaterial(vis_mat);
+        } else {
+            shape->GetMaterials()[0] = vis_mat;
+        }
     }
-    }
-
-    // auto box_body = chrono_types::make_shared<ChBodyEasyBox>(1.0, 1.0, 0.05, 1000, true, false);
-    // box_body->SetPos({20, 20, 0});
-    // box_body->SetBodyFixed(true);
-    // system->Add(box_body);
-    // {
-    //     auto shape = box_body->GetVisualModel()->GetShapes()[0].first;
-    //     if(shape->GetNumMaterials() == 0){
-    //         shape->AddMaterial(vis_mat);
-    //     }
-    //     else{
-    //         shape->GetMaterials()[0] = vis_mat;
-    //     }
-    // }
 
     
 
@@ -259,7 +224,6 @@ int main(int argc, char* argv[]) {
 
     // Create the basic driver
     auto driver = std::make_shared<ChDriver>(vehicle.GetVehicle());
-    auto driver_flw = std::make_shared<ChDriver>(vehicle_flw.GetVehicle());
 
     // Create a sensor manager
     auto manager = chrono_types::make_shared<ChSensorManager>(system);
@@ -273,7 +237,7 @@ int main(int argc, char* argv[]) {
 
     // Create a lidar and add it to the sensor manager
     auto offset_pose = chrono::ChFrame<double>({0, 0, 0.4}, Q_from_AngAxis(0, {0, 0, 1}));
-    auto lidar = chrono_types::make_shared<ChLidarSensor>(vehicle_flw.GetChassis()->GetBody(),  // body lidar is attached to
+    auto lidar = chrono_types::make_shared<ChLidarSensor>(vehicle.GetChassis()->GetBody(),  // body lidar is attached to
                                                           10,                             // scanning rate in Hz
                                                           offset_pose,                    // offset pose
                                                           180,                   // number of horizontal samples
@@ -292,8 +256,8 @@ int main(int argc, char* argv[]) {
 
     // Add camera
     auto cam_pose = chrono::ChFrame<double>({-5.304, 0, 1.0}, Q_from_AngAxis(0.1, {0, 1.25, 0}));
-    auto cam = chrono_types::make_shared<ChCameraSensor>(vehicle_flw.GetChassis()->GetBody(),         // body camera is attached to
-                                                            20,   // update rate in Hz
+    auto cam = chrono_types::make_shared<ChCameraSensor>(vehicle.GetChassis()->GetBody(),         // body camera is attached to
+                                                            10,   // update rate in Hz
                                                             cam_pose,  // offset pose
                                                             image_width,   // image width
                                                             image_height,  // image height
@@ -305,7 +269,7 @@ int main(int argc, char* argv[]) {
     cam->SetLag(lag);
     cam->SetCollectionWindow(0.0f);
     cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(image_width, image_height, "Camera"));
-    cam->PushFilter(chrono_types::make_shared<ChFilterSave>("./cam1/"));
+    // cam->PushFilter(chrono_types::make_shared<ChFilterSave>("./cam1/"));
     manager->AddSensor(cam);
     manager->Update();
     // ------------
@@ -335,12 +299,6 @@ int main(int argc, char* argv[]) {
         chrono_types::make_shared<ChROSDriverInputsHandler>(driver_inputs_rate, driver, driver_inputs_topic_name);
     ros_manager->RegisterHandler(driver_inputs_handler);
 
-    // Create a subscriber to the driver inputs for second car
-    auto driver_inputs_rate_flw = 10;
-    auto driver_inputs_topic_name_flw = "~/input/driver_inputs_flw";
-    auto driver_inputs_handler_flw =
-        chrono_types::make_shared<ChROSDriverInputsHandler>(driver_inputs_rate_flw, driver_flw, driver_inputs_topic_name_flw);
-    ros_manager->RegisterHandler(driver_inputs_handler_flw);
 
     // Create a publisher for the vehicle state
     auto vehicle_state_rate = 25;
@@ -348,13 +306,6 @@ int main(int argc, char* argv[]) {
     auto vehicle_state_handler = chrono_types::make_shared<ChROSBodyHandler>(
         vehicle_state_rate, vehicle.GetChassisBody(), vehicle_state_topic_name);
     ros_manager->RegisterHandler(vehicle_state_handler);
-
-    // Create a publisher for the following vehicle state
-    auto vehicle_state_rate_flw = 25;
-    auto vehicle_state_topic_name_flw = "~/output/vehicle_flw/state";
-    auto vehicle_state_handler_flw = chrono_types::make_shared<ChROSBodyHandler>(
-        vehicle_state_rate_flw, vehicle_flw.GetChassisBody(), vehicle_state_topic_name_flw);
-    ros_manager->RegisterHandler(vehicle_state_handler_flw);
 
     // Finally, initialize the ros manager
     ros_manager->Initialize();
@@ -375,20 +326,15 @@ int main(int argc, char* argv[]) {
 
         // Get driver inputs
         DriverInputs driver_inputs = driver->GetInputs();
-        DriverInputs driver_inputs_flw = driver_flw->GetInputs();
         // Update modules (process inputs from other modules)
         time = vehicle.GetSystem()->GetChTime();
         driver->Synchronize(time);
-        driver_flw->Synchronize(time);
         vehicle.Synchronize(time, driver_inputs, terrain);
-        vehicle_flw.Synchronize(time, driver_inputs_flw, terrain);
         terrain.Synchronize(time);
 
         // Advance simulation for one timestep for all modules
         driver->Advance(step_size);
-        driver_flw->Advance(step_size);
         vehicle.Advance(step_size);
-        vehicle_flw.Advance(step_size);
         terrain.Advance(step_size);
 
         // update sensor manager

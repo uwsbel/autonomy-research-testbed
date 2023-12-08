@@ -1,0 +1,8 @@
+{
+  "Name":                       "audi Brake",
+  "Type":                       "Brake",
+  "Template":                   "BrakeShafts",
+
+  "Maximum Torque":             800,
+  "Shaft Inertia":              0.4
+}

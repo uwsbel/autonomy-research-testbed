@@ -13,9 +13,9 @@ import pychrono.vehicle as veh
 import pychrono.sensor as sens
 
 
-class ART1(veh.RCCar):
+class ART1(veh.ARTcar):
     def __init__(self, init_loc: chrono.ChVectorD, init_rot: chrono.ChQuaternionD):
-        self.veh = veh.RCCar()
+        self.veh = veh.ARTcar()
         self.veh.SetContactMethod(chrono.ChContactMethod_NSC)
         self.veh.SetChassisCollisionType(veh.CollisionType_NONE)
         self.veh.SetChassisFixed(False)

@@ -8,6 +8,7 @@ project(autonomy_research_testbed)
 set(DEMOS
     demo_ROS_sensor
     demo_ROS_dART
+    demo_ROS_dART_tracking
 )
 
 #--------------------------------------------------------------
