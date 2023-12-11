@@ -1,0 +1,20 @@
+{
+  "Name": "ART Accelerometer",
+  "Type": "Sensor",
+  "Template": "Accelerometer",
+
+  "Properties": {
+    "Update Rate": 100,
+    "Noise Model": {
+      "Noise Type": "ChNoiseNone"
+    }
+  },
+
+  "Filters":
+  [
+    {
+      "Filter": "ChFilterAccelAccess"
+    }
+  ]
+}
+

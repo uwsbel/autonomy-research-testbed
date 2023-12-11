@@ -1,0 +1,20 @@
+{
+  "Name": "ART Gyroscope",
+  "Type": "Sensor",
+  "Template": "Gyroscope",
+
+  "Properties": {
+    "Update Rate": 100,
+    "Noise Model": {
+      "Noise Type": "ChNoiseNone"
+    }
+  },
+
+  "Filters":
+  [
+    {
+      "Filter": "ChFilterGyroAccess"
+    }
+  ]
+}
+
