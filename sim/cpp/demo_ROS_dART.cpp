@@ -172,7 +172,6 @@ int main(int argc, char* argv[]) {
 
     // RigidTerrain terrain(system, vehicle::GetDataFile(rigidterrain_file));
     // terrain.Initialize();
-
     // Create the basic driver
     //auto driver = std::make_shared<ChDriver>(vehicle.GetVehicle());
 
@@ -205,9 +204,9 @@ int main(int argc, char* argv[]) {
    
 
     ChVector<double> gyro_noise_mean(0, 0, 0);
-    ChVector<double> gyro_noise_stdev(0.00, 0.00, 0.00); // degrees per second
-    ChVector<double> accel_noise_mean(0, 0, 0);
-    ChVector<double> accel_noise_stdev(0.0, 0.0, 0.0); // m/s²
+    ChVector<double> gyro_noise_stdev(0.05, 0.05, 0.05); // degrees per second
+    ChVector<double> accel_noise_mean(0.0, 0.0, 0.0);
+    ChVector<double> accel_noise_stdev(0.01, 0.01, 0.01); // m/s²
     double gyro_drift_bias = 0.02; // degrees per second
     double gyro_tau_drift = 75; // seconds
     double update_rate = 100; // Sensor update rate in Hz
@@ -216,13 +215,13 @@ int main(int argc, char* argv[]) {
     // auto gyro_noise_model = chrono_types::make_shared<ChNoiseNormalDrift>(
     //     update_rate, gyro_noise_mean, gyro_noise_stdev, gyro_drift_bias, gyro_tau_drift);
 
-    // auto gyro_noise_model = chrono_types::make_shared<ChNoiseNormal>(
-    //     gyro_noise_mean, gyro_noise_stdev);
-    // auto accel_noise_model = chrono_types::make_shared<ChNoiseNormal>(
-    //     accel_noise_mean, accel_noise_stdev);
+    auto gyro_noise_model = chrono_types::make_shared<ChNoiseNormal>(
+        gyro_noise_mean, gyro_noise_stdev);
+    auto accel_noise_model = chrono_types::make_shared<ChNoiseNormal>(
+        accel_noise_mean, accel_noise_stdev);
 
-    auto accel_noise_model = chrono_types::make_shared<ChNoiseNone>();
-    auto gyro_noise_model = chrono_types::make_shared<ChNoiseNone>();
+    //auto accel_noise_model = chrono_types::make_shared<ChNoiseNone>();
+    //auto gyro_noise_model = chrono_types::make_shared<ChNoiseNone>();
      
     // auto accel_noise_model = chrono_types::make_shared<ChNoiseNormalDrift>(
     //     update_rate, gyro_noise_mean, accel_noise_stdev, gyro_drift_bias, gyro_tau_drift);
@@ -246,7 +245,7 @@ int main(int argc, char* argv[]) {
     manager->AddSensor(magnetometer);
 
     ChVector<double> gps_noise_mean(0, 0, 0);
-    ChVector<double> gps_noise_stdev(0.00, 0.00, 0.00); // meters
+    ChVector<double> gps_noise_stdev(0.017, 0.017, 0.017); // meters
 
     auto gps_noise_model = chrono_types::make_shared<ChNoiseNormal>(
     gps_noise_mean, gps_noise_stdev);
@@ -281,12 +280,11 @@ int main(int argc, char* argv[]) {
     ros_manager->RegisterHandler(magnetometer_handler);
 
 
-
     auto gps_topic_name = "~/output/gps/data";
     auto gps_handler = chrono_types::make_shared<ChROSGPSHandler>(gps, gps_topic_name);
     ros_manager->RegisterHandler(gps_handler);
 
-    auto vehicle_state_rate = 25;
+    auto vehicle_state_rate = 5.0;
     auto vehicle_state_topic_name = "~/output/vehicle/state";
     auto vehicle_state_handler = chrono_types::make_shared<ChROSBodyHandler>(
         vehicle_state_rate, car.GetChassisBody(), vehicle_state_topic_name);
@@ -303,6 +301,14 @@ int main(int argc, char* argv[]) {
         csv_file, std::ofstream::out | std::ofstream::trunc);  // Open in write mode, truncating the file to zero length
     if (!file_stream.is_open()) {
         std::cerr << "Failed to open " << csv_file << " for writing." << std::endl;
+        return 1;
+    }
+
+    std::ofstream acc_file_stream;
+    std::string acc_file_name = "acceleration_data.txt";
+    acc_file_stream.open(acc_file_name, std::ofstream::out | std::ofstream::trunc);
+    if (!acc_file_stream.is_open()) {
+        std::cerr << "Failed to open " << acc_file_name << " for writing." << std::endl;
         return 1;
     }
 
@@ -387,11 +393,19 @@ int main(int argc, char* argv[]) {
         vis->EnableContactDrawing(ContactsDrawMode::CONTACT_FORCES);
     }
 
+    bool acceleration_stabilized = false;
+
+    std::cout << acceleration_stabilized << std::endl;
+
     car.GetVehicle().EnableRealtime(true);
+
+    double simulation_start_time = car.GetSystem()->GetChTime();
+    double throttle_start_time = 10.0; 
     while (vis->Run()) {
         double time = car.GetSystem()->GetChTime();
 
         //car.GetChassisBody()->SetRot(ChQuaternion<>(0, 0, 0, 0));
+        //std::cout << acceleration_stabilized << std::endl;
 
         // End simulation
         if (time >= t_end)
@@ -403,10 +417,25 @@ int main(int argc, char* argv[]) {
             }
 
             render_frame++;
+
+            
         
             // Get driver inputs
             DriverInputs driver_inputs = driver.GetInputs();
             driver_inputs.m_throttle = 0.0;
+
+            
+            ///////// For constant throttle only //////
+            //////////////////////////////////////////
+            if (time - simulation_start_time > throttle_start_time) {
+                driver_inputs.m_throttle = 0.5;
+            } else {
+                driver_inputs.m_throttle = 0.0;
+                }
+            ////////////////////////////////////////// 
+            //////////////////////////////////////////   
+
+            
             driver_inputs.m_steering = 0.0;
             driver_inputs.m_braking = 0.0;
 
@@ -424,9 +453,31 @@ int main(int argc, char* argv[]) {
             ChVector<> total_acceleration = tran_acc_no_offset + tran_acc_offset;
 
             ChVector<> ground_truth_acc = car.GetChassisBody()->GetPos_dtdt();
+            double current_x_acc = ground_truth_acc.x();
+
+            ChVector<> ground_truth_vel = car.GetChassisBody()->GetPos_dt();
+            double current_x_vel = ground_truth_vel.x();
 
             // Calculate difference in x-component
-            double x_diff = ground_truth_acc.x() - tran_acc_no_offset.x();
+            double x_diff = ground_truth_acc.x() - tran_acc_no_offset.x() ;
+
+            //std::cout << current_x_acc << std::endl;
+
+
+            //Check if the acceleration has stabilized
+            // if (std::abs(current_x_acc) < 1e-7 && std::abs(current_x_acc) > 0 && !acceleration_stabilized) {
+            //     acceleration_stabilized = true;
+                
+                
+            // }
+
+            // if (acceleration_stabilized == true) {
+            //     driver_inputs.m_throttle = 0.5;
+                
+                
+            // } else {
+            //     driver_inputs.m_throttle = 0.0;
+            // }
 
 
     //         ChVector<double> tran_acc_no_offset = m_parent->PointAccelerationLocalToParent(m_offsetPose.GetPos());
@@ -437,7 +488,12 @@ int main(int argc, char* argv[]) {
             // Write acceleration data to CSV
             csv_writer << tran_acc_no_offset  << gravity << tran_acc_offset  <<  total_acceleration << x_diff << std::endl;
 
+            
+            acc_file_stream << time << "\t" << current_x_acc << "\t" << acceleration_stabilized<<  "\t" << current_x_vel << std::endl;
+
             std::cout << "Ground truth acceleration: " << ground_truth_acc << std::endl;
+            std::cout << current_x_acc << std::endl;
+            //std::cout << "Ground truth vel: " << current_x_vel << std::endl;
 
             // Update modules (process inputs from other modules)
             driver.Synchronize(time);
