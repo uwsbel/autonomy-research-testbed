@@ -125,10 +125,10 @@ class PIDLateralControllerNode(Node):
     def state_callback(self, msg):
         """Callback for the vehicle state subscriber.
 
-        Read the state of the vehicle from the subscriber.
+        Read the state of the vehicle from the topic.
 
         Args:
-            msg: The message received from the subscriber
+            msg: The message received from the topic
         """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
@@ -136,10 +136,10 @@ class PIDLateralControllerNode(Node):
     def path_callback(self, msg):
         """Callback for the path subscriber.
 
-        Read the path from the subscriber.
+        Read the path from the topic.
 
         Args:
-            msg: The message received from the subscriber
+            msg: The message received from the topic
         """
         self.go = True
         # self.get_logger().info("Received '%s'" % msg)

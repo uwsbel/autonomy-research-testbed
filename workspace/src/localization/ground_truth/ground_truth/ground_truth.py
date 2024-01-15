@@ -16,6 +16,14 @@ from localization_shared_utils import get_dynamics, get_coordinate_transfer
 
 
 class GroundTruthNode(Node):
+    """A state estimation node based that just pushes data from the observations.
+
+    This state estimation package takes the GPS and Magnetometer observations and projects the location and heading of the vehicle onto a Local Tangent Plane (LTP) defined at the original location and orientation of the vehicle. The vehicle's speed is estimated by just taking the derivative of the positions.
+
+    Attributes:
+
+    """
+
     def __init__(self):
         super().__init__("state_estimation_node")
 

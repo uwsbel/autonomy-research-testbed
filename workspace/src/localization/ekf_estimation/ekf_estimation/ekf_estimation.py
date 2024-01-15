@@ -29,11 +29,15 @@ class EKFEstimationNode(Node):
         throttle: The input throttle.
         steering: The input steering.
         gps: The observation of the position as a GPS reading.
-        mag: The observation of the heading as a Magnetometer reading.
+        mag: The observation of the heading as a Magnetometer reading.origin_set: whether or not the origin and orientation of the LTP has been set.
+        origin_heading_set: whether or not the original heading has been determined.
     """
 
     def __init__(self):
-        """Initialize the Extended Kalman Filter node."""
+        """Initialize the Extended Kalman Filter node.
+
+        Initialize the Extended Kalman Filter object with the appropriate parameters, and set the initial state of the vehicle. Subscribe to the GPS and Magnetometer topics, as well as the vehicle inputs. Set put the publisher to publish to the `filtered_state` topic.
+        """
         super().__init__("ekf_estimation_node")
 
         # ROS PARAMETERS
@@ -141,11 +145,25 @@ class EKFEstimationNode(Node):
 
     # CALLBACKS:
     def inputs_callback(self, msg):
+        """Callback for the vehicle input subscriber.
+
+        Read the input for the vehicle from the topic.
+
+        Args:
+            msg: The message received from the topic
+        """
         self.inputs = msg
         self.steering = self.inputs.steering
         self.throttle = self.inputs.throttle
 
     def mag_callback(self, msg):
+        """Callback for the Magnetometer subscriber.
+
+        Read the Magnetometer observation from the topic. Process this into a heading angle, and then set the rotation of the LTP if the original heading has not been set yet.
+
+        Args:
+            msg: The message received from the topic
+        """
         self.mag = msg
         mag_x = self.mag.magnetic_field.x
         mag_y = self.mag.magnetic_field.y
@@ -170,6 +188,13 @@ class EKFEstimationNode(Node):
             self.state[2, 0] = self.init_theta
 
     def gps_callback(self, msg):
+        """Callback for the GPS subscriber.
+
+        Read the GPS observation from the topic. If the original heading has been set, initialize the LTP and set this point as the origin. If the origin has been set, project this gps coordinate onto the defined LTP using the graph object, and return that x and y coordinate.
+
+        Args:
+            msg: The message received from the topic
+        """
         self.gps = msg
         self.gps_ready = True
         if math.isnan(self.gps.latitude):
@@ -198,6 +223,10 @@ class EKFEstimationNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
+        """Callback for the publisher.
+
+        Get the vehicle input (u) and observation (z), and step the EKF using this information. Then, publish the estimated state to the `filtered_state` topic.
+        """
         u = np.array([[self.throttle], [self.steering / 2.2]])
 
         z = np.array([[self.x], [self.y], [np.deg2rad(self.D)]])
@@ -217,6 +246,14 @@ class EKFEstimationNode(Node):
         self.pub_objects.publish(msg)
 
     def EKFstep(self, u, z):
+        """Step the EKF.
+
+        Propogate the EKF through the predict step using the vehicle input and through the correction step using the observation.
+
+        Args:
+            u: The vehicle throttle and steering input
+            z: The location and heading observation
+        """
         self.state = self.ekf.predict(self.state, u)
         if self.gps_ready:
             self.state = self.ekf.correct(self.state, z)

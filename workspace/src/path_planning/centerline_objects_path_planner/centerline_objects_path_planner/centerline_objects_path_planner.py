@@ -121,10 +121,10 @@ class ConePathPlannerNode(Node):
     def state_callback(self, msg):
         """Callback for the vehicle state subscriber.
 
-        Read the state of the vehicle from the subscriber.
+        Read the state of the vehicle from the topic.
 
         Args:
-            msg: The message received from the subscriber
+            msg: The message received from the topic
         """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
@@ -132,10 +132,10 @@ class ConePathPlannerNode(Node):
     def objects_callback(self, msg):
         """Callback for the object subscriber.
 
-        Read the object locations from the subscriber. The (x,y,z) position of each object is recorded in either the red or green cones list, depending on the identification of the object.
+        Read the object locations from the topic. The (x,y,z) position of each object is recorded in either the red or green cones list, depending on the identification of the object.
 
         Args:
-            msg: The message received from the subscriber. Contains red cones and green cone labels, and the locations of the cones.
+            msg: The message received from the topic. Contains red cones and green cone labels, and the locations of the cones.
         """
         # self.get_logger().info("Received '%s'" % msg)
         # self.objects = msg
