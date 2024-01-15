@@ -64,7 +64,7 @@ class PIDLateralControllerNode(Node):
         self.file = ""
         self.recorded_inputs = np.array([])
 
-        # update frequency of this node
+        # update frequency of this nodefile"
         self.freq = 10.0
 
         self.t_start = self.get_clock().now().nanoseconds / 1e9
@@ -128,7 +128,7 @@ class PIDLateralControllerNode(Node):
         Read the state of the vehicle from the subscriber.
 
         Args:
-            msg: The message received from the subscriber.
+            msg: The message received from the subscriber
         """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
@@ -139,7 +139,7 @@ class PIDLateralControllerNode(Node):
         Read the path from the subscriber.
 
         Args:
-            msg: The message received from the subscriber.
+            msg: The message received from the subscriber
         """
         self.go = True
         # self.get_logger().info("Received '%s'" % msg)
@@ -149,7 +149,7 @@ class PIDLateralControllerNode(Node):
     def pub_callback(self):
         """Callback for the publisher.
 
-        Publish the vehicle inputs to follow the path.
+        Publish the vehicle inputs to follow the path. If we are using control inputs from a file, then calculate what the control inputs should be. If the PID controller is being used, multiply the ratio of y/x reference coordinatesby the steering gain, and set constant throttle.
         """
         if not self.go:
             return
@@ -195,7 +195,7 @@ class PIDLateralControllerNode(Node):
     def calc_inputs_from_file(self):
         """Calculate the inputs from a given file.
 
-        Defines steering, throttle, and braking based on the given file.
+        Defines steering, throttle, and braking based on inputs that are recorded in a given file.
         """
         t = self.get_clock().now().nanoseconds / 1e9 - self.t_start
 
