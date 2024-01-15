@@ -62,7 +62,7 @@ class ConePathPlannerNode(Node):
     """
 
     def __init__(self):
-        """initialize the Path planning Node.
+        """Initialize the Path planning node.
 
         Initialize the path planning node, and set up the publishers / subscribers. This requires definition of the green and red cone lists, subscription to the list of objects (cones), and (optional) visualization setup.
         """

@@ -17,7 +17,23 @@ from localization_shared_utils import get_dynamics, get_coordinate_transfer
 
 
 class EKFEstimationNode(Node):
+    """A state estimation node based on an Extended Kalman Filter.
+
+    This Extended Kalman Filter is designed based on a 4 Degree of Freedom (DOF) dynamics, as defined in the `EKF.py` file and the `../../localization_shared_utils/localization_shared_utils/dynamics.py` files. Parameters for the filter are passed as parameters from a `.yaml` file.
+    Attributes:
+        Q{1-4}: The diagonal parameters for the 4x4 Q matrix for the EKF.
+        R{1-3}: The diagonal parameters for the 3x3 R matrix for the EKF.
+        c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0: Parameters for the dynamics of the ART vehicle.
+        init_x, init_y, init_theta: Initialization data for the definition of the local tangent plane on which the vehicle is assumed to drive.
+        state: The 4 DOF state of the vehicle, as defined by it's x and y coordinates, heading angle, and speed.
+        throttle: The input throttle.
+        steering: The input steering.
+        gps: The observation of the position as a GPS reading.
+        mag: The observation of the heading as a Magnetometer reading.
+    """
+
     def __init__(self):
+        """Initialize the Extended Kalman Filter node."""
         super().__init__("ekf_estimation_node")
 
         # ROS PARAMETERS
