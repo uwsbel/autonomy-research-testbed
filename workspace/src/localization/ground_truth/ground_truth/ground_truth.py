@@ -22,6 +22,7 @@ class GroundTruthNode(Node):
 
     Attributes:
         init_x, init_y, init_theta: Initialization data for the definition of the local tangent plane on which the vehicle is assumed to drive.
+        x, y: The Local Tangent Plane (LTP) - translated GPS coordinates.
         state: The 4 DOF state of the vehicle, as defined by it's x and y coordinates, heading angle, and speed.
         gps: The observation of the position as a GPS reading.
         mag: The observation of the heading as a Magnetometer reading.origin_set: whether or not the origin and orientation of the LTP has been set.

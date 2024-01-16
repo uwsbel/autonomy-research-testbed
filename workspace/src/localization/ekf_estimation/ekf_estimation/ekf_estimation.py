@@ -24,6 +24,7 @@ class EKFEstimationNode(Node):
         Q{1-4}: The diagonal parameters for the 4x4 Q matrix for the EKF.
         R{1-3}: The diagonal parameters for the 3x3 R matrix for the EKF.
         c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0: Parameters for the dynamics of the ART vehicle.
+        x, y: The Local Tangent Plane (LTP) - translated GPS coordinates.
         init_x, init_y, init_theta: Initialization data for the definition of the local tangent plane on which the vehicle is assumed to drive.
         state: The 4 DOF state of the vehicle, as defined by it's x and y coordinates, heading angle, and speed.
         throttle: The input throttle.
