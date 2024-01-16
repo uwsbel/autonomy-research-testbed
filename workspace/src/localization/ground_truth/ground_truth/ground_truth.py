@@ -127,6 +127,13 @@ class GroundTruthNode(Node):
             self.state[2, 0] = self.init_theta
 
     def gps_callback(self, msg):
+        """Callback for the GPS subscriber.
+
+        Read the GPS observation from the topic. If the original heading has been set, initialize the LTP and set this point as the origin. If the origin has been set, project this gps coordinate onto the defined LTP using the graph object, and return that x and y coordinate.
+
+        Args:
+            msg: The message received from the topic
+        """
         self.gps = msg
         self.gps_ready = True
         if math.isnan(self.gps.latitude):
@@ -155,6 +162,10 @@ class GroundTruthNode(Node):
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
+        """Callback for the publisher.
+
+        Publish the estimated state to the `filtered_state` topic. This filter just directly passes the LTP x and y coordinates as recorded by the GPS, the heading as recorded by the Magnetometer, and the change in position since the last GPS measurement.
+        """
         msg = VehicleState()
         msg.pose.position.x = float(self.x)
         msg.pose.position.y = float(self.y)
