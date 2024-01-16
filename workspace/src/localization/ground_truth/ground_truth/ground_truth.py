@@ -21,10 +21,18 @@ class GroundTruthNode(Node):
     This state estimation package takes the GPS and Magnetometer observations and projects the location and heading of the vehicle onto a Local Tangent Plane (LTP) defined at the original location and orientation of the vehicle. The vehicle's speed is estimated by just taking the derivative of the positions.
 
     Attributes:
-
+        init_x, init_y, init_theta: Initialization data for the definition of the local tangent plane on which the vehicle is assumed to drive.
+        state: The 4 DOF state of the vehicle, as defined by it's x and y coordinates, heading angle, and speed.
+        gps: The observation of the position as a GPS reading.
+        mag: The observation of the heading as a Magnetometer reading.origin_set: whether or not the origin and orientation of the LTP has been set.
+        origin_heading_set: whether or not the original heading has been determined.
     """
 
     def __init__(self):
+        """Initialize the state estimation node.
+
+        Initialize the node and set the initial state, and initial sensor reading variables. Subscribe to the GPS and Magnetometer topics. Set put the publisher to publish to the `filtered_state` topic.
+        """
         super().__init__("state_estimation_node")
 
         # ROS PARAMETERS
@@ -66,10 +74,6 @@ class GroundTruthNode(Node):
         self.origin_set = False
         self.orig_heading_set = False
 
-        # inputs to the vehicle
-        self.throttle = 0.0
-        self.steering = 0
-
         # time between imu updates, sec
         self.dt_gps = 1 / self.freq
 
@@ -84,9 +88,6 @@ class GroundTruthNode(Node):
         self.sub_mag = self.create_subscription(
             MagneticField, "~/input/magnetometer", self.mag_callback, 1
         )
-        self.sub_control = self.create_subscription(
-            VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1
-        )
         # publishers
         self.pub_objects = self.create_publisher(
             VehicleState, "~/output/filtered_state", 1
@@ -94,12 +95,14 @@ class GroundTruthNode(Node):
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
 
     # CALLBACKS:
-    def inputs_callback(self, msg):
-        self.inputs = msg
-        self.steering = self.inputs.steering
-        self.throttle = self.inputs.throttle
-
     def mag_callback(self, msg):
+        """Callback for the Magnetometer subscriber.
+
+        Read the Magnetometer observation from the topic. Process this into a heading angle, and then set the rotation of the LTP if the original heading has not been set yet.
+
+        Args:
+            msg: The message received from the topic
+        """
         self.mag = msg
         mag_x = self.mag.magnetic_field.x
         mag_y = self.mag.magnetic_field.y
