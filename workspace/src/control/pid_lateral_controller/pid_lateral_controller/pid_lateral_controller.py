@@ -64,7 +64,7 @@ class PIDLateralControllerNode(Node):
         self.file = ""
         self.recorded_inputs = np.array([])
 
-        # update frequency of this node"
+        # update frequency of this node
         self.freq = 10.0
 
         self.t_start = self.get_clock().now().nanoseconds / 1e9
