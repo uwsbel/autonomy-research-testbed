@@ -125,10 +125,10 @@ class PIDLateralControllerNode(Node):
     def state_callback(self, msg):
         """Callback for the vehicle state subscriber.
 
-        Read the state of the vehicle from the subscriber.
+        Read the state of the vehicle from the topic.
 
         Args:
-            msg: The message received from the subscriber.
+            msg: The message received from the topic
         """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
@@ -136,10 +136,10 @@ class PIDLateralControllerNode(Node):
     def path_callback(self, msg):
         """Callback for the path subscriber.
 
-        Read the path from the subscriber.
+        Read the path from the topic.
 
         Args:
-            msg: The message received from the subscriber.
+            msg: The message received from the topic
         """
         self.go = True
         # self.get_logger().info("Received '%s'" % msg)
@@ -149,7 +149,7 @@ class PIDLateralControllerNode(Node):
     def pub_callback(self):
         """Callback for the publisher.
 
-        Publish the vehicle inputs to follow the path.
+        Publish the vehicle inputs to follow the path. If we are using control inputs from a file, then calculate what the control inputs should be. If the PID controller is being used, multiply the ratio of y/x reference coordinatesby the steering gain, and set constant throttle.
         """
         if not self.go:
             return
@@ -195,7 +195,7 @@ class PIDLateralControllerNode(Node):
     def calc_inputs_from_file(self):
         """Calculate the inputs from a given file.
 
-        Defines steering, throttle, and braking based on the given file.
+        Defines steering, throttle, and braking based on inputs that are recorded in a given file.
         """
         t = self.get_clock().now().nanoseconds / 1e9 - self.t_start
 

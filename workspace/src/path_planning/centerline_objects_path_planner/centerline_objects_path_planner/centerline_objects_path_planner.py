@@ -62,9 +62,9 @@ class ConePathPlannerNode(Node):
     """
 
     def __init__(self):
-        """initialize the Path planning Node.
+        """Initialize the Path planning node.
 
-        Initialize the path planning node, and set up the publishers / subscribers.
+        Initialize the path planning node, and set up the publishers / subscribers. This requires definition of the green and red cone lists, subscription to the list of objects (cones), and (optional) visualization setup.
         """
         super().__init__("centerline_objects_path_planner_node")
 
@@ -121,10 +121,10 @@ class ConePathPlannerNode(Node):
     def state_callback(self, msg):
         """Callback for the vehicle state subscriber.
 
-        Read the state of the vehicle from the subscriber.
+        Read the state of the vehicle from the topic.
 
         Args:
-            msg: The message received from the subscriber.
+            msg: The message received from the topic
         """
         # self.get_logger().info("Received '%s'" % msg)
         self.state = msg
@@ -132,10 +132,10 @@ class ConePathPlannerNode(Node):
     def objects_callback(self, msg):
         """Callback for the object subscriber.
 
-        Read the object locations from the subscriber.
+        Read the object locations from the topic. The (x,y,z) position of each object is recorded in either the red or green cones list, depending on the identification of the object.
 
         Args:
-            msg: The message received from the subscriber. Contains red cones and green cones.
+            msg: The message received from the topic. Contains red cones and green cone labels, and the locations of the cones.
         """
         # self.get_logger().info("Received '%s'" % msg)
         # self.objects = msg
@@ -163,16 +163,16 @@ class ConePathPlannerNode(Node):
                     )
 
     def order_cones(self, cones, start):
-        """Orders the cones in a path.
+        """Generate a list of ordered nearby cones.
 
-        Orders the cones in a path, and then return them, along with the total distance.
+        Get a starting position around which we want to find nearby cones. Find cones that are closest to this starting point. Return the ordered list of cones.
 
         Args:
-            cones: The cones to be ordered.
-            start: The starting position.
+            cones: A list of cones, which we want to order with lambda being distance to the start.
+            start: A point we are using as reference for ordering.
         Returns:
-            ordered_cones: The ordered cones.
-            total_dist: The total distance.
+            ordered_cones: An ordered list of nearby cones
+            total_dist: The total distance of all cones in the list to the starting point.
         """
         ordered_cones = [start]
 
@@ -191,12 +191,12 @@ class ConePathPlannerNode(Node):
         return ordered_cones, total_dist
 
     def plan_path(self):
-        """Plans the path.
+        """Determine the path between the red and green cones.
 
-        Plans the path based on the cone locations.
+        Plans the path based on the cone locations. First order the red and green cones, with the red cones about a point in front of and to the left of the vehicle, and green cones in front of and to the right of the vehicle. Then, draw a spline through the red/green cones to define a left boundary and right boundary. Finally, determine the centerline through the two boundaries, and return a target point to drive towards. (Optionally) visualize.
 
         Returns:
-            target_pt: The target point we should drive towards.
+            target_pt: The target point we should drive towards
 
         """
         self.red_cones = np.asarray(self.red_cones)
@@ -276,7 +276,7 @@ class ConePathPlannerNode(Node):
     def pub_callback(self):
         """Callback for the publisher.
 
-        Publishes the path to the subscriber.
+        The path consists of just the target point, as returned by the `plan_path` function. This is the point towards which we would like the car to drive towards, given the red and green cone locations.
         """
         if not self.go:
             return

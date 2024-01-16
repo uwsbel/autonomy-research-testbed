@@ -1,4 +1,4 @@
-"""Main entry point for the `shared_utils` package"""
+"""Main entry point for the `localization shared_utils` package"""
 
 from .localization_shared_utils import (
     get_dynamics,
