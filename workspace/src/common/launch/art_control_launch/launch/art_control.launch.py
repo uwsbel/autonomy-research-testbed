@@ -12,8 +12,11 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
+    # IncludeLaunchDescriptionWithCondition(
+    #     ld, "art_control_launch", "pid_lateral_controller"
+    # )
     IncludeLaunchDescriptionWithCondition(
-        ld, "art_control_launch", "pid_lateral_controller"
+        ld, "art_control_launch", "rl_waypoints_controller"
     )
 
     return ld
