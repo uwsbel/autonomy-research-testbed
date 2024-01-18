@@ -118,9 +118,9 @@ class RLWaypointsController(Node):
         """
         msg = VehicleInput()
 
-        msg.steering = np.clip(0, -1, 1)
+        msg.steering = np.clip(0.0, -1, 1)
         msg.throttle = np.clip(0.5, 0, 1)
-        msg.braking = np.clip(0, 0, 1)
+        msg.braking = np.clip(0.0, 0, 1)
 
         msg.header.stamp = self.get_clock().now().to_msg()
 
