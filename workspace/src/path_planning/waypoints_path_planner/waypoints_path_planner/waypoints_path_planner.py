@@ -73,6 +73,13 @@ class WaypointsPathPlannerNode(Node):
         # update frequency of this node
         self.freq = 10.0
 
+        self.file = open(
+            "/home/art/art/workspace/src/path_planning/waypoints_path_planner/waypoints_path_planner/path.csv"
+        )
+        self.ref_traj = np.loadtxt(self.file, delimiter=",")
+        self.final_x = self.ref_traj[-1, 0]
+        self.final_y = self.ref_traj[-1, 1]
+
         # READ IN SHARE DIRECTORY LOCATION
         package_share_directory = get_package_share_directory("waypoints_path_planner")
 
@@ -92,7 +99,9 @@ class WaypointsPathPlannerNode(Node):
         )
 
         # publishers
-        self.pub_path = self.create_publisher(VehicleState, "~/output/error_state", 10)
+        self.pub_err_state = self.create_publisher(
+            VehicleState, "~/output/error_state", 10
+        )
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
 
     # function to process data this class subscribes to
