@@ -193,32 +193,6 @@ int main(int argc, char* argv[]) {
         system->Add(box_body);
     }
 
-    // Randomly shuffle the positions vector to select n unique positions
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::shuffle(positions.begin(), positions.end(), gen);
-    int n = std::atoi(argv[2]); // Number of boxes to add
-    for (int i = 0; i < n; ++i) {
-        double x = std::get<0>(positions[i]);
-        double y = std::get<1>(positions[i]);
-
-        // Create and add a box at the (x, y) position
-        auto box_body = chrono_types::make_shared<ChBodyEasyBox>(1.0, 1.0, 2.0, 1000, true, false);
-        box_body->SetPos({x, y, 0});
-        box_body->SetBodyFixed(true);
-        system->Add(box_body);
-
-        // Set visual material for the box
-        auto shape = box_body->GetVisualModel()->GetShapes()[0].first;
-        if (shape->GetNumMaterials() == 0) {
-            shape->AddMaterial(vis_mat);
-        } else {
-            shape->GetMaterials()[0] = vis_mat;
-        }
-    }
-
-    
-
     // Create the terrain
     RigidTerrain terrain(system, vehicle::GetDataFile(rigidterrain_file));
     terrain.Initialize();
