@@ -82,6 +82,10 @@ class RLWaypointsController(Node):
         self.throttle = 0.0
         self.braking = 0.0
 
+        # checkpoints dir
+        checkpoints_dir = "/home/art/art/workspace/src/control/rl_waypoints_controller/rl_waypoints_controller/network_file"
+        self.loaded_model = PPO.load(os.path.join(checkpoints_dir, "ppo_checkpoint"))
+
         # data that will be used by this class
         self.state = ""
         self.vehicle_cmd = VehicleInput()
@@ -117,6 +121,19 @@ class RLWaypointsController(Node):
         Publish the vehicle inputs to follow the path. If we are using control inputs from a file, then calculate what the control inputs should be. If the PID controller is being used, multiply the ratio of y/x reference coordinatesby the steering gain, and set constant throttle.
         """
         msg = VehicleInput()
+        # TODO: FIX THE PATH PLANNER LINEAR PUBLISHING
+        obs_dict = {
+            "data": np.array(
+                [
+                    self.state.pose.position.x,
+                    self.state.pose.position.y,
+                    self.state.pose.orientation.z,
+                    self.state.twist.linear.x,
+                ]
+            )
+        }
+        action, _states = self.loaded_model.predict(obs_dict, deterministic=True)
+        self.get_logger().info("Action: " + str(action))
 
         msg.steering = np.clip(0.0, -1, 1)
         msg.throttle = np.clip(0.5, 0, 1)
