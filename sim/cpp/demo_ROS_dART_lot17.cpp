@@ -43,13 +43,18 @@
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "chrono_vehicle/ChDriver.h"
+//#include "chrono_models/vehicle/artvehicle/ARTvehicle.h"
 #include "chrono_models/vehicle/artcar/ARTcar.h"
+
 
 #include "chrono_sensor/sensors/ChLidarSensor.h"
 #include "chrono_sensor/sensors/ChCameraSensor.h"
 #include "chrono_sensor/filters/ChFilterSave.h"
 #include "chrono_sensor/ChSensorManager.h"
 #include "chrono_sensor/filters/ChFilterAccess.h"
+#include "chrono_sensor/sensors/ChIMUSensor.h"
+#include "chrono_sensor/sensors/ChGPSSensor.h"
+
 #include "chrono_sensor/filters/ChFilterPCfromDepth.h"
 #include "chrono_sensor/filters/ChFilterVisualize.h"
 #include "chrono_sensor/filters/ChFilterVisualizePointCloud.h"
@@ -62,6 +67,15 @@
 #include "chrono_sensor/filters/ChFilterRadarVisualizeCluster.h"
 #include "chrono_sensor/filters/ChFilterRadarXYZReturn.h"
 #include "chrono_sensor/filters/ChFilterRadarXYZVisualize.h"
+#include "chrono_ros/ChROSManager.h"
+#include "chrono_ros/handlers/ChROSClockHandler.h"
+#include "chrono_ros/handlers/vehicle/ChROSDriverInputsHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSCameraHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSAccelerometerHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSGyroscopeHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSMagnetometerHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSLidarHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSGPSHandler.h"
 
 #include <chrono>
 #include <random>
@@ -69,7 +83,7 @@ using namespace chrono;
 using namespace chrono::ros;
 using namespace chrono::vehicle;
 using namespace chrono::sensor;
-using namespace chrono::vehicle::artcar;
+//using namespace chrono::vehicle::artvehicle;
 // =============================================================================
 // Initial vehicle location and orientation
 ChVector<> initLoc(-1.0, -1.0, 0.5);
@@ -115,7 +129,7 @@ double step_size = 1e-3;
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2023 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
     //SetChronoDataPath(CHRONO_DATA_DIR);
-    ARTcar vehicle;
+    artcar::ARTcar vehicle;
     //vehicle::SetDataPath(std::string(CHRONO_DATA_DIR) + "/vehicle/");
     vehicle.SetContactMethod(contact_method);
     vehicle.SetChassisCollisionType(chassis_collision_type);
@@ -140,7 +154,7 @@ int main(int argc, char* argv[]) {
     // Containing system
     auto system = vehicle.GetSystem();
 
-    // Add box in front of the car
+    // Add box in front of the vehicle
     auto vis_mat = chrono_types::make_shared<ChVisualMaterial>();
     vis_mat->SetAmbientColor({0.f, 0.f, 0.f});
     vis_mat->SetDiffuseColor({1.0, 0.0, 0.0});
@@ -231,6 +245,52 @@ int main(int argc, char* argv[]) {
     manager->Update();
     // ------------
 
+    auto sensor_offset_pose = chrono::ChFrame<double>({0, 0, 0}, Q_from_AngAxis(0, {0, 0, 0}));
+    auto noise_none = chrono_types::make_shared<ChNoiseNone>();
+    ChVector<> gps_reference(-89.400, 43.070, 260.0);
+
+    ChVector<double> gyro_noise_mean(0, 0, 0);
+    ChVector<double> gyro_noise_stdev(0.05, 0.05, 0.05); // degrees per second
+    ChVector<double> accel_noise_mean(0.0, 0.0, 0.0);
+    ChVector<double> accel_noise_stdev(0.01, 0.01, 0.01); // m/s²
+
+
+
+    auto gyro_noise_model = chrono_types::make_shared<ChNoiseNormal>(
+        gyro_noise_mean, gyro_noise_stdev);
+    auto accel_noise_model = chrono_types::make_shared<ChNoiseNormal>(
+        accel_noise_mean, accel_noise_stdev);
+
+
+    ChFrame<double> sensor_frame(ChVector<>(0, 0, 0), ChQuaternion<>(1, 0, 0, 0));
+
+
+    // Accelerometer
+    auto accelerometer = chrono_types::make_shared<ChAccelerometerSensor>(vehicle.GetChassisBody(), 100, sensor_offset_pose, accel_noise_model);
+    accelerometer->PushFilter(chrono_types::make_shared<ChFilterAccelAccess>());
+    manager->AddSensor(accelerometer);
+
+    // Gyroscope
+    auto gyroscope = chrono_types::make_shared<ChGyroscopeSensor>(vehicle.GetChassisBody(), 100, sensor_offset_pose,gyro_noise_model);
+    gyroscope->PushFilter(chrono_types::make_shared<ChFilterGyroAccess>());
+    manager->AddSensor(gyroscope);
+
+    // Magnetometer
+    auto magnetometer = chrono_types::make_shared<ChMagnetometerSensor>(vehicle.GetChassisBody(), 100, sensor_offset_pose, noise_none, gps_reference);
+    magnetometer->PushFilter(chrono_types::make_shared<ChFilterMagnetAccess>());
+    manager->AddSensor(magnetometer);
+
+    ChVector<double> gps_noise_mean(0, 0, 0);
+    ChVector<double> gps_noise_stdev(0.017, 0.017, 0.017); // meters
+
+    auto gps_noise_model = chrono_types::make_shared<ChNoiseNormal>(
+    gps_noise_mean, gps_noise_stdev);
+
+    auto gps = chrono_types::make_shared<ChGPSSensor>(vehicle.GetChassis()->GetBody(), 10.f, sensor_offset_pose, gps_reference, noise_none);
+    gps->PushFilter(chrono_types::make_shared<ChFilterGPSAccess>());
+    manager->AddSensor(gps);
+    manager->Update();
+
     // Create ROS manager
     auto ros_manager = chrono_types::make_shared<ChROSManager>();
 
@@ -246,6 +306,23 @@ int main(int argc, char* argv[]) {
     auto driver_inputs_handler =
         chrono_types::make_shared<ChROSDriverInputsHandler>(driver_inputs_rate, driver, driver_inputs_topic_name);
     ros_manager->RegisterHandler(driver_inputs_handler);
+
+    auto accelerometer_topic_name = "~/output/accelerometer/data";
+    auto accelerometer_handler = chrono_types::make_shared<ChROSAccelerometerHandler>(accelerometer, accelerometer_topic_name);
+    ros_manager->RegisterHandler(accelerometer_handler);
+
+    auto gyroscope_topic_name = "~/output/gyroscope/data";
+    auto gyroscope_handler = chrono_types::make_shared<ChROSGyroscopeHandler>(gyroscope, gyroscope_topic_name);
+    ros_manager->RegisterHandler(gyroscope_handler);
+
+    auto magnetometer_topic_name = "~/output/magnetometer/data";
+    auto magnetometer_handler = chrono_types::make_shared<ChROSMagnetometerHandler>(magnetometer, magnetometer_topic_name);
+    ros_manager->RegisterHandler(magnetometer_handler);
+
+
+    auto gps_topic_name = "~/output/gps/data";
+    auto gps_handler = chrono_types::make_shared<ChROSGPSHandler>(gps, gps_topic_name);
+    ros_manager->RegisterHandler(gps_handler);
 
 
     // Create a publisher for the vehicle state
@@ -268,7 +345,7 @@ int main(int argc, char* argv[]) {
     while (time < t_end) {
 
         // ros_manager->Update(time,step_size);
-        // // hardcode random data for one car:
+        // // hardcode random data for one vehicle:
         // driver_flw->SetThrottle(0.6f);
         // driver_flw->SetSteering(0.4f);
 
