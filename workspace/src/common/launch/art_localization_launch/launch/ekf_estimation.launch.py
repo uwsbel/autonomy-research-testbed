@@ -59,6 +59,7 @@ def generate_launch_description():
     AddLaunchArgument(
         ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
     )
+    AddLaunchArgument(ld, "ekf_vel_only", "False")
 
     # -----
     # Nodes
@@ -97,6 +98,7 @@ def generate_launch_description():
             ),
             GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
+            {"ekf_vel_only": GetLaunchArgument("ekf_vel_only")},
         ],
     )
     ld.add_action(node)

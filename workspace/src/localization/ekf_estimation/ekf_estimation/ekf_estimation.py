@@ -45,6 +45,10 @@ class EKFEstimationNode(Node):
         self.use_sim_msg = (
             self.get_parameter("use_sim_time").get_parameter_value().bool_value
         )
+        self.declare_parameter("ekf_vel_only", False)
+        self.ekf_vel_only = (
+            self.get_parameter("ekf_vel_only").get_parameter_value().bool_value
+        )
 
         # EKF parameters
         self.declare_parameter("Q1", 0.1)
@@ -237,8 +241,12 @@ class EKFEstimationNode(Node):
         msg = VehicleState()
         # pos and velocity are in meters, from the origin, [x, y, z]
 
-        msg.pose.position.x = float(self.state[0, 0])
-        msg.pose.position.y = float(self.state[1, 0])
+        if self.ekf_vel_only:
+            msg.pose.position.x = float(self.x)
+            msg.pose.position.y = float(self.y)
+        else:
+            msg.pose.position.x = float(self.state[0, 0])
+            msg.pose.position.y = float(self.state[1, 0])
         msg.pose.orientation.z = float(self.state[2, 0])
         msg.twist.linear.x = float(self.state[3, 0] * math.cos(self.state[2, 0]))
         msg.twist.linear.y = float(self.state[3, 0] * math.sin(self.state[2, 0]))
