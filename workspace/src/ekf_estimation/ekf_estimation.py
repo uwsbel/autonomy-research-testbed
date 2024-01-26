@@ -1,0 +1,251 @@
+import csv
+import rclpy
+from rclpy.node import Node
+from art_msgs.msg import VehicleState
+from art_msgs.msg import VehicleInput
+from sensor_msgs.msg import Imu, NavSatFix, MagneticField
+from chrono_ros_interfaces.msg import Body as ChVehicle
+import matplotlib.pyplot as plt
+import matplotlib
+import math
+import numpy as np
+import sys
+import os
+from enum import Enum
+from ekf_estimation.EKF import EKF
+from localization_shared_utils import get_dynamics, get_coordinate_transfer
+
+
+class EKFEstimationNode(Node):
+    def __init__(self):
+        super().__init__("ekf_estimation_node")
+
+        # ROS PARAMETERS
+        self.use_sim_msg = (
+            self.get_parameter("use_sim_time").get_parameter_value().bool_value
+        )
+
+        # EKF parameters
+        self.declare_parameter("Q1", 0.1)
+        Q1 = self.get_parameter("Q1").get_parameter_value().double_value
+        self.declare_parameter("Q3", 3)
+        Q3 = self.get_parameter("Q3").get_parameter_value().double_value
+        self.declare_parameter("Q4", 0.1)
+        Q4 = self.get_parameter("Q4").get_parameter_value().double_value
+        self.declare_parameter("R1", 0.0)
+        R1 = self.get_parameter("R1").get_parameter_value().double_value
+        self.declare_parameter("R3", 0.3)
+        R3 = self.get_parameter("R3").get_parameter_value().double_value
+        Q = [Q1, Q1, Q3, Q4]
+        R = [R1, R1, R3]
+
+        # dynamics parameters
+        self.declare_parameter("c_1", 0.0001)
+        c_1 = self.get_parameter("c_1").get_parameter_value().double_value
+        self.declare_parameter("c_0", 0.02)
+        c_0 = self.get_parameter("c_0").get_parameter_value().double_value
+        self.declare_parameter("l", 0.5)
+        l = self.get_parameter("l").get_parameter_value().double_value
+        self.declare_parameter("r_wheel", 0.08451952624)
+        r_wheel = self.get_parameter("r_wheel").get_parameter_value().double_value
+        self.declare_parameter("i_wheel", 0.001)
+        i_wheel = self.get_parameter("i_wheel").get_parameter_value().double_value
+        self.declare_parameter("gamma", 0.33333333)
+        gamma = self.get_parameter("gamma").get_parameter_value().double_value
+        self.declare_parameter("tau_0", 0.3)
+        tau_0 = self.get_parameter("tau_0").get_parameter_value().double_value
+        self.declare_parameter("omega_0", 30.0)
+        omega_0 = self.get_parameter("omega_0").get_parameter_value().double_value
+        dyn = [c_1, c_0, l, r_wheel, i_wheel, gamma, tau_0, omega_0]
+
+        # update frequency of this node
+        self.freq = 10.0
+
+        self.gps = ""
+        self.mag = ""
+
+        # x, y, from measurements
+        self.x = 0
+        self.y = 0
+        self.bu_x = 0
+        self.bu_y = 0
+        self.count_bu = 0
+        # what we will be using for our state vector. (x, y, theta yaw, v vel)
+        self.state = np.zeros((4, 1))
+
+        self.init_x = 0.0
+        self.init_y = 0.0
+        self.init_theta = 0.0
+        self.init_v = 0.0
+        self.state[0, 0] = self.init_x
+        self.state[1, 0] = self.init_y
+        self.state[2, 0] = self.init_theta
+        self.state[3, 0] = self.init_v
+
+        self.gps_ready = False
+
+        # ground truth velocity
+        self.gtvy = 0
+        self.gtvx = 0
+        self.D = 0
+
+        # origin, and whether or not the origin has been set yet.
+        self.origin_set = False
+        self.orig_heading_set = False
+
+        # inputs to the vehicle
+        self.throttle = 0.0
+        self.steering = 0
+
+        # time between imu updates, sec
+        self.dt_gps = 1 / self.freq
+
+        # the ROM
+        self.dynamics_model = get_dynamics(self.dt_gps, dyn)
+        # filter
+        self.ekf = EKF(self.dt_gps, self.dynamics_model, Q, R)
+
+        # our graph object, for reference frame
+        self.graph = get_coordinate_transfer()
+
+        # subscribers
+        self.sub_gps = self.create_subscription(NavSatFix, "/fix", self.gps_callback, 1)
+
+        self.sub_mag = self.create_subscription(
+            MagneticField, "~/input/magnetometer", self.mag_callback, 1
+        )
+        self.sub_imu = self.create_subscription(Imu, "/imu", self.imu_callback, 1)
+        self.sub_control = self.create_subscription(
+            VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1
+        )
+        # publishers
+        self.pub_objects = self.create_publisher(
+            VehicleState, "~/output/filtered_state", 1
+        )
+        self.timer = self.create_timer(1 / self.freq, self.pub_callback)
+
+    # CALLBACKS:
+    def inputs_callback(self, msg):
+        self.inputs = msg
+        self.steering = self.inputs.steering
+        self.throttle = self.inputs.throttle
+
+    def mag_callback(self, msg):
+        self.mag = msg
+        mag_x = self.mag.magnetic_field.x
+        mag_y = self.mag.magnetic_field.y
+        mag_z = self.mag.magnetic_field.z
+        xGauss = mag_x * 0.48828125
+        yGauss = mag_y * 0.4882815
+        if xGauss == 0:
+            if yGauss < 0:
+                self.D = 0
+            else:
+                self.D = 90
+        else:
+            self.D = math.atan2(yGauss, xGauss) * 180 / math.pi
+        while self.D > 360:
+            self.D = self.D - 360
+        while self.D < 0:
+            self.D = self.D + 360
+
+        if not self.orig_heading_set:
+            self.orig_heading_set = True
+            self.graph.set_rotation(np.deg2rad(self.D) - self.init_theta)
+            self.state[2, 0] = self.init_theta
+
+    def imu_callback(self, msg):
+        time_step = 1 / 100
+        ang_vel_x = msg.angular_velocity.x
+        ang_vel_y = msg.angular_velocity.y
+        ang_vel_z = msg.angular_velocity.z
+        # getting heading angle (yaw angle)
+        if abs(ang_vel_z) > 0.005:
+            ang_vel_z = ang_vel_z
+        elif abs(ang_vel_z) < 0.005:
+            ang_vel_z = 0.0
+        self.D -= time_step * ang_vel_z
+        # self.get_logger().info("THE HEADING IS: " + str(self.D))
+        if not self.orig_heading_set:
+            self.orig_heading_set = True
+            self.orig_heading = self.D  # TODO: bug here.....
+            if self.D > 0:
+                self.graph.set_rotation(self.D - np.pi)
+            else:
+                self.graph.set_rotation(self.D + np.pi)
+            self.state[2, 0] = 0  # self.init_theta
+
+    def gps_callback(self, msg):
+        self.get_logger().info(
+            "getting ground truth, with back up times: " + str(self.count_bu)
+        )
+        self.gps = msg
+        lat = self.gps.latitude
+        lon = self.gps.longitude
+        alt = self.gps.altitude
+        if not self.origin_set:
+            self.origin_set = True
+            self.graph.set_graph(lat, lon, alt)
+        x, y, z = self.graph.gps2cartesian(lat, lon, alt)
+        if self.orig_heading_set:
+            self.x, self.y, self.gtz = self.graph.rotate(x, y, z)
+            self.x = self.x + self.init_x
+            self.y = self.y + self.init_y
+        if str(self.x) == "nan":
+            # use back up ground truth position
+            self.x = self.bu_x
+            self.y = self.bu_y
+            self.count_bu = self.count_bu + 1
+        else:
+            ## assign back up ground truth data
+            self.bu_x = self.x
+            self.bu_y = self.y
+            # self.get_logger().info("back up data for ground truth")
+
+    # callback to run a loop and publish data this class generates
+    def pub_callback(self):
+        u = np.array([[self.throttle], [self.steering / 2.2]])
+
+        z = np.array([[self.x], [self.y], [np.deg2rad(self.D)]])
+
+        self.EKFstep(u, z)
+
+        msg = VehicleState()
+
+        with open("state_output_.csv", "a", encoding="UTF8") as csvfile:
+            mywriter = csv.writer(csvfile)
+            # mywriter.writerow([self.x, self.y, self.D-self.orig_heading])
+            mywriter.writerow(
+                [self.x, self.y, self.D, self.state[3][0], self.throttle, self.steering]
+            )
+            csvfile.close()
+
+        # pos and velocity are in meters, from the origin, [x, y, z]
+
+        msg.pose.position.x = float(self.x)
+        msg.pose.position.y = float(self.y)
+        msg.pose.orientation.z = float(self.D)
+        msg.twist.linear.x = float(self.state[3, 0] * math.cos(np.deg2rad(self.D)))
+        msg.twist.linear.y = float(self.state[3, 0] * math.sin(np.deg2rad(self.D)))
+
+        msg.header.stamp = self.get_clock().now().to_msg()
+        self.pub_objects.publish(msg)
+
+    def EKFstep(self, u, z):
+        self.state = self.ekf.predict(self.state, u)
+        if self.gps_ready:
+            self.state = self.ekf.correct(self.state, z)
+            self.gps_ready = False
+
+
+def main(args=None):
+    print("=== Starting State Estimation Node ===")
+    rclpy.init(args=args)
+    estimator = EKFEstimationNode()
+    rclpy.spin(estimator)
+    estimator.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
