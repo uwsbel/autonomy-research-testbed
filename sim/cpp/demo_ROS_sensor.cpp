@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
                                                                   false, true);
     mmesh->Transform(ChVector<>(0, 0, 0), ChMatrix33<>(1));
 
-    auto trimesh_shape = chrono_types::make_shared<ChTriangleMeshShape>();
+    auto trimesh_shape = chrono_types::make_shared<ChVisualShapeTriangleMesh>();
     trimesh_shape->SetMesh(mmesh);
     trimesh_shape->SetName("Audi Chassis Mesh");
     trimesh_shape->SetMutable(false);
@@ -168,7 +168,8 @@ int main(int argc, char* argv[]) {
     // Create the publisher for the lidar
     auto lidar_2d_topic_name = "~/output/lidar_2d/data/laser_scan";
     auto lidar_2d_handler = chrono_types::make_shared<ChROSLidarHandler>(
-        lidar_2d, lidar_2d_topic_name, false);  // last parameter indicates whether to use LaserScan or PointCloud2
+        lidar_2d, lidar_2d_topic_name,
+        ChROSLidarHandlerMessageType::LASER_SCAN);  // last parameter indicates whether to use LaserScan or PointCloud2
     ros_manager->RegisterHandler(lidar_2d_handler);
 
     // Create the publisher for the accelerometer
