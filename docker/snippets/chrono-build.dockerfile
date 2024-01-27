@@ -42,22 +42,12 @@ ARG CHRONO_BRANCH="main"
 ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
 ARG CHRONO_DIR="${USERHOME}/chrono"
 ARG CHRONO_INSTALL_DIR="/opt/chrono"
-<<<<<<< HEAD:docker/snippets/chrono.dockerfile
-RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
-    . ${ROS_WORKSPACE_DIR}/install/setup.sh && \
-    cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
-    bash buildVSG.sh /opt/vsg && \
-    cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
-    bash buildURDF.sh /opt/urdf && \
-    mkdir ${CHRONO_DIR}/build && \
-=======
 RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR}
 RUN cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
     sudo bash buildVSG.sh /opt/vsg
 RUN cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
     sudo bash buildURDF.sh /opt/urdf
 RUN mkdir ${CHRONO_DIR}/build && \
->>>>>>> 3b81521 (Updated docs. Moved chrono.dockerfile to chrono-build.dockerfile snippet. Added optix dockerfile.):docker/snippets/chrono-build.dockerfile
     cd ${CHRONO_DIR}/build && \
     . ${ROS_WORKSPACE_DIR}/install/setup.sh && \
     cmake ../ -G Ninja \
