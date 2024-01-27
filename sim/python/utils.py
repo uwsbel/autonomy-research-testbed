@@ -32,7 +32,7 @@ def AddConesFromFile(
             pos = chrono.ChVectorD(pos_x, pos_y, pos_z)
             rot = chrono.ChQuaternionD(1, 0, 0, 0)
 
-            cone_shape = chrono.ChTriangleMeshShape()
+            cone_shape = chrono.ChVisualShapeTriangleMesh()
             if color == 0:
                 cone_shape.SetMesh(red_cone_mesh)
                 red_cone_assets.append(cone_shape)
@@ -50,7 +50,7 @@ def AddConesFromFile(
     return red_cone_assets, green_cone_assets
 
 
-def LabelAssets(assets: List[chrono.ChTriangleMeshShape], class_id: int):
+def LabelAssets(assets: List[chrono.ChVisualShapeTriangleMesh], class_id: int):
     instance_id = 0
     for cone in assets:
         instance_id += 1
