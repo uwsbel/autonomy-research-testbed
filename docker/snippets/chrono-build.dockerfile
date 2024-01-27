@@ -38,7 +38,6 @@ RUN mkdir -p ${CHRONO_ROS_INTERFACES_DIR} && \
     colcon build --packages-select chrono_ros_interfaces
 
 # Chrono
-# Build in separate goes to aid caching
 ARG CHRONO_BRANCH="main"
 ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
 ARG CHRONO_DIR="${USERHOME}/chrono"
