@@ -76,7 +76,7 @@ ChVector<> initLoc_flw(0, 0.0, 0.5);
 ChQuaternion<> initRot = Q_from_AngZ(0.4f);
 // Rigid terrain
 RigidTerrain::PatchType terrain_model = RigidTerrain::PatchType::BOX;
-double terrainHeight = 0;      // terrain height (FLAT terrain only)
+double terrainHeight = 0;     // terrain height (FLAT terrain only)
 double terrainLength = 10.0;  // size in X direction
 double terrainWidth = 10.0;   // size in Y direction
 
@@ -99,7 +99,7 @@ std::string rigidterrain_file("terrain/RigidPlane.json");
 ////std::string rigidterrain_file("terrain/RigidSlope10.json");
 ////std::string rigidterrain_file("terrain/RigidSlope20.json");
 
-//sensor params
+// sensor params
 unsigned int image_width = 1080;
 unsigned int image_height = 720;
 float fov = (float)CH_C_PI / 2.;
@@ -134,7 +134,6 @@ int main(int argc, char* argv[]) {
     vehicle.SetSteeringVisualizationType(steering_vis_type);
     vehicle.SetWheelVisualizationType(wheel_vis_type);
     vehicle.SetTireVisualizationType(tire_vis_type);
-
 
     // Containing system
     auto system = vehicle.GetSystem();
@@ -196,7 +195,7 @@ int main(int argc, char* argv[]) {
     std::mt19937 gen(rd());
     std::shuffle(positions.begin(), positions.end(), gen);
     // Number of random obstacles on the reference path to add
-    int n = 3; 
+    int n = 3;
     for (int i = 0; i < n; ++i) {
         double x = std::get<0>(positions[i]);
         double y = std::get<1>(positions[i]);
@@ -215,8 +214,6 @@ int main(int argc, char* argv[]) {
             shape->GetMaterials()[0] = vis_mat;
         }
     }
-
-    
 
     // Create the terrain
     RigidTerrain terrain(system, vehicle::GetDataFile(rigidterrain_file));
@@ -238,13 +235,13 @@ int main(int argc, char* argv[]) {
     // Create a lidar and add it to the sensor manager
     auto offset_pose = chrono::ChFrame<double>({0.25, 0, 0.4}, Q_from_AngAxis(0, {0, 0, 1}));
     auto lidar = chrono_types::make_shared<ChLidarSensor>(vehicle.GetChassis()->GetBody(),  // body lidar is attached to
-                                                          10,                             // scanning rate in Hz
-                                                          offset_pose,                    // offset pose
-                                                          180,                   // number of horizontal samples
-                                                          1,                   // number of vertical channels
+                                                          10,                               // scanning rate in Hz
+                                                          offset_pose,                      // offset pose
+                                                          180,               // number of horizontal samples
+                                                          1,                 // number of vertical channels
                                                           (float)(CH_C_PI),  // horizontal field of view
-                                                          (float)0.0f, 
-                                                          (float)0.0f,// vertical field of view
+                                                          (float)0.0f,
+                                                          (float)0.0f,  // vertical field of view
                                                           30.0f);
     lidar->SetName("Lidar Sensor 1");
     lidar->SetLag(0.f);
@@ -256,15 +253,15 @@ int main(int argc, char* argv[]) {
 
     // Add camera
     auto cam_pose = chrono::ChFrame<double>({-5.304, 0, 1.0}, Q_from_AngAxis(0.1, {0, 1.25, 0}));
-    auto cam = chrono_types::make_shared<ChCameraSensor>(vehicle.GetChassis()->GetBody(),         // body camera is attached to
-                                                            10,   // update rate in Hz
-                                                            cam_pose,  // offset pose
-                                                            image_width,   // image width
-                                                            image_height,  // image height
-                                                            fov,           // camera's horizontal field of view
-                                                            alias_factor,  // supersample factor for antialiasing
-                                                            lens_model,    // FOV
-                                                            false);        // use global illumination or not
+    auto cam = chrono_types::make_shared<ChCameraSensor>(vehicle.GetChassis()->GetBody(),  // body camera is attached to
+                                                         10,                               // update rate in Hz
+                                                         cam_pose,                         // offset pose
+                                                         image_width,                      // image width
+                                                         image_height,                     // image height
+                                                         fov,           // camera's horizontal field of view
+                                                         alias_factor,  // supersample factor for antialiasing
+                                                         lens_model,    // FOV
+                                                         false);        // use global illumination or not
     cam->SetName(" Camera ");
     cam->SetLag(lag);
     cam->SetCollectionWindow(0.0f);
@@ -284,7 +281,8 @@ int main(int argc, char* argv[]) {
     // Create the publisher for the lidar
     auto lidar_2d_topic_name = "~/output/lidar_2d/data/laser_scan";
     // last parameter indicates whether to use LaserScan or PointCloud2
-    auto lidar_2d_handler = chrono_types::make_shared<ChROSLidarHandler>(lidar, lidar_2d_topic_name, ChROSLidarHandlerMessageType::LASER_SCAN); 
+    auto lidar_2d_handler = chrono_types::make_shared<ChROSLidarHandler>(lidar, lidar_2d_topic_name,
+                                                                         ChROSLidarHandlerMessageType::LASER_SCAN);
     ros_manager->RegisterHandler(lidar_2d_handler);
 
     // Create a subscriber to the driver inputs
@@ -293,7 +291,6 @@ int main(int argc, char* argv[]) {
     auto driver_inputs_handler =
         chrono_types::make_shared<ChROSDriverInputsHandler>(driver_inputs_rate, driver, driver_inputs_topic_name);
     ros_manager->RegisterHandler(driver_inputs_handler);
-
 
     // Create a publisher for the vehicle state
     auto vehicle_state_rate = 25;
@@ -310,7 +307,6 @@ int main(int argc, char* argv[]) {
     double time = 0;
     vehicle.GetVehicle().EnableRealtime(true);
     while (time < t_end) {
-
         // Get driver inputs
         DriverInputs driver_inputs = driver->GetInputs();
         // Update modules (process inputs from other modules)
