@@ -113,9 +113,9 @@ double step_size = 1e-3;
 
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2023 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
-    //SetChronoDataPath(CHRONO_DATA_DIR);
+    SetChronoDataPath(CHRONO_DATA_DIR);
     ARTcar vehicle;
-    //vehicle::SetDataPath(std::string(CHRONO_DATA_DIR) + "/vehicle/");
+    vehicle::SetDataPath(std::string(CHRONO_DATA_DIR) + "/vehicle/");
     vehicle.SetContactMethod(contact_method);
     vehicle.SetChassisCollisionType(chassis_collision_type);
     vehicle.SetChassisFixed(false);
@@ -149,10 +149,10 @@ int main(int argc, char* argv[]) {
     vis_mat->SetClassID(30000);
     vis_mat->SetInstanceID(50000);
 
-    // Add path to follow:
+    // Add visualized reference path to follow:
     // Function to read and parse the CSV file
     std::vector<std::tuple<double, double, double, double>> positions;
-    std::string csvFile = "/home/art/art/sim/data/paths/lot17_sinsquare.csv";
+    std::string csvFile = "/home/art/art/sim/data/waypoints_paths/lot17_sinsquare.csv";
     std::ifstream file(csvFile);
     if (!file.is_open()) {
         std::cerr << "Error: Unable to open CSV file." << std::endl;
@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::shuffle(positions.begin(), positions.end(), gen);
-    // Number of obstacles to add
+    // Number of random obstacles on the reference path to add
     int n = 3; 
     for (int i = 0; i < n; ++i) {
         double x = std::get<0>(positions[i]);
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
     manager->SetVerbose(false);
 
     // Create a lidar and add it to the sensor manager
-    auto offset_pose = chrono::ChFrame<double>({0, 0, 0.4}, Q_from_AngAxis(0, {0, 0, 1}));
+    auto offset_pose = chrono::ChFrame<double>({0.25, 0, 0.4}, Q_from_AngAxis(0, {0, 0, 1}));
     auto lidar = chrono_types::make_shared<ChLidarSensor>(vehicle.GetChassis()->GetBody(),  // body lidar is attached to
                                                           10,                             // scanning rate in Hz
                                                           offset_pose,                    // offset pose
@@ -269,10 +269,9 @@ int main(int argc, char* argv[]) {
     cam->SetLag(lag);
     cam->SetCollectionWindow(0.0f);
     cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(image_width, image_height, "Camera"));
-    cam->PushFilter(chrono_types::make_shared<ChFilterSave>("./cam1/"));
+    // cam->PushFilter(chrono_types::make_shared<ChFilterSave>("./cam1/"));
     manager->AddSensor(cam);
     manager->Update();
-    // ------------
 
     // Create ROS manager
     auto ros_manager = chrono_types::make_shared<ChROSManager>();
@@ -284,7 +283,8 @@ int main(int argc, char* argv[]) {
 
     // Create the publisher for the lidar
     auto lidar_2d_topic_name = "~/output/lidar_2d/data/laser_scan";
-    auto lidar_2d_handler = chrono_types::make_shared<ChROSLidarHandler>(lidar, lidar_2d_topic_name, ChROSLidarHandlerMessageType::LASER_SCAN);  // last parameter indicates whether to use LaserScan or PointCloud2
+    // last parameter indicates whether to use LaserScan or PointCloud2
+    auto lidar_2d_handler = chrono_types::make_shared<ChROSLidarHandler>(lidar, lidar_2d_topic_name, ChROSLidarHandlerMessageType::LASER_SCAN); 
     ros_manager->RegisterHandler(lidar_2d_handler);
 
     // Create a subscriber to the driver inputs

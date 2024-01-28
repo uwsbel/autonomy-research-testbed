@@ -6,7 +6,7 @@ project(autonomy_research_testbed)
 # Define demos
 
 set(DEMOS
-    #demo_ROS_sensor
+    demo_ROS_sensor
     demo_ROS_dART
 )
 
