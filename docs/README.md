@@ -37,6 +37,12 @@ In addition, you will need to install docker and docker compose. Please refer to
 
 To build the chrono image, you'll need to download the OptiX 7.7 build script from NVIDIA's website and place it in [`docker/data`](./../docker/data). You can find the download link [here](https://developer.nvidia.com/designworks/optix/download). See the [FAQs](./misc/faq.md#optix-install) for more details.
 
+#### Download Waypoints Data Files
+To run the waypoints-based path following demo, we need to download some waypoints paths as reference trajectories into [`sim/data`](./../sim/data). You can use the following command to download the data files:
+```bash
+cd <path_to_autonomy_research_testbed>/sim/data && gdown --folder 1as3pPYlC0m9LcRJuuVOzuAOYPMlosMfY
+```
+
 ### Start up vnc
 
 You'll probably want to visualize GUI windows, so start up vnc first. The first time around, the image will need to be build so this may take a little while.
