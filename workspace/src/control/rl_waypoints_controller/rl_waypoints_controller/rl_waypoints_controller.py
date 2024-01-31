@@ -122,6 +122,9 @@ class RLWaypointsController(Node):
         """
         msg = VehicleInput()
         # TODO: FIX THE PATH PLANNER LINEAR PUBLISHING
+        if self.state == "":
+            self.get_logger().info("State: " + str(self.state))
+            return
         obs_dict = {
             "data": np.array(
                 [
