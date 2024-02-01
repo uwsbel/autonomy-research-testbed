@@ -19,7 +19,8 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "localization_shared_utils = localization_shared_utils.localization_shared_utils:main"
+            "localization_shared_utils = localization_shared_utils.localization_shared_utils:main",
+            'ins_publisher = localization_shared_utils.ins_publisher:main'
         ],
     },
 )
