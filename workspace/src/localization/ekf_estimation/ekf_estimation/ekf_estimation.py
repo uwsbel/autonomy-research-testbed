@@ -133,14 +133,14 @@ class EKFEstimationNode(Node):
 
         # subscribers
         self.sub_gps = self.create_subscription(
-            NavSatFix, "~/input/gps", self.gps_callback, 1
+            NavSatFix, "/chrono_ros_node/output/gps/data", self.gps_callback, 1
         )
 
         self.sub_mag = self.create_subscription(
-            MagneticField, "~/input/magnetometer", self.mag_callback, 1
+            MagneticField, "/chrono_ros_node/output/magnetometer/data", self.mag_callback, 1
         )
         self.sub_control = self.create_subscription(
-            VehicleInput, "~/input/vehicle_inputs", self.inputs_callback, 1
+            VehicleInput, "/chrono_ros_node/input/vehicle_inputs", self.inputs_callback, 1
         )
         # publishers
         self.pub_objects = self.create_publisher(

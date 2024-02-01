@@ -113,19 +113,17 @@ class EKF:
         """
         H = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
         zPred = H @ x
-        while z[2, 0] > np.pi:
-            z[2, 0] = z[2, 0] - 2 * np.pi
-        while z[2, 0] < -np.pi:
-            z[2, 0] = z[2, 0] + 2 * np.pi
+        # Ensure angle is within the correct range
+        z[2, 0] = (z[2, 0] + np.pi) % (2 * np.pi) - np.pi
 
         y = z - zPred
         y[2, 0] = self.angle_diff(z[2, 0], zPred[2, 0])
-        if y[2, 0] > np.pi:
-            y[2, 0] = y[2, 0] - 2 * np.pi
-        if y[2, 0] < -np.pi:
-            y[2, 0] = y[2, 0] + 2 * np.pi
+
         S = H @ self.P @ H.T + self.R
-        K = self.P @ H.T @ np.linalg.inv(S)
+        epsilon = 1e-6  # Small regularization term
+        S_reg = S + np.eye(S.shape[0]) * epsilon  # Adding regularization term
+        K = self.P @ H.T @ np.linalg.inv(S_reg)
         x = x + K @ y
         self.P = (np.eye(len(x)) - K @ H) @ self.P
         return x
+
