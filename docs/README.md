@@ -64,7 +64,7 @@ WARN[0000] The "DISPLAY" variable is not set. Defaulting to a blank string.
 
 ### Launch the simulation
 
-The first time you start up the chrono service, it will need to build the image. This may take a while.
+The first time you start up the chrono service, it will need to build/pull the image. This may take a while.
 
 ```bash
 $ atk dev -ua -s chrono --optionals gpus vnc
@@ -86,7 +86,7 @@ Initialized ChROSInterface: chrono_ros_node.
 
 ### Build and run the autonomy stack
 
-The first time you start up the dev service, it will need to build the image. This may take a while.
+The first time you start up the dev service, it will need to build/pull the image. This may take a while.
 
 > [!NOTE]
 > The very first time you run `colcon build`, you may need to install the `bluespace_ai_xsens_ros_mti_driver` library. To do that, run the following:

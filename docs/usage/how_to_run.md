@@ -18,9 +18,10 @@ This is a quick review of some `atk` concepts and how to do some basic operation
 
 ### Building the services
 
-Explicitly building the services is not actually required. When you run the `up` command for the first time, the images will also be built.
+> [!TIP]
+> Explicitly building the services is not actually required. We have pre-built images on [Docker Hub](https://hub.docker.com/repository/docker/uwsbel/art/general) which will be pulled when you use the `up` command.
 
-At the moment, there are three services: `vnc`, `chrono`, and `dev`. We can build all of these in one go:
+Let's say you want to build three services: `vnc`, `chrono`, and `dev`. We can build all of these in one go:
 
 ```bash
 $ atk dev -b -s vnc chrono dev

@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: MIT
 # This snippet install Chrono in /opt/chrono
-# NOTE: Requires OPTIX_SCRIPT to be set and for there be a file that exists there
 # NOTE: ROS needs to be installed, as well
 
 # Install Chrono dependencies
@@ -23,14 +22,6 @@ RUN apt-get update && \
         xorg-dev && \
         apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
-# OptiX
-ARG OPTIX_SCRIPT
-COPY ${OPTIX_SCRIPT} /tmp/optix.sh
-RUN chmod +x /tmp/optix.sh && \
-    mkdir /opt/optix && \
-    /tmp/optix.sh --prefix=/opt/optix --skip-license && \
-    rm /tmp/optix.sh
-
 # Vulkan
 RUN wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | tee /etc/apt/trusted.gpg.d/lunarg.asc && \
     wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list http://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list && \
@@ -51,14 +42,14 @@ ARG CHRONO_BRANCH="main"
 ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
 ARG CHRONO_DIR="${USERHOME}/chrono"
 ARG CHRONO_INSTALL_DIR="/opt/chrono"
-RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
-    . ${ROS_WORKSPACE_DIR}/install/setup.sh && \
-    cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
-    bash buildVSG.sh /opt/vsg && \
-    cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
-    bash buildURDF.sh /opt/urdf && \
-    mkdir ${CHRONO_DIR}/build && \
+RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR}
+RUN cd ${CHRONO_DIR}/contrib/build-scripts/vsg/ && \
+    sudo bash buildVSG.sh /opt/vsg
+RUN cd ${CHRONO_DIR}/contrib/build-scripts/urdf/ && \
+    sudo bash buildURDF.sh /opt/urdf
+RUN mkdir ${CHRONO_DIR}/build && \
     cd ${CHRONO_DIR}/build && \
+    . ${ROS_WORKSPACE_DIR}/install/setup.sh && \
     cmake ../ -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_DEMOS=OFF \
@@ -89,6 +80,13 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
 
 # chown the chrono dir so that we can edit it
 RUN chown -R ${USERNAME}:${USERNAME} ${CHRONO_DIR} ${ROS_WORKSPACE_DIR}
+
+# Remove optix
+# Due to licensing, we don't want to include this in the final image
+ARG REMOVE_OPTIX="false"
+RUN if [ "${REMOVE_OPTIX}" = "true" ]; then \
+        rm -rf /opt/optix/*; \
+    fi
 
 # Update shell config
 RUN echo ". ${ROS_WORKSPACE_DIR}/install/setup.sh" >> ${USERSHELLPROFILE} && \

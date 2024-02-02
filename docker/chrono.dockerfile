@@ -7,7 +7,8 @@ INCLUDE ./docker/common/base.dockerfile
 
 # Snippets
 INCLUDE ./docker/snippets/ros.dockerfile
-INCLUDE ./docker/snippets/chrono.dockerfile
+INCLUDE ./docker/snippets/optix.dockerfile
+INCLUDE ./docker/snippets/chrono-build.dockerfile
 
 # Will copy in other common configurations for this build
 INCLUDE ./docker/common/common.dockerfile

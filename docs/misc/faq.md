@@ -41,3 +41,16 @@ USER_GID=1001
 ## OptiX Install
 
 Chrono currently builds against OptiX 7.7. In order to install OptiX in the container, you need to install the OptiX build script that you download from [their website](https://developer.nvidia.com/designworks/optix/downloads/legacy). Then place the script in the `docker/data/` directory. Files in this folder are ignored by git, so no worries there.
+
+If you are pulling the image from [Docker Hub](https://hub.docker.com/repository/docker/uwsbel/art/general), you will also need to run the following. The image on Docker Hub doesn't include the OptiX library since it's under a non-permissive license. This command will just copy the OptiX library to the location Chrono expects and then save the image.
+
+```bash
+$ atk dev -ua -s chrono
+WARNING  | logger.set_verbosity :: Verbosity has been set to WARNING
+[+] Running 1/1
+ ✔ Container art-chrono  Started
+art@art-chrono:~/art/sim$ cd ../docker/data/
+art@art-chrono:~/art/sim$ sudo bash <optix script>.sh --prefix=/opt/optix --skip-license
+art@art-chrono:~/art/sim$ exit
+$ container_id=$(atk dev -c ps -s chrono --compose-arg='-q'); docker commit $container_id $(docker inspect -f '{{.Config.Image}}' $container_id)
+```
