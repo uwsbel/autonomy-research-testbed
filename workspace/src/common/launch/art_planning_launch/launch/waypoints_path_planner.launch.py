@@ -45,9 +45,7 @@ def generate_launch_description():
     # ----------------
 
     AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/filtered_state")
-    AddLaunchArgument(
-        ld, "art_planning/output/error_state", "/path_planning/error_state"
-    )
+    AddLaunchArgument(ld, "art_planning/output/error_state", "/vehicle/error_state")
     AddLaunchArgument(ld, "vis", "False")
     AddLaunchArgument(ld, "lookahead", ".75")
 
