@@ -44,28 +44,33 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_control/input/error_state", "vehicle/error_state")
-    AddLaunchArgument(
-        ld, "art_control/output/vehicle_inputs", "/control/vehicle_inputs"
-    )
+    AddLaunchArgument(ld, "art_planning/input/vehicle_state", "/vehicle/state")
+    AddLaunchArgument(ld, "art_planning/input/objects", "/perception/objects")
+    AddLaunchArgument(ld, "art_planning/output/path", "/path_planning/path")
+
+    AddLaunchArgument(ld, "vis", "False")
+    AddLaunchArgument(ld, "lookahead", ".75")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package="rl_waypoints_controller",
-        executable="rl_waypoints_controller",
-        name="rl_waypoints_controller",
+        package="centerline_objects_path_planner",
+        executable="centerline_objects_path_planner",
+        name="centerline_objects_path_planner",
         remappings=[
-            ("~/input/error_state", GetLaunchArgument("art_control/input/error_state")),
+            ("~/input/objects", GetLaunchArgument("art_planning/input/objects")),
             (
-                "~/output/vehicle_inputs",
-                GetLaunchArgument("art_control/output/vehicle_inputs"),
+                "~/input/vehicle_state",
+                GetLaunchArgument("art_planning/input/vehicle_state"),
             ),
+            ("~/output/path", GetLaunchArgument("art_planning/output/path")),
         ],
         parameters=[
-            {"input": GetLaunchArgument("art_control/input/error_state")},
+            {"vis": GetLaunchArgument("vis")},
+            {"lookahead": GetLaunchArgument("lookahead")},
+            {"use_sim_time": GetLaunchArgument("use_sim_time")},
         ],
     )
     ld.add_action(node)
