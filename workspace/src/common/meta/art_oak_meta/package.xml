@@ -9,10 +9,11 @@
 
   <exec_depend>art_common_meta</exec_depend>
 
-  <exec_depend>art_launch</exec_depend>
-  <exec_depend>localization_py</exec_depend>
-  <exec_depend>path_planning</exec_depend>
-  <exec_depend>control</exec_depend>
+  <exec_depend>art_oak_launch</exec_depend>
+  <exec_depend>cone_detector</exec_depend>
+  <exec_depend>ground_truth</exec_depend>
+  <exec_depend>waypoints_path_planner</exec_depend>
+  <exec_depend>pid_lateral_controller</exec_depend>
   <exec_depend>chrono_ros_interfaces</exec_depend>
   <!-- add sensing -->
 </package>
