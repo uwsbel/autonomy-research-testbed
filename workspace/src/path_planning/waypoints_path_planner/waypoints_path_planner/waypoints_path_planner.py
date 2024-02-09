@@ -155,6 +155,7 @@ class WaypointsPathPlannerNode(Node):
         ref = ref_state_current[2]
         act = theta_current
 
+        # Modular subtraction between angles, to get an accurate difference between two angles.
         if (ref > 0 and act > 0) or (ref <= 0 and act <= 0):
             err_theta = ref - act
         elif ref <= 0 and act > 0:
