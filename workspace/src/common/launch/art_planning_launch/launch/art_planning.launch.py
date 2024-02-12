@@ -13,7 +13,9 @@ def generate_launch_description():
     # ---------------
 
     IncludeLaunchDescriptionWithCondition(
-        ld, "art_planning_launch", "centerline_path_planner"
+        ld, "art_planning_launch", "centerline_objects_path_planner"
     )
-
+    IncludeLaunchDescriptionWithCondition(
+        ld, "art_planning_launch", "waypoints_path_planner"
+    )
     return ld
