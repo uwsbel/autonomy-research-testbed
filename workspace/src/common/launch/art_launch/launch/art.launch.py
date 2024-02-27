@@ -80,7 +80,7 @@ def generate_launch_description():
     )
     SetLaunchArgument(
         ld,
-        "disable_ekf_estimation",
+        "disable_ground_truth",
         "True",
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
@@ -92,11 +92,16 @@ def generate_launch_description():
     )
     SetLaunchArgument(
         ld,
-        "disable_waypoints_path_planner",
+        "disable_centerline_objects_path_planner",
         "True",
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
-
+    SetLaunchArgument(
+        ld,
+        "disable_cone_detector",
+        "True",
+        condition=IfCondition(GetLaunchArgument("use_sim")),
+    )
     # -------------
     # Composability
     # -------------

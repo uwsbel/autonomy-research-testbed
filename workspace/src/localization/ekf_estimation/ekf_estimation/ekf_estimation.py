@@ -147,6 +147,11 @@ class EKFEstimationNode(Node):
             VehicleState, "~/output/filtered_state", 1
         )
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
+        os.remove("data.csv")
+        with open("data.csv", "a", encoding="UTF8") as csvfile:
+            mywriter = csv.writer(csvfile)
+            mywriter.writerow(["x", "y", "throttle", "steering", "v", "theta"])
+            csvfile.close()
 
     # CALLBACKS:
     def inputs_callback(self, msg):
@@ -250,6 +255,19 @@ class EKFEstimationNode(Node):
         msg.pose.orientation.z = float(self.state[2, 0])
         msg.twist.linear.x = float(self.state[3, 0] * math.cos(self.state[2, 0]))
         msg.twist.linear.y = float(self.state[3, 0] * math.sin(self.state[2, 0]))
+        with open("data.csv", "a", encoding="UTF8") as csvfile:
+            mywriter = csv.writer(csvfile)
+            mywriter.writerow(
+                [
+                    self.x,
+                    self.y,
+                    self.throttle,
+                    self.steering,
+                    self.state[3, 0],
+                    self.state[2, 0],
+                ]
+            )
+            csvfile.close()
 
         msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)

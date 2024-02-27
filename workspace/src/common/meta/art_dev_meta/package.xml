@@ -15,4 +15,7 @@
   <exec_depend>centerline_objects_path_planner</exec_depend>
   <exec_depend>pid_lateral_controller</exec_depend>
   <exec_depend>chrono_ros_interfaces</exec_depend>
+  <exec_depend>ekf_estimation</exec_depend>
+  <exec_depend>rl_waypoints_controller</exec_depend>
+  <exec_depend>waypoints_path_planner</exec_depend>
 </package>
