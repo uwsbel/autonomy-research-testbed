@@ -1,9 +1,5 @@
-# GPS and IMU Localization
-# 
-# Params from https://github.com/clearpathrobotics/robot_localization/blob/kinetic-devel/params/ekf_template.yaml
-# https://answers.ros.org/question/269631/robot_localization-gps-and-imu-minimal-example-not-working/
-# Tutorial from The Construct https://www.youtube.com/watch?v=nQZeAafDEJE
-# 
+# GPS/IMU Localization
+
 ekf_filter_node:
   ros__parameters:
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
