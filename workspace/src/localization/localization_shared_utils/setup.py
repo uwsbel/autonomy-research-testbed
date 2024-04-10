@@ -3,12 +3,12 @@ import os
 
 package_name = 'localization_shared_utils'
 
-# It's important to use the full path from the package directory when listing files
+
 launch_directory = os.path.join('launch')
 launch_files = [
     os.path.join(launch_directory, file)
     for file in os.listdir(launch_directory)
-    if file.endswith('.py')  # Make sure this matches your file extensions
+    if file.endswith('.py')  
 ]
 
 setup(
