@@ -38,11 +38,7 @@ def generate_launch_description():
             ('/gps/fix', '/fix'),
            #('/odometry/filtered', '/odometry/gps')
         ]
-        #  remappings=[
-        #    ('/imu/data', '/sensing/imu/data'),
-        #     ('/gps/fix', '/sensing/gps/data'),
-        #    # ('/odometry/filtered', '/odometry/gps')
-        # ]
+       
     )
 
     
@@ -65,23 +61,4 @@ def generate_launch_description():
     ])
     
 
-
-
-        # Node(
-        #     package='robot_localization',
-        #     executable='navsat_transform_node',
-        #     name='navsat_transform',
-        #     output='screen',
-        #     parameters=['/home/art/art/workspace/src/localization/localization_py/config/ekf_config.yaml'],
-        #     remappings=[
-        #         ('/gps/fix', '/fix'),
-        #     ]
-            
-        # ),
-
-        # Node(
-        #     package='tf2_ros',
-        #     executable='static_transform_publisher',
-        #     name='base_link_to_imu',
-        #     arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'imu_link']
     
