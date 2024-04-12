@@ -39,8 +39,8 @@ from enum import Enum
 
 
 def generate_launch_description():
-    ekf_config_path = GetPackageSharePath(
-        package="art_localization_launch", path="config/ekf_config.yaml"
+    ekf_config = GetPackageSharePath(
+        "art_localization_launch", "config", "ekf_config.yaml"
     )
     # Transforms
     gps_transform = Node(
@@ -86,7 +86,7 @@ def generate_launch_description():
         name="ekf_filter_node",
         output="screen",
         parameters=[
-            ekf_config_path,
+            ekf_config,
         ],
     )
 
