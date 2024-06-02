@@ -16,3 +16,7 @@
 [submodule "workspace/src/simulation/chrono_ros_interfaces"]
 	path = workspace/src/simulation/chrono_ros_interfaces
 	url = https://github.com/projectchrono/chrono_ros_interfaces.git
+[submodule "workspace/src/external/gym-chrono"]
+	path = workspace/src/external/gym-chrono
+	url = https://github.com/projectchrono/gym-chrono.git
+	branch = demo/art_path_tracking
