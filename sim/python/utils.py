@@ -27,10 +27,13 @@ def AddConesFromFile(
 
             pos_x = x + cone_offset_x
             pos_y = y + cone_offset_y
-            pos_z = terrain.GetHeight(chrono.ChVectorD(pos_x, pos_y, 1000))
+            pos_z = terrain.GetHeight(chrono.ChVector3d(pos_x, pos_y, 1000))
 
-            pos = chrono.ChVectorD(pos_x, pos_y, pos_z)
-            rot = chrono.ChQuaternionD(1, 0, 0, 0)
+            pos = chrono.ChVector3d(pos_x, pos_y, pos_z)
+            rot = chrono.ChQuaterniond(1,0, 0, 0)
+            
+
+
 
             cone_shape = chrono.ChVisualShapeTriangleMesh()
             if color == 0:
@@ -40,11 +43,13 @@ def AddConesFromFile(
                 cone_shape.SetMesh(green_cone_mesh)
                 green_cone_assets.append(cone_shape)
 
+
+
             cone_body = chrono.ChBody()
             cone_body.SetPos(pos)
             cone_body.SetRot(rot)
             cone_body.AddVisualShape(cone_shape)
-            cone_body.SetBodyFixed(True)
+            cone_body.SetFixed(True)
             system.Add(cone_body)
 
     return red_cone_assets, green_cone_assets
