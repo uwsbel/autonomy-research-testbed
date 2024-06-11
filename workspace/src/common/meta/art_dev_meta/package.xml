@@ -10,6 +10,7 @@
   <exec_depend>art_common_meta</exec_depend>
 
   <exec_depend>art_launch</exec_depend>
+  <exec_depend>description</exec_depend>
   <exec_depend>cone_detector</exec_depend>
   <exec_depend>ground_truth</exec_depend>
   <exec_depend>centerline_objects_path_planner</exec_depend>

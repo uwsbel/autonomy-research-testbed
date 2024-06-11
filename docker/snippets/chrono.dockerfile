@@ -74,7 +74,7 @@ RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
         -DEigen3_DIR=/usr/lib/cmake/eigen3 \
         -DOptiX_INCLUDE=/opt/optix/include \
         -DOptiX_INSTALL_DIR=/opt/optix \
-        -DCMAKE_LIBRARY_PATH=/usr/local/cuda/lib64/stubs \
+        -DCMAKE_LIBRARY_PATH=${LIBRARY_PATH}\
         -DUSE_CUDA_NVRTC=ON \
         -DNUMPY_INCLUDE_DIR=$(python3 -c 'import numpy; print(numpy.get_include())') \
         -DCMAKE_INSTALL_PREFIX=${CHRONO_INSTALL_DIR} \

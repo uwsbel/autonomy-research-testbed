@@ -27,7 +27,6 @@ def main(args):
 
     # Create the terrain
     terrain = veh.RigidTerrain(vehicle.GetSystem())
-    
 
 
     patch_mat = chrono.ChContactMaterialNSC()
@@ -68,7 +67,7 @@ def main(args):
 
 
     # Add an irrlicht visualization, if desired
-    if True:
+    if args.irrlicht:
         vis = veh.ChWheeledVehicleVisualSystemIrrlicht()
         vis.SetWindowTitle("ART1")
         vis.SetWindowSize(1280, 720)
@@ -138,6 +137,12 @@ def main(args):
             vehicle.mag.GetUpdateRate(), vehicle.mag, "/sensing/magnetometer/data"
         )
     )
+    # ros_manager.RegisterHandler(
+    #     ros.ChROSLidarHandler(
+    #         vehicle.lidar.GetUpdateRate(), vehicle.lidar, "/sensing/lidar/data"
+    #     )
+    # )
+
     ros_manager.Initialize()
 
     # Simulation Loop

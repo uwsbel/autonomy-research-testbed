@@ -34,7 +34,12 @@ class ART1(veh.ARTcar):
         camera_pos = chrono.ChVector3d(0.204, 0, 0.10018)
         camera_rot = chrono.ChQuaterniond()
         camera_rot.SetFromAngleAxis(0.1, chrono.ChVector3d(0.,1.,0.))
-        camera_pose = chrono.ChFramed(camera_pos, camera_rot)
+        camera_pose = chrono.ChFramed(camera_pos, camera_rot)        
+        
+        lidar_pos = chrono.ChVector3d(0.0, 0, 0.3)
+        lidar_rot = chrono.ChQuaterniond()
+        lidar_pose = chrono.ChFramed(camera_pos, camera_rot)
+
 
         self.cam = sens.CastToChCameraSensor(
             sens.Sensor.CreateFromJSON(
@@ -63,12 +68,18 @@ class ART1(veh.ARTcar):
                 str(sensor_path / "gps.json"), chassis_body, offset_pose
             )
         )
+        self.lidar = sens.CastToChLidarSensor(
+            sens.Sensor.CreateFromJSON(
+                str(sensor_path / "lidar.json"), chassis_body, lidar_pose
+            )
+        )
 
         self._sensors.append(self.cam)
         self._sensors.append(self.acc)
         self._sensors.append(self.gyro)
         self._sensors.append(self.mag)
         self._sensors.append(self.gps)
+        self._sensors.append(self.lidar)
 
     def Initialize(self, sensor_manager: sens.ChSensorManager):
         self.SetChassisVisualizationType(veh.VisualizationType_PRIMITIVES)
