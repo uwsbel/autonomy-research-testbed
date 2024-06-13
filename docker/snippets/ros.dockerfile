@@ -12,7 +12,7 @@ RUN apt-get update && \
       echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo ${UBUNTU_CODENAME}) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null && \
       apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && \
-      apt-get install -y ros-${ROS_DISTRO}-ros-base python3-colcon-common-extensions build-essential && \
+      apt-get install -y ros-${ROS_DISTRO}-ros-base ros-${ROS_DISTRO}-robot-localization python3-colcon-common-extensions build-essential && \
       apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Update shell config
