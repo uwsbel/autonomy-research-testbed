@@ -45,19 +45,19 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
+    AddLaunchArgument(ld, "art_localization/input/gps", "/artcar_1/output/gps/data")
     AddLaunchArgument(
-        ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data"
+        ld, "art_localization/input/magnetometer", "/artcar_1/output/magnetometer/data"
     )
-    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/artcar_1/output/gyroscope/data")
     AddLaunchArgument(
-        ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data"
-    )
-    AddLaunchArgument(
-        ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs"
+        ld, "art_localization/input/accelerometer", "/artcar_1/output/accelerometer/data"
     )
     AddLaunchArgument(
-        ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
+        ld, "art_localization/input/vehicle_inputs", "/artcar_1/input/driver_inputs"
+    )
+    AddLaunchArgument(
+        ld, "art_localization/output/filtered_state", "/artcar_1/vehicle/filtered_state"
     )
     AddLaunchArgument(ld, "ekf_vel_only", "False")
 

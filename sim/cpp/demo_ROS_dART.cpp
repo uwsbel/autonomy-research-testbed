@@ -38,6 +38,22 @@ using namespace chrono::vsg3d;
 #include "chrono_ros/handlers/vehicle/ChROSDriverInputsHandler.h"
 #include "chrono_ros/handlers/ChROSClockHandler.h"
 #include "chrono_ros/handlers/ChROSBodyHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSCameraHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSAccelerometerHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSGyroscopeHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSMagnetometerHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSLidarHandler.h"
+#include "chrono_ros/handlers/sensor/ChROSGPSHandler.h"
+
+#include "chrono_sensor/ChSensorManager.h"
+#include "chrono_sensor/sensors/ChCameraSensor.h"
+#include "chrono_sensor/sensors/ChLidarSensor.h"
+#include "chrono_sensor/sensors/ChIMUSensor.h"
+#include "chrono_sensor/sensors/ChGPSSensor.h"
+#include "chrono_sensor/filters/ChFilterAccess.h"
+#include "chrono_sensor/filters/ChFilterPCfromDepth.h"
+#include "chrono_sensor/filters/ChFilterVisualize.h"
+#include "chrono_sensor/filters/ChFilterVisualizePointCloud.h"
 
 using namespace chrono;
 using namespace chrono::vehicle;
@@ -50,7 +66,8 @@ using namespace chrono::ros;
 ChVisualSystem::Type vis_type = ChVisualSystem::Type::VSG;
 
 // Simulation step sizes
-double step_size = 1e-3;
+double step_size = 2e-3;
+using namespace chrono::sensor;
 
 // =============================================================================
 
@@ -60,10 +77,11 @@ int main(int argc, char* argv[]) {
     // --------------
     // Create systems
     // --------------
+    vehicle::SetDataPath(std::string(CHRONO_DATA_DIR) + "/vehicle/");
 
     // Chrono system
     ChSystemNSC sys;
-    sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
     sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
     sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
     sys.GetSolver()->AsIterative()->SetMaxIterations(150);
@@ -76,7 +94,7 @@ int main(int argc, char* argv[]) {
     patch_mat->SetRestitution(0.01f);
     auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 200, 100);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));
-    patch->SetTexture(vehicle::GetDataFile("terrain/textures/tile4.jpg"), 200, 200);
+    // patch->SetTexture(vehicle::GetDataFile("terrain/textures/cubetexture_pinkwhite.png"), 200, 200);
     terrain.Initialize();
 
     // define ROS handlers' rate
@@ -112,9 +130,66 @@ int main(int argc, char* argv[]) {
     auto vehicle_state_handler_1 = chrono_types::make_shared<ChROSBodyHandler>(
         vehicle_state_rate, artcar_1.GetChassisBody(), vehicle_state_topic_name);
     ros_manager_1->RegisterHandler(vehicle_state_handler_1);
+    
+
+    // ------------
+
+    // Create the sensors
+    auto noise_none = chrono_types::make_shared<ChNoiseNone>();
+    chrono::ChFrame<double> offset_pose({-8, 0, 2}, QuatFromAngleAxis(.2, {0, 1, 0}));
+
+    auto sensor_manager = chrono_types::make_shared<ChSensorManager>(&sys);
+    sensor_manager->scene->AddPointLight({100, 100, 100}, {2, 2, 2}, 500);
+    sensor_manager->scene->SetAmbientLight({0.1f, 0.1f, 0.1f});
+
+    // auto cam = chrono_types::make_shared<ChCameraSensor>(artcar_1.GetChassisBody(), 30, offset_pose, 1280, 720, CH_PI / 3.);
+    // cam->PushFilter(chrono_types::make_shared<ChFilterRGBA8Access>());
+    // cam->PushFilter(chrono_types::make_shared<ChFilterVisualize>(1280, 720));
+    // sensor_manager->AddSensor(cam);
+
+    // add an accelerometer, gyroscope, and magnetometer
+    ChVector3d gps_reference(-89.400, 43.070, 260.0);
+    auto acc = chrono_types::make_shared<ChAccelerometerSensor>(artcar_1.GetChassisBody(), 100.f, offset_pose, noise_none);
+    acc->PushFilter(chrono_types::make_shared<ChFilterAccelAccess>());
+    sensor_manager->AddSensor(acc);
+
+    auto gyro = chrono_types::make_shared<ChGyroscopeSensor>(artcar_1.GetChassisBody(), 100.f, offset_pose, noise_none);
+    gyro->PushFilter(chrono_types::make_shared<ChFilterGyroAccess>());
+    sensor_manager->AddSensor(gyro);
+
+    auto mag =
+        chrono_types::make_shared<ChMagnetometerSensor>(artcar_1.GetChassisBody(), 100.f, offset_pose, noise_none, gps_reference);
+    mag->PushFilter(chrono_types::make_shared<ChFilterMagnetAccess>());
+    sensor_manager->AddSensor(mag);
+
+    // add a GPS sensor
+    auto gps = chrono_types::make_shared<ChGPSSensor>(artcar_1.GetChassisBody(), 5.f, offset_pose, gps_reference, noise_none);
+    gps->PushFilter(chrono_types::make_shared<ChFilterGPSAccess>());
+    sensor_manager->AddSensor(gps);
+    sensor_manager->Update();
+
+    auto acc_rate = acc->GetUpdateRate() / 2;
+    auto acc_topic_name = "/artcar_1/output/accelerometer/data";
+    auto acc_handler = chrono_types::make_shared<ChROSAccelerometerHandler>(acc_rate, acc, acc_topic_name);
+    ros_manager_1->RegisterHandler(acc_handler);
+
+    // Create the publisher for the gyroscope
+    auto gyro_topic_name = "/artcar_1/output/gyroscope/data";
+    auto gyro_handler = chrono_types::make_shared<ChROSGyroscopeHandler>(gyro, gyro_topic_name);
+    ros_manager_1->RegisterHandler(gyro_handler);
+
+    // Create the publisher for the magnetometer
+    auto mag_topic_name = "/artcar_1/output/magnetometer/data";
+    auto mag_handler = chrono_types::make_shared<ChROSMagnetometerHandler>(mag, mag_topic_name);
+    ros_manager_1->RegisterHandler(mag_handler);
+
+    // Create the publisher for the GPS
+    auto gps_topic_name = "/artcar_1/output/gps/data";
+    auto gps_handler = chrono_types::make_shared<ChROSGPSHandler>(gps, gps_topic_name);
+    ros_manager_1->RegisterHandler(gps_handler);
+
     // Finally, initialize the ros manager
     ros_manager_1->Initialize();
-
 
     // Create and initialize the second vehicle (ARTcar)
     ARTcar artcar_2(&sys);
@@ -230,7 +305,8 @@ int main(int argc, char* argv[]) {
 
         // Advance state of entire system (containing both vehicles)
         sys.DoStepDynamics(step_size);
-
+            
+        sensor_manager->Update();
         // Update ROS managers
         if (!ros_manager_1->Update(time, step_size) || !ros_manager_2->Update(time, step_size))
             break;

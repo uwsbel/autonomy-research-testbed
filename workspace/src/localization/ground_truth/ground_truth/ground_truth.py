@@ -83,15 +83,15 @@ class GroundTruthNode(Node):
 
         # subscribers
         self.sub_gps = self.create_subscription(
-            NavSatFix, "~/input/gps", self.gps_callback, 1
+            NavSatFix, "/input/gps", self.gps_callback, 1
         )
 
         self.sub_mag = self.create_subscription(
-            MagneticField, "~/input/magnetometer", self.mag_callback, 1
+            MagneticField, "/input/magnetometer", self.mag_callback, 1
         )
         # publishers
         self.pub_objects = self.create_publisher(
-            VehicleState, "~/output/filtered_state", 1
+            VehicleState, "/output/filtered_state", 1
         )
         self.timer = self.create_timer(1 / self.freq, self.pub_callback)
 

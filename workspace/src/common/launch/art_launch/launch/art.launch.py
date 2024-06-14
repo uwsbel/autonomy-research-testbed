@@ -34,6 +34,9 @@ from launch import LaunchDescription
 from launch.actions import SetLaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import ComposableNodeContainer
+from launch_ros.actions import PushRosNamespace
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 # internal imports
 from launch_utils import (
@@ -53,9 +56,15 @@ def generate_launch_description():
 
     AddLaunchArgument(ld, "use_sim", "False")
     AddLaunchArgument(ld, "use_sim_time", "False")
+
+
+    ld.add_action(DeclareLaunchArgument('robot_ns', default_value='artcar_1'))
+    robot_ns = LaunchConfiguration('robot_ns')
+
     SetLaunchArgument(
         ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
     )
+
 
     AddLaunchArgument(ld, "container", "")
     container_name = AddLaunchArgument(ld, "container_name", "art_container")
@@ -91,6 +100,10 @@ def generate_launch_description():
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
 
+
+    namespace = PushRosNamespace('/artcar_1')
+    ld.add_action(namespace)
+
     # -------------
     # Composability
     # -------------
@@ -121,14 +134,14 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
 
-    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
     IncludeLaunchDescriptionWithCondition(
         ld, "art_localization_launch", "art_localization"
     )
-    IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
     IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")  
-    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     #IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle") 
-    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld

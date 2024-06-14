@@ -36,29 +36,38 @@ from launch_ros.actions import Node
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
 from enum import Enum
-
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.actions import DeclareLaunchArgument
+from launch.actions import OpaqueFunction
 
 def generate_launch_description():
     ld = LaunchDescription()
+
+    # Launch argument
+    # ld.add_action(DeclareLaunchArgument('robot_ns', default_value='artcar_1'))    
+    robot_ns = LaunchConfiguration('robot_ns')
 
     # ----------------
     # Launch Arguments
     # ----------------
 
-    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
+    exp = PythonExpression(['"', '/', robot_ns, '/output/gps/data', '"'])    
+
+    AddLaunchArgument(ld, "art_localization/input/gps", PythonExpression(['"', '/', robot_ns, '/output/gps/data', '"']))   
+
     AddLaunchArgument(
-        ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data"
-    )
-    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+        ld, "art_localization/input/magnetometer", PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data", '"']))    
+    
+
+    AddLaunchArgument(ld, "art_localization/input/gyroscope", PythonExpression(['"', '/', robot_ns, "/output/gyroscope/data", '"']))
+
     AddLaunchArgument(
-        ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data"
+        ld, "art_localization/input/accelerometer",  PythonExpression(['"', '/', robot_ns, "/output/accelerometer/data", '"'])      
     )
     AddLaunchArgument(
-        ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs"
-    )
+        ld, "art_localization/input/vehicle_inputs",  PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"']))    
     AddLaunchArgument(
-        ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
-    )
+        ld, "art_localization/output/filtered_state", PythonExpression(['"', '/', robot_ns, "/vehicle/filtered_state", '"']))  
 
     # -----
     # Nodes
@@ -69,25 +78,25 @@ def generate_launch_description():
         executable="ground_truth",
         name="ground_truth",
         remappings=[
-            ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
+            ("/input/gps", GetLaunchArgument("art_localization/input/gps")),
             (
-                "~/input/magnetometer",
+                "/input/magnetometer",
                 GetLaunchArgument("art_localization/input/magnetometer"),
             ),
             (
-                "~/input/gyroscope",
+                "/input/gyroscope",
                 GetLaunchArgument("art_localization/input/gyroscope"),
             ),
             (
-                "~/input/accelerometer",
+                "/input/accelerometer",
                 GetLaunchArgument("art_localization/input/accelerometer"),
             ),
             (
-                "~/input/vehicle_inputs",
+                "/input/vehicle_inputs",
                 GetLaunchArgument("art_localization/input/vehicle_inputs"),
             ),
             (
-                "~/output/filtered_state",
+                "/output/filtered_state",
                 GetLaunchArgument("art_localization/output/filtered_state"),
             ),
         ],
