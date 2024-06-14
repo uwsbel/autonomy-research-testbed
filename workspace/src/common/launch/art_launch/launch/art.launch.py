@@ -65,7 +65,6 @@ def generate_launch_description():
         ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
     )
 
-
     AddLaunchArgument(ld, "container", "")
     container_name = AddLaunchArgument(ld, "container_name", "art_container")
 
@@ -101,8 +100,8 @@ def generate_launch_description():
     )
 
 
-    namespace = PushRosNamespace('/artcar_1')
-    ld.add_action(namespace)
+    # namespace = PushRosNamespace('/artcar_1')
+    # ld.add_action(namespace)
 
     # -------------
     # Composability

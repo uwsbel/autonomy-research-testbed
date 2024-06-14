@@ -63,7 +63,7 @@ using namespace chrono::ros;
 // =============================================================================
 
 // Run-time visualization system (IRRLICHT or VSG)
-ChVisualSystem::Type vis_type = ChVisualSystem::Type::VSG;
+ChVisualSystem::Type vis_type = ChVisualSystem::Type::IRRLICHT;
 
 // Simulation step sizes
 double step_size = 2e-3;
@@ -77,11 +77,11 @@ int main(int argc, char* argv[]) {
     // --------------
     // Create systems
     // --------------
-    vehicle::SetDataPath(std::string(CHRONO_DATA_DIR) + "/vehicle/");
-
+    // vehicle::SetDataPath("/opt/chrono/share/chrono/data/vehicle/" + "/vehicle/");
+    chrono::SetChronoDataPath("/opt/chrono/share/chrono/data/");
     // Chrono system
     ChSystemNSC sys;
-    sys.SetCollisionSystemType(ChCollisionSystem::Type::MULTICORE);
+    sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
     sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
     sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
     sys.GetSolver()->AsIterative()->SetMaxIterations(150);
@@ -214,6 +214,47 @@ int main(int argc, char* argv[]) {
         vehicle_state_rate, artcar_2.GetChassisBody(), vehicle_state_topic_name);
     ros_manager_2->RegisterHandler(vehicle_state_handler_2);
     // Finally, initialize the ros manager
+
+    ChVector3d gps_reference2(-89.400, 43.070, 260.0);
+    auto acc2 = chrono_types::make_shared<ChAccelerometerSensor>(artcar_2.GetChassisBody(), 100.f, offset_pose, noise_none);
+    acc2->PushFilter(chrono_types::make_shared<ChFilterAccelAccess>());
+    sensor_manager->AddSensor(acc2);
+
+    auto gyro2 = chrono_types::make_shared<ChGyroscopeSensor>(artcar_2.GetChassisBody(), 100.f, offset_pose, noise_none);
+    gyro2->PushFilter(chrono_types::make_shared<ChFilterGyroAccess>());
+    sensor_manager->AddSensor(gyro2);
+
+    auto mag2 =
+        chrono_types::make_shared<ChMagnetometerSensor>(artcar_2.GetChassisBody(), 100.f, offset_pose, noise_none, gps_reference);
+    mag2->PushFilter(chrono_types::make_shared<ChFilterMagnetAccess>());
+    sensor_manager->AddSensor(mag2);
+
+    // add a GPS sensor
+    auto gps2 = chrono_types::make_shared<ChGPSSensor>(artcar_2.GetChassisBody(), 5.f, offset_pose, gps_reference, noise_none);
+    gps2->PushFilter(chrono_types::make_shared<ChFilterGPSAccess>());
+    sensor_manager->AddSensor(gps2);
+    sensor_manager->Update();
+
+    auto acc_rate2 = acc->GetUpdateRate() / 2;
+    auto acc_topic_name2 = "/artcar_2/output/accelerometer/data";
+    auto acc_handler2 = chrono_types::make_shared<ChROSAccelerometerHandler>(acc_rate2, acc2, acc_topic_name2);
+    ros_manager_2->RegisterHandler(acc_handler2);
+
+    // Create the publisher for the gyroscope
+    auto gyro_topic_name2 = "/artcar_2/output/gyroscope/data";
+    auto gyro_handler2 = chrono_types::make_shared<ChROSGyroscopeHandler>(gyro2, gyro_topic_name2);
+    ros_manager_2->RegisterHandler(gyro_handler2);
+
+    // Create the publisher for the magnetometer
+    auto mag_topic_name2 = "/artcar_2/output/magnetometer/data";
+    auto mag_handler2 = chrono_types::make_shared<ChROSMagnetometerHandler>(mag2, mag_topic_name2);
+    ros_manager_2->RegisterHandler(mag_handler2);
+
+    // Create the publisher for the GPS
+    auto gps_topic_name2 = "/artcar_2/output/gps/data";
+    auto gps_handler2 = chrono_types::make_shared<ChROSGPSHandler>(gps2, gps_topic_name2);
+    ros_manager_2->RegisterHandler(gps_handler2);
+
     ros_manager_2->Initialize();
 
 // Create the vehicle run-time visualization interface and the interactive driver
@@ -302,6 +343,7 @@ int main(int argc, char* argv[]) {
         artcar_2.Advance(step_size);
         terrain.Advance(step_size);
         vis->Advance(step_size);
+
 
         // Advance state of entire system (containing both vehicles)
         sys.DoStepDynamics(step_size);
