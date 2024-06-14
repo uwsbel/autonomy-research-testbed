@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 
     // Create and initialize the first vehicle (ARTcar)
     ARTcar artcar_1(&sys);
-    artcar_1.SetInitPosition(ChCoordsys<>(ChVector3d(0, -1.5, 0.2), QUNIT));
+    artcar_1.SetInitPosition(ChCoordsys<>(ChVector3d(0, 0, 0.2), QUNIT));
     artcar_1.Initialize();
     artcar_1.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     artcar_1.SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
 
     // Create and initialize the second vehicle (ARTcar)
     ARTcar artcar_2(&sys);
-    artcar_2.SetInitPosition(ChCoordsys<>(ChVector3d(7, 1.5, 0.2), QUNIT));
+    artcar_2.SetInitPosition(ChCoordsys<>(ChVector3d(-3.5, 0, 0.2), QUNIT));    
     artcar_2.Initialize();
     artcar_2.SetChassisVisualizationType(VisualizationType::PRIMITIVES);
     artcar_2.SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);

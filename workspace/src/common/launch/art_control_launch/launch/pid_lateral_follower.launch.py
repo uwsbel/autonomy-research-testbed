@@ -34,8 +34,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 # internal imports
-from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
-from enum import Enum
+from launch_utils import AddLaunchArgument, GetLaunchArgument
 from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
@@ -45,63 +44,48 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
+
+
+    AddLaunchArgument(ld, "art_control/input/path", PythonExpression(['"', '/', robot_ns, '/path_planning/path', '"']))
+    AddLaunchArgument(ld, "art_control/input/vehicle_state", PythonExpression(['"', '/', robot_ns, '/vehicle/state', '"']))
+    AddLaunchArgument(
+        ld, "art_control/output/vehicle_inputs", PythonExpression(['"', '/', robot_ns, '/input/driver_inputs', '"']))
+    # AddLaunchArgument(
+    #     ld, "art_control/output/vehicle_inputs", "~/control/vehicle_inputs"
+    # )    
+    AddLaunchArgument(ld, "steering_gain", "1.6")
+    AddLaunchArgument(ld, "throttle_gain", "0.08")
+    AddLaunchArgument(ld, "use_sim_time", "False")
+
     robot_ns = LaunchConfiguration('robot_ns')
-
-    AddLaunchArgument(ld, "art_localization/input/gps", PythonExpression(['"', '/', robot_ns, "/output/gps/data", '"'])) 
-    AddLaunchArgument(
-        ld, "art_localization/input/magnetometer",  PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data", '"'])  
-    )
-    AddLaunchArgument(ld, "art_localization/input/gyroscope",  PythonExpression(['"', '/', robot_ns, "/output/gyroscope/data", '"']))
-
-    AddLaunchArgument(
-        ld, "art_localization/input/accelerometer", PythonExpression(['"', '/', robot_ns, "/output/accelerometer/data", '"'])  
-    )
-    AddLaunchArgument(
-        ld, "art_localization/input/vehicle_inputs", PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"'])   
-    )
-    AddLaunchArgument(
-        ld, "art_localization/output/filtered_state",  PythonExpression(['"', '/', robot_ns, "/vehicle/filtered_state", '"'])  
-    )
-    AddLaunchArgument(ld, "ekf_vel_only", "False")
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package="ekf_estimation",
-        executable="ekf_estimation",
-        name="ekf_estimation",
+        package="pid_lateral_controller",
+        executable="pid_lateral_controller",
+        name="pid_lateral_controller",
+        namespace=robot_ns,
         remappings=[
-            ("~/input/gps", GetLaunchArgument("art_localization/input/gps")),
+            ("~/input/path", GetLaunchArgument("art_control/input/path")),
             (
-                "~/input/magnetometer",
-                GetLaunchArgument("art_localization/input/magnetometer"),
+                "/input/vehicle_state",
+                GetLaunchArgument("art_control/input/vehicle_state"),
             ),
             (
-                "~/input/gyroscope",
-                GetLaunchArgument("art_localization/input/gyroscope"),
-            ),
-            (
-                "~/input/accelerometer",
-                GetLaunchArgument("art_localization/input/accelerometer"),
-            ),
-            (
-                "~/input/vehicle_inputs",
-                GetLaunchArgument("art_localization/input/vehicle_inputs"),
-            ),
-            (
-                "~/output/filtered_state",
-                GetLaunchArgument("art_localization/output/filtered_state"),
+                "/output/vehicle_inputs",
+                GetLaunchArgument("art_control/output/vehicle_inputs"),
             ),
         ],
         parameters=[
-            GetPackageSharePath(
-                "art_localization_launch", "config", "4DOF_dynamics.yml"
-            ),
-            GetPackageSharePath("art_localization_launch", "config", "EKF_param.yml"),
+            {"input": GetLaunchArgument("art_control/input/path")},
+            {"control_mode": GetLaunchArgument("control_mode")},
+            {"control_file": GetLaunchArgument("control_file")},
+            {"steering_gain": GetLaunchArgument("steering_gain")},
+            {"throttle_gain": GetLaunchArgument("throttle_gain")},
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
-            {"ekf_vel_only": GetLaunchArgument("ekf_vel_only")},
         ],
     )
     ld.add_action(node)

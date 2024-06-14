@@ -90,7 +90,7 @@ def generate_launch_description():
         ld,
         "disable_ekf_estimation",
         "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
+        condition=UnlessCondition(GetLaunchArgument("use_sim")),
     )
     SetLaunchArgument(
         ld,

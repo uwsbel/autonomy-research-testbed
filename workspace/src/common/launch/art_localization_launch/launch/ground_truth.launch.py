@@ -51,7 +51,7 @@ def generate_launch_description():
     # Launch Arguments
     # ----------------
 
-    exp = PythonExpression(['"', '/', robot_ns, '/output/gps/data', '"'])    
+    # exp = PythonExpression(['"', '/', robot_ns, '/output/gps/data', '"'])    
 
     AddLaunchArgument(ld, "art_localization/input/gps", PythonExpression(['"', '/', robot_ns, '/output/gps/data', '"']))   
 
