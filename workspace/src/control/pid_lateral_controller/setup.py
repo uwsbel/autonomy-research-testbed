@@ -52,6 +52,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": ["pid = pid_lateral_controller.pid_lateral_controller:main",
-                            "pid_follower = pid_lateral_controller.pid_lateral_follower:main"],
+                            "pid_follower = pid_lateral_controller.pid_lateral_follower:main",
+                           ],
     },
 )
