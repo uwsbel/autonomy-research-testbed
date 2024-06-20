@@ -104,7 +104,7 @@ class NeuralNetworkControllerNode(Node):
         self.heading = 0.0
 
         self.model_mc = load_model(
-            "/home/art/art/workspace/src/control/neural_network_controller/neural_network_controller/nn_oatracking.keras"
+            "/home/art/art/workspace/src/control/neural_network_controller/neural_network_controller/nn_oatracking_8clip.keras"
         )
 
     def err_state_callback(self, msg):
@@ -113,6 +113,7 @@ class NeuralNetworkControllerNode(Node):
 
     def lidar_scan_callback(self, msg):
         self.lidar_scan = msg.data
+        # self.get_logger().info(str(self.lidar_scan))
 
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
@@ -135,8 +136,9 @@ class NeuralNetworkControllerNode(Node):
         ##concatenate error and lidar input as nn input
         nn_input = np.concatenate((error_input, lidar_input)).reshape(1, 22)
 
-        self.steering = self.model_mc.predict(nn_input)[0][0]
-        self.throttle = 0.75
+        self.steering = 1.6 * self.model_mc.predict(nn_input)[0][1]
+        # self.steering = 1.0
+        self.throttle = 0.45
         # self.get_logger().info("control input: %s" % [self.steering, self.throttle])
         msg.steering = np.clip(self.steering, -1, 1)
         msg.throttle = np.clip(self.throttle, 0, 1)

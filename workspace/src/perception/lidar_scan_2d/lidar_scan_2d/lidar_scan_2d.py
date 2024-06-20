@@ -105,10 +105,22 @@ class lidar_scan_2d(Node):
         flipped_first_quarter = first_quarter[::-1]
         flipped_fourth_quarter = fourth_quarter[::-1]
         filtered_list = flipped_first_quarter + flipped_fourth_quarter
-
+        ## fine tunning lidar data:
+        keep_percentage = 0.5
+        num_elements_to_keep = int(len(filtered_list) * keep_percentage)
+        start_index = (len(filtered_list) - num_elements_to_keep) // 2
+        end_index = start_index + num_elements_to_keep
+        filtered_list = filtered_list[start_index:end_index]
+        # fliped
+        filtered_list = filtered_list[::-1]
         # Step 2: Replace ".inf" with 30.0
         filtered_list = [30.0 if math.isinf(val) else val for val in filtered_list]
-
+        clip_bound = 8.0
+        range_offset = 0.3
+        for i in range(len(filtered_list)):
+            filtered_list[i] = filtered_list[i] + 0.3
+            if filtered_list[i] > clip_bound:
+                filtered_list[i] = clip_bound
         # Step 3: Divide the list into 18 parts and grab the minimum value for each part
         num_parts = 18
         part_size = len(filtered_list) // num_parts

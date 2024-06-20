@@ -31,7 +31,7 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     channel_type = LaunchConfiguration("channel_type", default="serial")
-    serial_port = LaunchConfiguration("serial_port", default="/dev/ttyUSB1")
+    serial_port = LaunchConfiguration("serial_port", default="/dev/ttyUSB0")
     serial_baudrate = LaunchConfiguration(
         "serial_baudrate", default="1000000"
     )  # for s2 is 1000000

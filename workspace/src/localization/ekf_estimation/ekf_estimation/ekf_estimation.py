@@ -176,9 +176,6 @@ class EKFEstimationNode(Node):
             self.state[2, 0] = 0  # self.init_theta
 
     def gps_callback(self, msg):
-        self.get_logger().info(
-            "getting ground truth, with back up times: " + str(self.count_bu)
-        )
         self.gps = msg
         lat = self.gps.latitude
         lon = self.gps.longitude
@@ -225,8 +222,8 @@ class EKFEstimationNode(Node):
         msg.pose.position.x = float(self.x)
         msg.pose.position.y = float(self.y)
         msg.pose.orientation.z = float(self.D)
-        msg.twist.linear.x = float(self.state[3, 0] * math.cos(np.deg2rad(self.D)))
-        msg.twist.linear.y = float(self.state[3, 0] * math.sin(np.deg2rad(self.D)))
+        msg.twist.linear.x = float(self.state[3, 0] * math.cos(self.D))
+        msg.twist.linear.y = float(self.state[3, 0] * math.sin(self.D))
 
         msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_objects.publish(msg)

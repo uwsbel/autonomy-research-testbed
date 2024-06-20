@@ -47,10 +47,10 @@ class SteeringServoDriver:
     def __init__(self):
         # === CONSTANTS ===
         # Pulse width as measured from the RC car receiver in milliseconds
-        self.TRIM = -50
-        self.PW_LEFT = 1700 + self.TRIM  # absolute left: 1980
-        self.PW_RIGHT = 1300 + self.TRIM  # absolute right: 1000
-        self.PW_CENTER = 1500 + self.TRIM
+        self.TRIM = 0
+        self.PW_LEFT = 1600 + self.TRIM  # absolute left: 1980
+        self.PW_RIGHT = 1200 + self.TRIM  # absolute right: 1000
+        self.PW_CENTER = 1400 + self.TRIM
 
         # clamp response to achieve target
         self.current_pw = self.PW_CENTER
@@ -173,7 +173,7 @@ class MotorDriverNode(Node):
         self.servo = SteeringServoDriver()
 
         BAUD_RATE = 250000
-        PORT = "/dev/ttyUSB0"
+        PORT = "/dev/ttyUSB1"
         TIMEOUT = 0.1
         self.arduino = serial.Serial(port=PORT, baudrate=BAUD_RATE, timeout=TIMEOUT)
 
