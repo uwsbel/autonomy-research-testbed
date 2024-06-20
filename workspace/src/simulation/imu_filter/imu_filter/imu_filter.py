@@ -75,7 +75,7 @@ class ImuFilterNode(Node):
         self.odom_data = None
         self.heading = 0.0
 
-        self.timer = self.create_timer(0.25, self.print_heading) 
+        # self.timer = self.create_timer(0.25, self.print_heading) 
 
     def gyro_callback(self, msg):
         self.gyro_data = msg

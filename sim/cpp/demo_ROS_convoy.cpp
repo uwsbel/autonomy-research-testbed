@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     RigidTerrain terrain(&sys);
     auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    patch_mat->SetFriction(10.0f);
+    patch_mat->SetFriction(0.5f);
     patch_mat->SetRestitution(0.01f);
     auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 200, 100);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));

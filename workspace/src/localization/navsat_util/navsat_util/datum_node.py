@@ -25,7 +25,7 @@ class SetDatumClient(Node):
         )
         
         # self.create_subscription(Imu, f'/{self.namespace}/imu/data', self.imu_callback, qos_profile)
-        self.create_subscription(Imu, f'/artcar_1/imu/data', self.imu_callback, qos_profile)
+        # self.create_subscription(Imu, f'/artcar_1/imu/data', self.imu_callback, qos_profile)
         
         self.timer = self.create_timer(1.0, self.timer_callback)
 
@@ -43,7 +43,8 @@ class SetDatumClient(Node):
         request.geo_pose.position.altitude = 260.00
         
         # Use the orientation from the IMU data
-        request.geo_pose.orientation = self.orientation
+        request.geo_pose.orientation.w = 1.
+        # request.geo_pose.orientation = self.orientation
 
         future = self.client.call_async(request)
         future.add_done_callback(self.callback)

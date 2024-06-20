@@ -44,48 +44,50 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
+    robot_ns = LaunchConfiguration('robot_ns')
+    leader_ns = LaunchConfiguration('leader_ns')
 
 
-    AddLaunchArgument(ld, "art_control/input/path", PythonExpression(['"', '/', robot_ns, '/path_planning/path', '"']))
-    AddLaunchArgument(ld, "art_control/input/vehicle_state", PythonExpression(['"', '/', robot_ns, '/vehicle/state', '"']))
-    AddLaunchArgument(
-        ld, "art_control/output/vehicle_inputs", PythonExpression(['"', '/', robot_ns, '/input/driver_inputs', '"']))
+    # AddLaunchArgument(ld, "art_control/input/path", PythonExpression(['"', '/', robot_ns, '/path_planning/path', '"']))
+    # AddLaunchArgument(ld, "art_control/input/vehicle_state", PythonExpression(['"', '/', robot_ns, '/vehicle/state', '"']))
     # AddLaunchArgument(
     #     ld, "art_control/output/vehicle_inputs", "~/control/vehicle_inputs"
     # )    
+
+
+    AddLaunchArgument(
+        ld, "art_control/output/vehicle_inputs", PythonExpression(['"', '/', robot_ns, '/input/driver_inputs', '"']))
     AddLaunchArgument(ld, "steering_gain", "1.6")
     AddLaunchArgument(ld, "throttle_gain", "0.08")
     AddLaunchArgument(ld, "use_sim_time", "False")
 
-    robot_ns = LaunchConfiguration('robot_ns')
 
     # -----
     # Nodes
     # -----
 
     node = Node(
-        package="pid_lateral_controller",
-        executable="pid_lateral_controller",
-        name="pid_lateral_controller",
+        package="pure_pursuit_follower",
+        executable="pid_follower",
+        name="pid_follower",
         namespace=robot_ns,
         remappings=[
-            ("~/input/path", GetLaunchArgument("art_control/input/path")),
-            (
-                "/input/vehicle_state",
-                GetLaunchArgument("art_control/input/vehicle_state"),
-            ),
+            # ("~/input/path", GetLaunchArgument("art_control/input/path")),
+            # (
+            #     "/input/vehicle_state",
+            #     GetLaunchArgument("art_control/input/vehicle_state"),
+            # ),
             (
                 "/output/vehicle_inputs",
                 GetLaunchArgument("art_control/output/vehicle_inputs"),
             ),
         ],
         parameters=[
-            {"input": GetLaunchArgument("art_control/input/path")},
-            {"control_mode": GetLaunchArgument("control_mode")},
-            {"control_file": GetLaunchArgument("control_file")},
             {"steering_gain": GetLaunchArgument("steering_gain")},
             {"throttle_gain": GetLaunchArgument("throttle_gain")},
             {"use_sim_time": GetLaunchArgument("use_sim_time")},
+            {"robot_ns": robot_ns},
+            {"leader_ns": leader_ns},
         ],
     )
     ld.add_action(node)

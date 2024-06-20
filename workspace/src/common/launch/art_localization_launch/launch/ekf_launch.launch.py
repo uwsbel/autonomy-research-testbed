@@ -45,30 +45,6 @@ def generate_launch_description():
         "art_localization_launch", "config", "ekf_config.yaml"
     )
     
-    gps = PythonExpression(['"', robot_ns, "/gps", '"'])
-    imu = PythonExpression(['"', robot_ns, "/imu", '"'])
-    base_link = PythonExpression(['"', robot_ns, "/base_link", '"'])
-    odom = PythonExpression(['"', robot_ns, "/odom", '"'])
-
-    # Transforms
-    gps_transform = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="gps_transform",
-        arguments=["0", "0", "0", "0", "0", "0", base_link, gps],
-    )
-    imu_transform = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="imu_transform",
-        arguments=["0", "0", "0", "3.1416", "-1.5708", "0", base_link, imu],
-    )
-    odom_transform = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="odom_tf",
-        arguments=["0", "0", "0", "0", "0", "0", odom, base_link],
-    )
 
     # Navsat Transform
     navsat_transform_node = Node(
@@ -120,8 +96,8 @@ def generate_launch_description():
             ekf_config,
             {
                 'map_frame': "map",
-                'odom_frame': odom,
-                'base_link_frame': base_link,
+                'odom_frame': PythonExpression(['"', robot_ns, "/odom", '"']),
+                'base_link_frame': PythonExpression(['"', robot_ns, "/base_link", '"']),
                 'world_frame': 'map'
             }
         ],
@@ -135,10 +111,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-            gps_transform,
-            imu_transform,
             set_datum_client,
-            odom_transform,
             navsat_transform_node,
             ekf_filter_node,
         ]
