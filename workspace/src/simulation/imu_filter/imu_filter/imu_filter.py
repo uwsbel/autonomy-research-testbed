@@ -19,6 +19,10 @@ class ImuFilterNode(Node):
             In an ideal world
             1) Publish everything up to ~/imu/data_raw as a regular IMU driver would
             2) Localization stack does the rest, interfacing with only ~/imu/data_raw instead of the 4 different topics
+
+            Right now
+            1) Publish /imu/data
+            2) Only use IMU for orientation (lol)
     '''
 
     def __init__(self):
@@ -71,7 +75,7 @@ class ImuFilterNode(Node):
         self.odom_data = None
         self.heading = 0.0
 
-        self.timer = self.create_timer(0.25, self.print_heading)  # 0.25 seconds -> 4 times per second
+        self.timer = self.create_timer(0.25, self.print_heading) 
 
     def gyro_callback(self, msg):
         self.gyro_data = msg
@@ -95,15 +99,15 @@ class ImuFilterNode(Node):
 
         # Conversion to Gauss if needed
         xGauss = mag_x * 0.48828125
-        yGauss = mag_y * 0.48828125  # Fixed to be consistent with xGauss conversion
+        yGauss = mag_y * 0.48828125  
 
         if xGauss == 0:
             if yGauss < 0:
-                self.heading = 0  # Changed to 180 for ENU frame
+                self.heading = 0  
             else:
                 self.heading = 90
         else:
-            self.heading =  math.atan2(yGauss, xGauss) * 180 / math.pi - 90 #- 270 #- 90 #- 270
+            self.heading =  math.atan2(yGauss, xGauss) * 180 / math.pi - 90 # 
 
         # Normalize heading to 0-360 degrees
         while self.heading > 360:

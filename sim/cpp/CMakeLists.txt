@@ -7,7 +7,8 @@ project(autonomy_research_testbed)
 
 set(DEMOS
     demo_ROS_sensor
-    demo_ROS_dART
+    # demo_ROS_dART
+    demo_ROS_convoy
 )
 
 #--------------------------------------------------------------
@@ -20,6 +21,8 @@ find_package(Chrono
              COMPONENTS Vehicle Sensor ROS
              OPTIONAL_COMPONENTS Irrlicht VSG
              CONFIG)
+
+
 
 if (NOT Chrono_FOUND)
   message("Could not find Chrono or one of its required modules")

@@ -84,6 +84,7 @@ def generate_launch_description():
                 "zero_altitude": True,
                 "use_odometry_yaw": True,
                 "wait_for_datum": False,
+                #"use_local_cartesian": False,
                 "publish_filtered_gps": True,
                 "broadcast_cartesian_transform": False,
             }

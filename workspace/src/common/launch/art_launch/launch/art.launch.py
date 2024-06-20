@@ -136,7 +136,7 @@ def generate_launch_description():
     # Launch Includes
     # ---------------
     IncludeLaunchDescriptionWithCondition(
-        ld, "description", "robot"
+        ld, "art_description_launch", "art_description"
     )
 
     IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")

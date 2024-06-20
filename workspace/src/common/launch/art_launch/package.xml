@@ -11,6 +11,7 @@
 
   <exec_depend>art_perception_launch</exec_depend>
   <exec_depend>art_localization_launch</exec_depend>
+  <exec_depend>art_description_launch</exec_depend>
   <exec_depend>art_control_launch</exec_depend>
   <exec_depend>art_planning_launch</exec_depend>
   <exec_depend>art_sensing_launch</exec_depend>
