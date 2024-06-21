@@ -24,18 +24,22 @@ def generate_launch_description():
     )
     AddLaunchArgument(
         ld, "input/accelerometer/data",  PythonExpression(['"', '/', robot_ns, "/output/accelerometer/data", '"']))    
-    AddLaunchArgument(
-        ld, "output/imu", PythonExpression(['"', '/', robot_ns, "/imu/data", '"']))  
-    AddLaunchArgument(
-        ld, "output/gps/fix", PythonExpression(['"', '/', robot_ns, "/output/gps/fix", '"']))  
-
-    AddLaunchArgument(
-        ld, "output/gps/data", PythonExpression(['"', '/', robot_ns, "/output/gps/data", '"']))  
 
     AddLaunchArgument(
         ld, "input/magnetometer/data", PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data", '"']))  
+
     AddLaunchArgument(
-        ld, "output/magnetometer/data", PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data/filtered", '"']))  
+        ld, "input/gps/data", PythonExpression(['"', '/', robot_ns, "/output/gps/data", '"']))  
+
+    AddLaunchArgument(
+        ld, "output/imu/data", PythonExpression(['"', '/', robot_ns, "/imu/data", '"']))  
+    AddLaunchArgument(
+        ld, "output/gps/fix", PythonExpression(['"', '/', robot_ns, "/gps/fix", '"']))  
+
+    
+
+    # AddLaunchArgument(
+    #     ld, "output/magnetometer/data", PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data/filtered", '"']))  
 
 
     node = Node(
@@ -53,25 +57,21 @@ def generate_launch_description():
                 GetLaunchArgument("input/accelerometer/data"),
             ),
             (
-                "/output/imu",
-                GetLaunchArgument("output/imu"),
+                "/input/magnetometer/data",
+                GetLaunchArgument("input/magnetometer/data"),
             ), 
             (
-                "/output/gps/data",
-                GetLaunchArgument("output/gps/data"),
+                "/input/gps/data",
+                GetLaunchArgument("input/gps/data"),
+            ), 
+            (
+                "/output/imu/data",
+                GetLaunchArgument("output/imu/data"),
             ), 
             (
                 "/output/gps/fix",
                 GetLaunchArgument("output/gps/fix"),
             ), 
-            (
-                "/input/magnetometer/data",
-                GetLaunchArgument("input/magnetometer/data"),
-            ), 
-            (
-                "/output/magnetometer/data",
-                GetLaunchArgument("output/magnetometer/data"),
-            )
         ],
         parameters=[{'tf_prefix': robot_ns }],
     )

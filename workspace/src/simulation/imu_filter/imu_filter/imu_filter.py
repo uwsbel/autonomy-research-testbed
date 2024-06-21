@@ -13,26 +13,23 @@ class ImuFilterNode(Node):
             
             Change this to chrono_sensor_filters?
             
-            Originally published ~/imu/data_raw but hard to use imu_filter_madgwick when the y-axis of the Chrono accelerometer is broken.
-            Computes its own heading for now, yoinked the code from ground_truth.
+            Originally published ~/imu/data_raw but using imu_filter_madgwick feels wasteful. Computes its own heading for now, yoinked the code from ground_truth.
 
-            In an ideal world
-            1) Publish everything up to ~/imu/data_raw as a regular IMU driver would
-            2) Localization stack does the rest, interfacing with only ~/imu/data_raw instead of the 4 different topics
+            The point of this class is that the interface point between sim localization & reality localization should be exactly the same:
 
-            Right now
-            1) Publish /imu/data
-            2) Only use IMU for orientation (lol)
+            Sim: /output/* => ~/imu/data, ~/gps/fix
+            Reality: ~/imu/data, ~/gps/fix
     '''
 
     def __init__(self):
         super().__init__('imu_filter')
-        self.imu_publisher = self.create_publisher(Imu, '/output/imu', qos_profile_sensor_data)
+        self.imu_publisher = self.create_publisher(Imu, '/output/imu/data', qos_profile_sensor_data)
         self.gps_publisher = self.create_publisher(NavSatFix, '/output/gps/fix', qos_profile_sensor_data)
-        self.magnetometer_publisher = self.create_publisher(MagneticField, '/output/magnetometer/data', qos_profile_sensor_data)
+        # self.magnetometer_publisher = self.create_publisher(MagneticField, '/output/magnetometer/data', qos_profile_sensor_data)
         
         self.declare_parameter('tf_prefix', 'artcar_1')
         self.tf_prefix = self.get_parameter('tf_prefix').get_parameter_value().string_value
+
 
         self.gyro_subscription = self.create_subscription(
             Imu,
@@ -50,7 +47,7 @@ class ImuFilterNode(Node):
 
         self.gps_subscription = self.create_subscription(
             NavSatFix,
-            '/output/gps/data',
+            '/input/gps/data',
             self.gps_callback,
             qos_profile_sensor_data
         )
@@ -62,12 +59,12 @@ class ImuFilterNode(Node):
             qos_profile_sensor_data
         )
 
-        self.odom_subscription = self.create_subscription(
-            Odometry,
-            '/artcar_1/odometry/filtered',
-            self.odom_callback,
-            qos_profile_sensor_data
-        )
+        # self.odom_subscription = self.create_subscription(
+        #     Odometry,
+        #     '/artcar_1/odometry/filtered',
+        #     self.odom_callback,
+        #     qos_profile_sensor_data
+        # )
 
         self.gyro_data = None
         self.accel_data = None
@@ -85,13 +82,16 @@ class ImuFilterNode(Node):
         self.accel_data = msg
         self.publish_combined_imu()
 
+    # Chrono noise model is weird, so just do this
     def gps_callback(self, msg):
-        msg.header.frame_id =  f'{self.tf_prefix}/gps'
+        msg.header.frame_id = f'{self.tf_prefix}/gps'
+        # Set covariance to zero before publishing
+        msg.position_covariance = [0.0] * 9  
         self.gps_publisher.publish(msg)
-
+        
     def mag_callback(self, msg):
         self.mag_data = msg
-        self.publish_magnetometer_data()
+        # self.publish_magnetometer_data()
 
         # Calculate heading from magnetometer data
         mag_x = self.mag_data.magnetic_field.x
@@ -107,7 +107,7 @@ class ImuFilterNode(Node):
             else:
                 self.heading = 90
         else:
-            self.heading =  math.atan2(yGauss, xGauss) * 180 / math.pi - 90 # 
+            self.heading =  math.atan2(yGauss, xGauss) * 180 / math.pi # 
 
         # Normalize heading to 0-360 degrees
         while self.heading > 360:
@@ -132,7 +132,7 @@ class ImuFilterNode(Node):
         if self.gyro_data and self.accel_data:
             combined_imu = Imu()
             combined_imu.header.stamp = self.get_clock().now().to_msg()
-            combined_imu.header.frame_id =  f'{self.tf_prefix}/imu'
+            combined_imu.header.frame_id =  f'{self.tf_prefix}/base_link'
 
             # Copy gyroscope data
             combined_imu.angular_velocity = self.gyro_data.angular_velocity
@@ -152,15 +152,15 @@ class ImuFilterNode(Node):
 
             self.imu_publisher.publish(combined_imu)
 
-    def publish_magnetometer_data(self):
-        if self.mag_data:
-            mag_msg = MagneticField()
-            mag_msg.header.stamp = self.get_clock().now().to_msg()
-            mag_msg.header.frame_id = f'{self.tf_prefix}/imu'
-            mag_msg.magnetic_field = self.mag_data.magnetic_field
-            mag_msg.magnetic_field_covariance = self.mag_data.magnetic_field_covariance
+    # def publish_magnetometer_data(self):
+    #     if self.mag_data:
+    #         mag_msg = MagneticField()
+    #         mag_msg.header.stamp = self.get_clock().now().to_msg()
+    #         mag_msg.header.frame_id = f'{self.tf_prefix}/imu'
+    #         mag_msg.magnetic_field = self.mag_data.magnetic_field
+    #         mag_msg.magnetic_field_covariance = self.mag_data.magnetic_field_covariance
 
-            self.magnetometer_publisher.publish(mag_msg)
+    #         self.magnetometer_publisher.publish(mag_msg)
 
     def print_heading(self):
         if self.odom_data:

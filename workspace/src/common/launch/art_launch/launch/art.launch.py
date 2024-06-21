@@ -68,12 +68,57 @@ def generate_launch_description():
     AddLaunchArgument(ld, "container", "")
     container_name = AddLaunchArgument(ld, "container_name", "art_container")
 
+    # SetLaunchArgument(
+    #     ld,
+    #     "disable_art_sensing",
+    #     "True",
+    #     condition=IfCondition(GetLaunchArgument("use_sim")),
+    # )
+    # SetLaunchArgument(
+    #     ld,
+    #     "disable_art_vehicle",
+    #     "True",
+    #     condition=IfCondition(GetLaunchArgument("use_sim")),
+    # )
+    # SetLaunchArgument(
+    #     ld,
+    #     "disable_ekf_estimation",
+    #     "True",
+    #     condition=IfCondition(GetLaunchArgument("use_sim")),
+    # )
+    # SetLaunchArgument(
+    #     ld,
+    #     "disable_ekf_launch",
+    #     "True",
+    #     condition=IfCondition(GetLaunchArgument("use_sim")),
+    # )
+    # SetLaunchArgument(
+    #     ld,
+    #     "disable_particle_filter_estimation",
+    #     "True",
+    #     condition=IfCondition(GetLaunchArgument("use_sim")),
+    # )
+
+    # SetLaunchArgument(
+    #     ld,
+    #     "disable_art_simulation",
+    #     "True",
+    #     condition=UnlessCondition(GetLaunchArgument("use_sim")),
+    # )
+
+    SetLaunchArgument(
+        ld,
+        "disable_chrono_imu_filter",
+        "True",
+        condition=UnlessCondition(GetLaunchArgument("use_sim")),
+    )
     SetLaunchArgument(
         ld,
         "disable_art_sensing",
         "True",
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
+    
     SetLaunchArgument(
         ld,
         "disable_art_vehicle",
@@ -82,32 +127,7 @@ def generate_launch_description():
     )
     SetLaunchArgument(
         ld,
-        "disable_ekf_estimation",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_ekf_launch",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_particle_filter_estimation",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-
-    SetLaunchArgument(
-        ld,
         "disable_art_simulation",
-        "True",
-        condition=UnlessCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_chrono_imu_filter",
         "True",
         condition=UnlessCondition(GetLaunchArgument("use_sim")),
     )

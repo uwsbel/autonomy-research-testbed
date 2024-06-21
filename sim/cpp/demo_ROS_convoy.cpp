@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     RigidTerrain terrain(&sys);
     auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    patch_mat->SetFriction(0.5f);
+    patch_mat->SetFriction(10.0f);
     patch_mat->SetRestitution(0.01f);
     auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 200, 100);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto noise_none = chrono_types::make_shared<ChNoiseNone>();
-    chrono::ChFrame<double> offset_pose({-8, 0, 2}, QuatFromAngleAxis(.2, {0, 1, 0}));
+    chrono::ChFrame<double> offset_pose({0, 0, 2}, QuatFromAngleAxis(0, {0, 0, 1}));
     auto sensor_manager = chrono_types::make_shared<ChSensorManager>(&sys);
     sensor_manager->scene->AddPointLight({100, 100, 100}, {2, 2, 2}, 500);
     sensor_manager->scene->SetAmbientLight({0.1f, 0.1f, 0.1f});
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
         mag->PushFilter(chrono_types::make_shared<ChFilterMagnetAccess>());
         sensor_manager->AddSensor(mag);
         
-        auto gps = chrono_types::make_shared<ChGPSSensor>(artcars[i]->GetChassisBody(), 80.f, offset_pose, gps_reference, noise_none);
+        auto gps = chrono_types::make_shared<ChGPSSensor>(artcars[i]->GetChassisBody(), 1.f, offset_pose, gps_reference, noise_none);
         gps->PushFilter(chrono_types::make_shared<ChFilterGPSAccess>());
         sensor_manager->AddSensor(gps);
         sensor_manager->Update();

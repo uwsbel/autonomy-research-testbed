@@ -24,13 +24,14 @@ class SetDatumClient(Node):
             depth=10
         )
         
-        # self.create_subscription(Imu, f'/{self.namespace}/imu/data', self.imu_callback, qos_profile)
-        # self.create_subscription(Imu, f'/artcar_1/imu/data', self.imu_callback, qos_profile)
+        self.create_subscription(Imu, f'/{self.namespace}/imu/data', self.imu_callback, qos_profile)
+        self.create_subscription(Imu, f'/artcar_1/imu/data', self.imu_callback, qos_profile)
         
         self.timer = self.create_timer(1.0, self.timer_callback)
 
     def imu_callback(self, msg):
         self.orientation = msg.orientation
+        
 
     def timer_callback(self):
         if self.orientation:
@@ -44,6 +45,9 @@ class SetDatumClient(Node):
         
         # Use the orientation from the IMU data
         request.geo_pose.orientation.w = 1.
+        request.geo_pose.orientation.x = 0.
+        request.geo_pose.orientation.y = 0.
+        request.geo_pose.orientation.z = 0.
         # request.geo_pose.orientation = self.orientation
 
         future = self.client.call_async(request)

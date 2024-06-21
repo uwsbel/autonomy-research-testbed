@@ -55,19 +55,18 @@ def generate_launch_description():
         respawn=True,
         parameters=[
             {
-                "magnetic_declination_radians": -0.0523599,
+                "magnetic_declination_radians": 0.0,
                 "yaw_offset": 0.0,
                 "zero_altitude": True,
                 "use_odometry_yaw": True,
                 "wait_for_datum": False,
-                #"use_local_cartesian": False,
                 "publish_filtered_gps": True,
                 "broadcast_cartesian_transform": False,
             }
         ],
         remappings=[
             ("/imu/data", PythonExpression(['"', '/', robot_ns, "/imu/data", '"'])),
-            (PythonExpression(['"', '/', robot_ns, "/gps/fix", '"']), PythonExpression(['"', '/', robot_ns, "/output/gps/fix", '"'])),
+            (PythonExpression(['"', '/', robot_ns, "/gps/fix", '"']), PythonExpression(['"', '/', robot_ns, "/gps/fix", '"'])),
             ('/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
             ('/odometry/gps', PythonExpression(['"', '/', robot_ns, "/odometry/gps", '"'])),
             ('/gps/filtered', PythonExpression(['"', '/', robot_ns, "/gps/filtered", '"'])),
