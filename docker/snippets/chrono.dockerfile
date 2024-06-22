@@ -47,8 +47,8 @@ RUN mkdir -p ${CHRONO_ROS_INTERFACES_DIR} && \
     colcon build --packages-select chrono_ros_interfaces
 
 # Chrono
-ARG CHRONO_BRANCH="main"
-ARG CHRONO_REPO="https://github.com/projectchrono/chrono.git"
+ARG CHRONO_BRANCH="sensor-fixes"
+ARG CHRONO_REPO="https://github.com/bretwitt/chrono.git"
 ARG CHRONO_DIR="${USERHOME}/chrono"
 ARG CHRONO_INSTALL_DIR="/opt/chrono"
 RUN git clone --recursive -b ${CHRONO_BRANCH} ${CHRONO_REPO} ${CHRONO_DIR} && \
