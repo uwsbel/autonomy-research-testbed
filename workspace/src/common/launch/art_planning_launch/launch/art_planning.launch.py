@@ -8,7 +8,7 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 
 def generate_launch_description():
     ld = LaunchDescription()
-    task = LaunchConfiguration('task')
+
 
     # ---------------
     # Launch Includes

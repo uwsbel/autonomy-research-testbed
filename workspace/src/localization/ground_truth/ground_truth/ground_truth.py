@@ -104,11 +104,6 @@ class GroundTruthNode(Node):
             MagneticField, "/input/magnetometer", self.mag_callback, 1
         )
 
-        if (self.tf_prefix == "artcar_2"):
-            self.sub_initial_pose = self.create_subscription(
-                PoseStamped, "artcar_1/initial_pose", self.initial_pose_callback, 1
-            )
-
         # publishers
         self.pub_objects = self.create_publisher(
             VehicleState, "/output/filtered_state", 1

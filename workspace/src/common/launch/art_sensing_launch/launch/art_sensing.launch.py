@@ -8,7 +8,7 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 
 def generate_launch_description():
     ld = LaunchDescription()
-    task = LaunchConfiguration('task')
+
 
     # ---------------
     # Launch Includes
@@ -16,7 +16,6 @@ def generate_launch_description():
 
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "usb_cam")
 
-    if(task == "cones"):
-        IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "xsens")
+    IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "xsens")
 
     return ld
