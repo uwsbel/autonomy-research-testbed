@@ -8,19 +8,12 @@
   <license>TODO: License declaration</license>
 
   <exec_depend>art_common_meta</exec_depend>
-  <exec_depend>navsat_util</exec_depend>
-  <exec_depend>ekf_estimation</exec_depend>
-  <exec_depend>description</exec_depend>
-  <exec_depend>pure_pursuit_follower</exec_depend>
- 
-  <exec_depend>art_launch</exec_depend>
-  <exec_depend>cone_detector</exec_depend>
-  <exec_depend>ground_truth</exec_depend>
-  <exec_depend>waypoints_path_planner</exec_depend>
-  <exec_depend>pid_lateral_controller</exec_depend>
-  <exec_depend>chrono_ros_interfaces</exec_depend>
+
+  <exec_depend>art_vehicle_launch</exec_depend>
+
+  <!-- Drivers -->
   <exec_depend>wheeltec_n100_imu</exec_depend>
   <exec_depend>nmea_navsat_driver</exec_depend>
   <exec_depend>tf_transformations</exec_depend>
-	  <!-- add sensing -->
+  
 </package>
