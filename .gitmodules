@@ -16,3 +16,9 @@
 [submodule "workspace/src/simulation/chrono_ros_interfaces"]
 	path = workspace/src/simulation/chrono_ros_interfaces
 	url = https://github.com/projectchrono/chrono_ros_interfaces.git
+[submodule "workspace/src/sensing/WHEELTEC_N100_IMU_ROS2"]
+	path = workspace/src/sensing/WHEELTEC_N100_IMU_ROS2
+	url = https://github.com/Carpediem324/WHEELTEC_N100_IMU_ROS2
+[submodule "workspace/src/sensing/serial-ros2"]
+	path = workspace/src/sensing/serial-ros2
+	url = https://github.com/RoverRobotics-forks/serial-ros2
