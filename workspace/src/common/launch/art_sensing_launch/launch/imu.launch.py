@@ -42,7 +42,7 @@ def generate_launch_description():
         name="wheeltec_imu_node",
         output="screen",
         parameters=[{'serial_port':'/dev/ttyUSB1',
-                     'imu_frame': PythonExpression(['"', '/', robot_ns, "/imu", '"']),
+                     'imu_frame': PythonExpression(['"', robot_ns, "/imu", '"']),
                      'imu_topic': PythonExpression(['"', '/', robot_ns, "/imu/data", '"'])}],
     )
     ld.add_action(node)

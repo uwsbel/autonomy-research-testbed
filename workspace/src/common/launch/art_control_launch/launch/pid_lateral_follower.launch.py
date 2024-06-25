@@ -56,7 +56,7 @@ def generate_launch_description():
 
 
     AddLaunchArgument(
-        ld, "art_control/output/vehicle_inputs", PythonExpression(['"', '/', robot_ns, '/input/driver_inputs', '"']))
+        ld, "art_control/output/vehicle_inputs", PythonExpression(['"', '/', robot_ns, '/control/vehicle_inputs', '"']))
     AddLaunchArgument(ld, "steering_gain", "1.6")
     AddLaunchArgument(ld, "throttle_gain", "0.08")
     AddLaunchArgument(ld, "use_sim_time", "False")

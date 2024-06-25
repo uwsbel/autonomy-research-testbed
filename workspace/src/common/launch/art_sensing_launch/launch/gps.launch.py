@@ -40,7 +40,7 @@ def generate_launch_description():
         name="nmea_serial_driver",
         output="screen",
         parameters=[{'port':'/dev/ttyACM0',
-                     'frame_id': PythonExpression(['"', '/', robot_ns, "/gps", '"']),
+                     'frame_id': PythonExpression(['"', robot_ns, "/gps", '"']),
             }],
         remappings=[('/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))]
     )

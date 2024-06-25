@@ -35,17 +35,20 @@ from launch_ros.actions import Node
 
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
     ld = LaunchDescription()
+
+    robot_ns = LaunchConfiguration('robot_ns')
 
     # ----------------
     # Launch Arguments
     # ----------------
 
     AddLaunchArgument(
-        ld, "arduino_driver/input/vehicle_inputs", "/control/vehicle_inputs"
+        ld, "arduino_driver/input/vehicle_inputs", PythonExpression(['"', robot_ns, "/control/vehicle_inputs", '"'])    
     )
 
     # -----
