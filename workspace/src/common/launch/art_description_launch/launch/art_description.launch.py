@@ -34,7 +34,7 @@ def generate_launch_description():
         package="tf2_ros",
         executable="static_transform_publisher",
         name="imu_transform",
-        arguments=["0", "0", "0", "3.1416", "-1.5708", "0", base_link, imu],
+        arguments=["0", "0", "0", "0", "0.", "0.", base_link, imu],
     )
     ld.add_action(imu_transform)
     odom_transform = Node(

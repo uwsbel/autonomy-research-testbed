@@ -59,12 +59,16 @@ def generate_launch_description():
         package="arduino_driver",
         executable="motor_driver",
         name="motor_driver",
+        output="screen",
         remappings=[
             (
                 "~/output/vehicle_inputs",
                 GetLaunchArgument("arduino_driver/input/vehicle_inputs"),
             )
         ],
+        parameters=[
+            {"serial_port":"/dev/ttyUSB0"}
+        ]
     )
     ld.add_action(node)
 

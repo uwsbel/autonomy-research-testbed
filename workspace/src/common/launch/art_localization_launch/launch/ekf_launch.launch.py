@@ -55,8 +55,8 @@ def generate_launch_description():
         respawn=True,
         parameters=[
             {
-                "magnetic_declination_radians": 0.0,
-                "yaw_offset": 0.0,
+                "magnetic_declination_radians": -0.0524,
+                "yaw_offset": -0.78,
                 "zero_altitude": True,
                 "use_odometry_yaw": True,
                 "wait_for_datum": False,

@@ -95,6 +95,7 @@ services:
       dockerfile: "./docker/oak.dockerfile"
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
+        USER_SHELL_ADD_ONS: "RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
   chrono:
     extends: common
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:chrono"

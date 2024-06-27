@@ -5,16 +5,15 @@ from rclpy.node import Node
 import curses
 from std_msgs.msg import Header
 import time
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from art_msgs.msg import VehicleInput
+
 
 class KeyboardTeleop(Node):
     def __init__(self):
         super().__init__('keyboard_teleop')
-        self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/input/driver_inputs', 10)
+        self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/control/vehicle_inputs', 10)
         self.steering = 0.0
         self.throttle = 0.0
-        self.braking = 0.0
-        self.clutch = 0.0
         self.speed_increment = 0.1
         self.steer_increment = 0.1
 
@@ -37,19 +36,13 @@ class KeyboardTeleop(Node):
                 self.throttle = min(1.0, self.throttle + self.speed_increment)
             elif key == curses.KEY_DOWN:
                 self.throttle = max(0.0, self.throttle - self.speed_increment)
-            elif key == curses.KEY_LEFT:
-                self.steering = max(-1.0, self.steering - self.steer_increment)
             elif key == curses.KEY_RIGHT:
+                self.steering = max(-1.0, self.steering - self.steer_increment)
+            elif key == curses.KEY_LEFT:
                 self.steering = min(1.0, self.steering + self.steer_increment)
-            elif key == ord('b'):
-                self.braking = min(1.0, self.braking + self.speed_increment)
-            elif key == ord('c'):
-                self.clutch = min(1.0, self.clutch + self.speed_increment)
             elif key == ord('x'):
                 self.steering = 0.0
                 self.throttle = 0.0
-                self.braking = 0.0
-                self.clutch = 0.0
             elif key == ord('q'):
                 break
 
@@ -63,8 +56,6 @@ class KeyboardTeleop(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.steering = self.steering
         msg.throttle = self.throttle
-        msg.braking = self.braking
-        msg.clutch = self.clutch
         self.publisher_.publish(msg)
 
 def main(args=None):

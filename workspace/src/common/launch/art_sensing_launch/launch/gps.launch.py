@@ -38,7 +38,7 @@ def generate_launch_description():
         package="nmea_navsat_driver",
         executable="nmea_serial_driver",
         name="nmea_serial_driver",
-        output="screen",
+        #output="screen",
         parameters=[{'port':'/dev/ttyACM0',
                      'frame_id': PythonExpression(['"', robot_ns, "/gps", '"']),
             }],

@@ -39,8 +39,8 @@ class SetDatumClient(Node):
 
     def send_request(self):
         request = SetDatum.Request()
-        request.geo_pose.position.latitude = 43.06999991995453
-        request.geo_pose.position.longitude = -89.40010098905695
+        request.geo_pose.position.latitude = 43.07203
+        request.geo_pose.position.longitude = -89.41161
         request.geo_pose.position.altitude = 260.00
         
         # Use the orientation from the IMU data

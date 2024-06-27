@@ -33,7 +33,7 @@ from rclpy.node import Node
 from art_msgs.msg import VehicleState, VehicleInput
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
-from rclpy.qos import QoSHistoryPolicy
+from rclpy.qos import QoSReliabilityPolicy,QoSHistoryPolicy
 from rclpy.qos import QoSProfile
 
 import numpy as np
@@ -146,6 +146,8 @@ class MotorDriverNode(Node):
     def __init__(self):
         super().__init__("motor_driver")
 
+        self.declare_parameter('serial_port', '/dev/ttyUSB1')
+
         # update frequencies of this node
         self.freq = 20.0  # PWM is at 60Hz, so we should not overwrite previous signal too quickly
 
@@ -158,11 +160,12 @@ class MotorDriverNode(Node):
             0.3  # time after which motors will be killed if no new commands given
         )
 
+
         # subscriber
-        qos_profile = QoSProfile(depth=1)
+        qos_profile = QoSProfile(depth=1,reliability=QoSReliabilityPolicy.BEST_EFFORT)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_vehicle_cmd = self.create_subscription(
-            VehicleInput, "~/output/vehicle_inputs", self.control_callback, qos_profile
+            VehicleInput, "/artcar_1/control/vehicle_inputs", self.control_callback, qos_profile
         )
 
         # call the driver callback even if we haven't heard from the subscribers
@@ -173,18 +176,20 @@ class MotorDriverNode(Node):
         self.servo = SteeringServoDriver()
 
         BAUD_RATE = 250000
-        PORT = "/dev/ttyACM0"
+        PORT = self.get_parameter('serial_port').get_parameter_value().string_value
         TIMEOUT = 0.1
         self.arduino = serial.Serial(port=PORT, baudrate=BAUD_RATE, timeout=TIMEOUT)
+
 
     # function to process data this class subscribes to
     def control_callback(self, msg):
         self.vehicle_cmd = msg  # save the message
-        # self.get_logger().info("vehicle_cmd msg='%s'" % self.vehicle_cmd)
+        #self.get_logger().info("vehicle_cmd msg='%s'" % self.vehicle_cmd)
         self.stale_timer = 0  # reset watchdog timer
 
     def update_motors(self):
         # print("Sending commands to motor and steering servo")
+
         self.stale_timer += 1 / self.freq
         if self.stale_timer >= self.KILL_TIME:
             self.vehicle_cmd.throttle = 0.0
@@ -192,11 +197,13 @@ class MotorDriverNode(Node):
 
         # self.get_logger().info("Motors '%s'" % self.vehicle_cmd)
 
+        # self.vehicle_cmd.throttle = 0.5
+
         self.servo.setTargetSteering(self.vehicle_cmd.steering)
         target = self.motor.setTargetThrottle(
             self.vehicle_cmd.throttle, self.vehicle_cmd.braking
         )
-        # self.get_logger().info("target throttle='%s (%s - %s)'" % (target,self.vehicle_cmd.throttle,self.vehicle_cmd.braking))
+        #self.get_logger().info("target throttle='%s (%s - %s)'" % (target,self.vehicle_cmd.throttle,self.vehicle_cmd.braking))
         servo_pw = int(self.servo.step())
         esc_pw = int(self.motor.step())
 
@@ -206,11 +213,11 @@ class MotorDriverNode(Node):
         t0 = time.time()
         self.arduino.write(msg)
         t1 = time.time()
-        # self.get_logger().info("servo=%s,esc=%s, serial time=%s" % (servo_pw,esc_pw,str(t1-t0)))
+        #self.get_logger().info("servo=%s,esc=%s, serial time=%s" % (servo_pw,esc_pw,str(t1-t0)))
 
 
 def main(args=None):
-    # print("=== Starting MotorDriverNode ===")
+    print("=== Starting MotorDriverNode ===")
     rclpy.init(args=args)
     driver = MotorDriverNode()
     rclpy.spin(driver)
