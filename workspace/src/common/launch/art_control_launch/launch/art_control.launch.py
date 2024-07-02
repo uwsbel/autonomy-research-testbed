@@ -15,8 +15,12 @@ def generate_launch_description():
     # ---------------
 
     IncludeLaunchDescriptionWithCondition(
-        ld, "art_control_launch", "pid_lateral_follower"
+        ld, "art_control_launch", "convoy_leader"
     )
+
+    #IncludeLaunchDescriptionWithCondition(
+    #    ld, "art_control_launch", "pid_lateral_follower"
+    #)
 
     #IncludeLaunchDescriptionWithCondition(
     #    ld, "art_control_launch", "pid_lateral_controller"

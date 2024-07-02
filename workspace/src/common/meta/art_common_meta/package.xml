@@ -20,6 +20,7 @@
   <exec_depend>pid_lateral_controller</exec_depend>
   <exec_depend>centerline_objects_path_planner</exec_depend>
   <exec_depend>pure_pursuit_follower</exec_depend>
+  <exec_depend>convoy_controller</exec_depend>
   <exec_depend>navsat_util</exec_depend>
   <exec_depend>ekf_estimation</exec_depend>
   <exec_depend>description</exec_depend>
