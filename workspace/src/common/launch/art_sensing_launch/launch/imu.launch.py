@@ -25,8 +25,8 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 
 # internal imports
 from launch_utils import AddLaunchArgument, IncludeLaunchDescriptionWithCondition
-
-
+import os
+from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     ld = LaunchDescription()
 
@@ -35,13 +35,19 @@ def generate_launch_description():
     # ---------------
     # Launch Includes
     # ---------------
+    params_file_path = os.path.join(
+        get_package_share_directory('art_sensing_launch'),
+        'config',
+        'ports.yaml'
+    )
 
     node = Node(
         package="wheeltec_n100_imu",  # Replace with the correct package name if different
         executable="imu_node",
         name="wheeltec_imu_node",
         output="screen",
-        parameters=[{'serial_port':'/dev/ttyUSB1',
+        parameters=[params_file_path  
+                      , {
                      'imu_frame': PythonExpression(['"', robot_ns, "/imu", '"']),
                      'imu_topic': PythonExpression(['"', '/', robot_ns, "/imu/data", '"'])}],
     )

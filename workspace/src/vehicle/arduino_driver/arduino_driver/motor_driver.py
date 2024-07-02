@@ -146,7 +146,7 @@ class MotorDriverNode(Node):
     def __init__(self):
         super().__init__("motor_driver")
 
-        self.declare_parameter('serial_port', '/dev/ttyUSB1')
+        self.declare_parameter('serial_port', '/dev/ttyUSB0')
 
         # update frequencies of this node
         self.freq = 20.0  # PWM is at 60Hz, so we should not overwrite previous signal too quickly

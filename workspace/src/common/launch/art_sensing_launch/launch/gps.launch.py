@@ -24,7 +24,8 @@ from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration, PythonExpression
 # internal imports
 from launch_utils import AddLaunchArgument, IncludeLaunchDescriptionWithCondition
-
+import os
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     ld = LaunchDescription()
@@ -33,15 +34,20 @@ def generate_launch_description():
     # ---------------
     # Launch Includes
     # ---------------
+    params_file_path = os.path.join(
+        get_package_share_directory('art_sensing_launch'),
+        'config',
+        'ports.yaml'
+    )
 
     nmea_navsat_driver_node = Node(
         package="nmea_navsat_driver",
         executable="nmea_serial_driver",
         name="nmea_serial_driver",
         #output="screen",
-        parameters=[{'port':'/dev/ttyACM0',
+        parameters=[{
                      'frame_id': PythonExpression(['"', robot_ns, "/gps", '"']),
-            }],
+                    }, params_file_path],
         remappings=[('/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))]
     )
     ld.add_action(nmea_navsat_driver_node)
