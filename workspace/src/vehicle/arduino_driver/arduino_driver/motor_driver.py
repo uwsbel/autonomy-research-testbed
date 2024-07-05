@@ -186,7 +186,7 @@ class MotorDriverNode(Node):
         qos_profile = QoSProfile(depth=1,reliability=QoSReliabilityPolicy.BEST_EFFORT)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_vehicle_cmd = self.create_subscription(
-            VehicleInput, "/artcar_2/control/vehicle_inputs", self.control_callback, qos_profile
+            VehicleInput, "~/output/vehicle_inputs", self.control_callback, qos_profile
         )
 
         # call the driver callback even if we haven't heard from the subscribers
