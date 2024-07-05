@@ -6,5 +6,5 @@ nmea_serial_driver:
     port: "/dev/ttyACM0"
 motor_driver:
   ros__parameters:
-    serial_port: "/dev/ttyUSB1"
+    serial_port: "/dev/ttyACM1"
     PWM_FULL: 1550
