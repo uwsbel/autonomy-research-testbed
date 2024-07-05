@@ -3,8 +3,11 @@ wheeltec_imu_node:
     serial_port: "/dev/ttyUSB0"
 nmea_serial_driver:
   ros__parameters:
-    port: "/dev/ttyACM0"
+    port: "/dev/ttyACM1"
 motor_driver:
   ros__parameters:
-    serial_port: "/dev/ttyACM1"
+    serial_port: "/dev/ttyACM0"
     PWM_FULL: 1550
+    PWM_NEUTRAL: 1400
+    PWM_BRAKE: 1400
+    FORWARD: 1

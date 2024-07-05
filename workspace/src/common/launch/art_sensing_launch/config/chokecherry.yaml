@@ -8,3 +8,14 @@ motor_driver:
   ros__parameters:
     serial_port: "/dev/ttyUSB1"
     PWM_FULL: 1550
+    PWM_NEUTRAL: 1500
+    PWM_BRAKE: 1600
+    FORWARD: 1
+~
+~
+~
+~
+~
+~
+~
+~

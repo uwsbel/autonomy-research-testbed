@@ -95,17 +95,26 @@ class MotorDriver:
         self.Init_PWM()
 
         # clamp response to achieve target
+        #self.current_pw = self.PW_NEUTRAL
+        #self.current_throttle = 0.0
+        #self.target_throttle = 0.0
+        #self.MAX_THROTTLE_STEP = 0.1  # TODO find good value
+
+        #self.forward = True  # whether vehicle is in forward or reverse mode
+
+    def Init_PWM(self, brake = 1600,full = 1400,neutral = 1500,forward = True):
+        self.PW_BRAKE = brake + self.TRIM
+        self.PW_FULL_THROTTLE = full + self.TRIM
+        self.PW_NEUTRAL = neutral + self.TRIM
+        
+        # clamp response to achieve target
         self.current_pw = self.PW_NEUTRAL
         self.current_throttle = 0.0
         self.target_throttle = 0.0
         self.MAX_THROTTLE_STEP = 0.1  # TODO find good value
 
-        self.forward = True  # whether vehicle is in forward or reverse mode
+        self.forward = forward # whether vehicle is in forward or reverse mode
 
-    def Init_PWM(self, brake = 1600,full = 1400,neutral = 1500):
-        self.PW_BRAKE = brake + self.TRIM
-        self.PW_FULL_THROTTLE = full + self.TRIM
-        self.PW_NEUTRAL = neutral + self.TRIM
 
     def Reverse(self):
         pass  # TODO
@@ -151,9 +160,14 @@ class MotorDriver:
 class MotorDriverNode(Node):
     def __init__(self):
         super().__init__("motor_driver")
+        
+        self.get_logger().info("Initializing Motor Driver Node...")
 
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('PWM_FULL', 1400)
+        self.declare_parameter('PWM_NEUTRAL', 1500)
+        self.declare_parameter('PWM_BRAKE', 1600)
+        self.declare_parameter('FORWARD', 1)
 
         # update frequencies of this node
         self.freq = 20.0  # PWM is at 60Hz, so we should not overwrite previous signal too quickly
@@ -166,28 +180,32 @@ class MotorDriverNode(Node):
         self.KILL_TIME = (
             0.3  # time after which motors will be killed if no new commands given
         )
-
-
+        
         # subscriber
+    
         qos_profile = QoSProfile(depth=1,reliability=QoSReliabilityPolicy.BEST_EFFORT)
         qos_profile.history = QoSHistoryPolicy.KEEP_LAST
         self.sub_vehicle_cmd = self.create_subscription(
-            VehicleInput, "/artcar_1/control/vehicle_inputs", self.control_callback, qos_profile
+            VehicleInput, "/artcar_2/control/vehicle_inputs", self.control_callback, qos_profile
         )
 
         # call the driver callback even if we haven't heard from the subscribers
         self.timer = self.create_timer(1 / self.freq, self.update_motors)
 
         # motor and servo objects
+        PWM_NEUTRAL = self.get_parameter('PWM_NEUTRAL').get_parameter_value().integer_value
+        PWM_BRAKE = self.get_parameter('PWM_BRAKE').get_parameter_value().integer_value
         PWM_FULL = self.get_parameter('PWM_FULL').get_parameter_value().integer_value
+        FORWARD = self.get_parameter('FORWARD').get_parameter_value().integer_value == 1
         self.motor = MotorDriver()
-        self.motor.Init_PWM(full=PWM_FULL)
+        self.motor.Init_PWM(full=PWM_FULL,brake=PWM_BRAKE,neutral=PWM_NEUTRAL,forward=FORWARD)
         self.servo = SteeringServoDriver()
 
         BAUD_RATE = 250000
         PORT = self.get_parameter('serial_port').get_parameter_value().string_value
         TIMEOUT = 0.1
         self.arduino = serial.Serial(port=PORT, baudrate=BAUD_RATE, timeout=TIMEOUT)
+        self.get_logger().info(f"Initialized Motor Driver Node @ port {PORT} with PWM_FULL={PWM_FULL}")
 
 
     # function to process data this class subscribes to
@@ -197,7 +215,7 @@ class MotorDriverNode(Node):
         self.stale_timer = 0  # reset watchdog timer
 
     def update_motors(self):
-        # print("Sending commands to motor and steering servo")
+        #print("Sending commands to motor and steering servo")
 
         self.stale_timer += 1 / self.freq
         if self.stale_timer >= self.KILL_TIME:
