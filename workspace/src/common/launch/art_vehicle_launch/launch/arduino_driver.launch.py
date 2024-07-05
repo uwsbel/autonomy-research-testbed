@@ -35,7 +35,7 @@ from launch_ros.actions import Node
 
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
 import os
 from ament_index_python.packages import get_package_share_directory
 
@@ -43,6 +43,8 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     robot_ns = LaunchConfiguration('robot_ns')
+    package_share_directory = get_package_share_directory('art_sensing_launch')
+    veh_config_file_path = PathJoinSubstitution([package_share_directory, 'config', LaunchConfiguration('veh_config_file')])
 
     # ----------------
     # Launch Arguments
@@ -55,11 +57,6 @@ def generate_launch_description():
     # -----
     # Nodes
     # -----
-    params_file_path = os.path.join(
-        get_package_share_directory('art_sensing_launch'),
-        'config',
-        'ports.yaml'
-    )
 
     node = Node(
         package="arduino_driver",
@@ -73,7 +70,7 @@ def generate_launch_description():
             )
         ],
         parameters=[
-            params_file_path
+            veh_config_file_path 
         ]
     )
     ld.add_action(node)

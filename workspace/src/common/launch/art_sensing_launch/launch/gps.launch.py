@@ -21,24 +21,28 @@
 # ros imports
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration, PythonExpression
-# internal imports
-from launch_utils import AddLaunchArgument, IncludeLaunchDescriptionWithCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument
 import os
 from ament_index_python.packages import get_package_share_directory
+
+# internal imports
+from launch_utils import AddLaunchArgument, IncludeLaunchDescriptionWithCondition
 
 def generate_launch_description():
     ld = LaunchDescription()
     robot_ns = LaunchConfiguration("robot_ns")
-
+    veh_config = LaunchConfiguration('veh_config_file')
+    
+    # ---------------
+    # Vehicle Config
+    # ---------------
+    package_share_directory = get_package_share_directory('art_sensing_launch')
+    veh_config_file_path = PathJoinSubstitution([package_share_directory, 'config', veh_config])
+    
     # ---------------
     # Launch Includes
     # ---------------
-    params_file_path = os.path.join(
-        get_package_share_directory('art_sensing_launch'),
-        'config',
-        'ports.yaml'
-    )
 
     nmea_navsat_driver_node = Node(
         package="nmea_navsat_driver",
@@ -47,7 +51,7 @@ def generate_launch_description():
         #output="screen",
         parameters=[{
                      'frame_id': PythonExpression(['"', robot_ns, "/gps", '"']),
-                    }, params_file_path],
+                    }, veh_config_file_path],
         remappings=[('/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))]
     )
     ld.add_action(nmea_navsat_driver_node)

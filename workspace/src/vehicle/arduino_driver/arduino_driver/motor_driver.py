@@ -89,9 +89,10 @@ class MotorDriver:
         # === CONSTANTS ===
         # Pulse width as measured from the RC car receiver in milliseconds
         self.TRIM = 0
-        self.PW_BRAKE = 1600 + self.TRIM  # absolute full brake = 1980
-        self.PW_FULL_THROTTLE = 1400 + self.TRIM  # absolute full throttle = 1000
-        self.PW_NEUTRAL = 1500 + self.TRIM
+        #self.PW_BRAKE = 1600 + self.TRIM  # absolute full brake = 1980
+        #self.PW_FULL_THROTTLE = 1400 + self.TRIM  # absolute full throttle = 1000
+        #self.PW_NEUTRAL = 1500 + self.TRIM
+        self.Init_PWM()
 
         # clamp response to achieve target
         self.current_pw = self.PW_NEUTRAL
@@ -100,6 +101,11 @@ class MotorDriver:
         self.MAX_THROTTLE_STEP = 0.1  # TODO find good value
 
         self.forward = True  # whether vehicle is in forward or reverse mode
+
+    def Init_PWM(self, brake = 1600,full = 1400,neutral = 1500):
+        self.PW_BRAKE = brake + self.TRIM
+        self.PW_FULL_THROTTLE = full + self.TRIM
+        self.PW_NEUTRAL = neutral + self.TRIM
 
     def Reverse(self):
         pass  # TODO
@@ -147,6 +153,7 @@ class MotorDriverNode(Node):
         super().__init__("motor_driver")
 
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
+        self.declare_parameter('PWM_FULL', 1400)
 
         # update frequencies of this node
         self.freq = 20.0  # PWM is at 60Hz, so we should not overwrite previous signal too quickly
@@ -172,7 +179,9 @@ class MotorDriverNode(Node):
         self.timer = self.create_timer(1 / self.freq, self.update_motors)
 
         # motor and servo objects
+        PWM_FULL = self.get_parameter('PWM_FULL').get_parameter_value().integer_value
         self.motor = MotorDriver()
+        self.motor.Init_PWM(full=PWM_FULL)
         self.servo = SteeringServoDriver()
 
         BAUD_RATE = 250000
