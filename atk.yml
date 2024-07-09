@@ -96,7 +96,7 @@ services:
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
     command: >
-      sh -c '. /opt/ros/humble/setup.sh; if [ "$VEH_CONFIG" = "chokecherry" ]; then fastdds discovery -i 0; fi'
+      sh -c '. /opt/ros/humble/setup.sh; if [ "$VEH_CONFIG" = "$DISCOVERY_HOST_VEH" ]; then fastdds discovery -i 0; fi'
 
   chrono:
     extends: common
