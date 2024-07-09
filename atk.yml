@@ -14,7 +14,7 @@ x-optionals:
             #- "/dev/video0"
         - "/dev/ttyACM0"
         - "/dev/ttyUSB0"
-        - "/dev/ttyACM1"
+        - "/dev/ttyUSB1"
   network_mode_host:
     network_mode: "host"
   x11:
@@ -43,6 +43,7 @@ services:
     volumes:
       - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     tty: true
+  
   dev:
     extends: common
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:dev"
@@ -67,6 +68,7 @@ services:
           - windows/arm64
         no-cache: true
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
+ 
   agx:
     extends: dev
     build:
@@ -87,6 +89,7 @@ services:
       args:
         ROSDEP_METAPACKAGE: "art_art5_meta"
   oak:
+    ipc: host
     extends: agx
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:oak"
     hostname: "${COMPOSE_PROJECT_NAME}-oak"
@@ -95,17 +98,13 @@ services:
       dockerfile: "./docker/oak.dockerfile"
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
-    tty: true
-    stdin_open: true
-    command: >
-      sh -c "
-      . /opt/ros/humble/setup.sh;
-      if [ '$VEH_CONFIG' = '$DISCOVERY_HOST_VEH' ]; then 
-        exec fastdds discovery -i 0; 
-      else 
-        exec tail -f /dev/null; 
-      fi"
-
+  
+  discovery: 
+     ipc: host
+     extends: oak 
+     command: /bin/bash -c "source /opt/ros/humble/setup.sh && fastdds discovery -i 0"  
+     container_name: "${COMPOSE_PROJECT_NAME}-discovery"
+   
   chrono:
     extends: common
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:chrono"
