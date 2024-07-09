@@ -14,7 +14,7 @@ x-optionals:
             #- "/dev/video0"
         - "/dev/ttyACM0"
         - "/dev/ttyUSB0"
-        - "/dev/ttyUSB1"
+        - "/dev/ttyACM1"
   network_mode_host:
     network_mode: "host"
   x11:
@@ -95,8 +95,16 @@ services:
       dockerfile: "./docker/oak.dockerfile"
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
+    tty: true
+    stdin_open: true
     command: >
-      sh -c '. /opt/ros/humble/setup.sh; if [ "$VEH_CONFIG" = "$DISCOVERY_HOST_VEH" ]; then fastdds discovery -i 0; fi'
+      sh -c "
+      . /opt/ros/humble/setup.sh;
+      if [ '$VEH_CONFIG' = '$DISCOVERY_HOST_VEH' ]; then 
+        exec fastdds discovery -i 0; 
+      else 
+        exec tail -f /dev/null; 
+      fi"
 
   chrono:
     extends: common
