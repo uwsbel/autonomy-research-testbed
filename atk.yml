@@ -14,7 +14,7 @@ x-optionals:
             #- "/dev/video0"
         - "/dev/ttyACM0"
         - "/dev/ttyUSB0"
-        - "/dev/ttyACM1"
+        - "/dev/ttyUSB1"
   network_mode_host:
     network_mode: "host"
   x11:
@@ -95,9 +95,8 @@ services:
       dockerfile: "./docker/oak.dockerfile"
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
-        #USER_SHELL_ADD_ONS: "RMW_IMPLEMENTATION=rmw_fastrtps_cpp"
     command: >
-      sh -c 'if [ "$VEH_CONFIG" = "chokecherry" ]; then fastdds discovery -i 0; fi'
+      sh -c '. /opt/ros/humble/setup.sh; if [ "$VEH_CONFIG" = "chokecherry" ]; then fastdds discovery -i 0; fi'
 
   chrono:
     extends: common
