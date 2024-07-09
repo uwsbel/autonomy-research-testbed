@@ -98,6 +98,7 @@ services:
       dockerfile: "./docker/oak.dockerfile"
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
+    command: /bin/bash -c "python /home/art/art/fastdds/update_xml.py"
   
   discovery: 
      ipc: host
