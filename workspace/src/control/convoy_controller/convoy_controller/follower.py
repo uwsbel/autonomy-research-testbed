@@ -26,7 +26,7 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ###############################################################################
 ## Author: Harry Zhang
 ###############################################################################
@@ -44,8 +44,11 @@ import numpy as np
 import os
 
 import csv 
-from rclpy.qos import QoSHistoryPolicy,QoSReliabilityPolicy
+from rclpy.qos import QoSHistoryPolicy, QoSReliabilityPolicy
 from rclpy.qos import QoSProfile
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import ReentrantCallbackGroup
+from std_srvs.srv import Trigger
 
 class ControlNode(Node):
     def __init__(self):
@@ -85,6 +88,9 @@ class ControlNode(Node):
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '/follower_vehicle/driver_inputs', 10)
         self.sub_vehicle_state = self.create_subscription(Odometry, '/leader_vehicle/odometry/filtered', self.trajectory_callback, qos_profile)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
+        
+        # Service to start the node
+        self.srv = self.create_service(Trigger, 'start_control', self.start_control_callback)
     
     # subscribe manual control inputs
     def trajectory_callback(self, msg):
@@ -169,6 +175,11 @@ class ControlNode(Node):
         steering = sum([x * y for x, y in zip(e, [0.02176878, 0.72672704, 0.78409284, -0.0105355])])
         self.throttle = 0.7
         
+        position_error = np.sqrt(e[0] ** 2 + e[1] ** 2)
+        self.throttle = np.clip(throttle_gain * position_error, 0, 1)
+        #velocity_error = e[3]  # The velocity error is the fourth element in the error state
+        #self.throttle = np.clip(self.throttle + throttle_gain * velocity_error, 0, 1)
+
         # Ensure steering can't change too much between timesteps, smooth transition
         delta_steering = steering - self.steering
         if abs(delta_steering) > 0.25:
@@ -189,17 +200,23 @@ class ControlNode(Node):
             my_writer = csv.writer(csvfile, quoting=csv.QUOTE_NONE, escapechar=' ')
             my_writer.writerow([self.x, self.y, self.theta, self.v])
             csvfile.close()
-
+    
+    def start_control_callback(self, request, response):
+        self.go = True
+        response.success = True
+        response.message = "Control node started"
+        self.get_logger().info("Received start signal")
+        return response
 
 def main(args=None):
     rclpy.init(args=args)
     control = ControlNode()
-    rclpy.spin(control)
+    executor = MultiThreadedExecutor()
+    rclpy.spin(control, executor)
 
     control.destroy_node()
     rclpy.shutdown()
 
-
 if __name__ == '__main__':
-    main()   
+    main()
 
