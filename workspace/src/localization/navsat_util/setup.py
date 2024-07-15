@@ -19,6 +19,7 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        "console_scripts": ["datum_service = navsat_util.datum_node:main"],
+        "console_scripts": ["datum_service = navsat_util.datum_node:main",
+                            "heading_calib = navsat_util.heading_calibration:main"],
     },
 )

@@ -35,7 +35,8 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import TwistStamped, PoseStamped, Twist
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+#from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from art_msgs.msg import VehicleInput
 from chrono_ros_interfaces.msg import Body
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import Float64MultiArray, MultiArrayDimension

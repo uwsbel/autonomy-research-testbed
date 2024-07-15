@@ -11,7 +11,7 @@ from art_msgs.msg import VehicleInput
 class KeyboardTeleop(Node):
     def __init__(self):
         super().__init__('keyboard_teleop')
-        self.publisher_ = self.create_publisher(VehicleInput, '/artcar_2/control/vehicle_inputs', 10)
+        self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/control/vehicle_inputs', 10)
         self.steering = 0.0
         self.throttle = 0.0
         self.speed_increment = 0.1

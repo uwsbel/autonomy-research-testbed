@@ -68,44 +68,6 @@ def generate_launch_description():
     AddLaunchArgument(ld, "container", "")
     container_name = AddLaunchArgument(ld, "container_name", "art_container")
 
-    # SetLaunchArgument(
-    #     ld,
-    #     "disable_art_sensing",
-    #     "True",
-    #     condition=IfCondition(GetLaunchArgument("use_sim")),
-    # )
-    # SetLaunchArgument(
-    #     ld,
-    #     "disable_art_vehicle",
-    #     "True",
-    #     condition=IfCondition(GetLaunchArgument("use_sim")),
-    # )
-    # SetLaunchArgument(
-    #     ld,
-    #     "disable_ekf_estimation",
-    #     "True",
-    #     condition=IfCondition(GetLaunchArgument("use_sim")),
-    # )
-    # SetLaunchArgument(
-    #     ld,
-    #     "disable_ekf_launch",
-    #     "True",
-    #     condition=IfCondition(GetLaunchArgument("use_sim")),
-    # )
-    # SetLaunchArgument(
-    #     ld,
-    #     "disable_particle_filter_estimation",
-    #     "True",
-    #     condition=IfCondition(GetLaunchArgument("use_sim")),
-    # )
-
-    # SetLaunchArgument(
-    #     ld,
-    #     "disable_art_simulation",
-    #     "True",
-    #     condition=UnlessCondition(GetLaunchArgument("use_sim")),
-    # )
-
     SetLaunchArgument(
         ld,
         "disable_chrono_imu_filter",
@@ -169,7 +131,7 @@ def generate_launch_description():
     IncludeLaunchDescriptionWithCondition(
         ld, "art_localization_launch", "art_localization"
     )
-    #IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
+    ##IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
     IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")  
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle") 

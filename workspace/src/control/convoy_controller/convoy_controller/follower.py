@@ -35,7 +35,8 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import TwistStamped, PoseStamped, Twist
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+#from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from art_msgs.msg import VehicleInput
 from chrono_ros_interfaces.msg import Body
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import Float64MultiArray, MultiArrayDimension
@@ -176,7 +177,7 @@ class ControlNode(Node):
         self.throttle = 0.7
         
         position_error = np.sqrt(e[0] ** 2 + e[1] ** 2)
-        self.throttle = np.clip(throttle_gain * position_error, 0, 1)
+        self.throttle = np.clip(0.5 * position_error, 0, 1)
         #velocity_error = e[3]  # The velocity error is the fourth element in the error state
         #self.throttle = np.clip(self.throttle + throttle_gain * velocity_error, 0, 1)
 
