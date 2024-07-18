@@ -92,8 +92,8 @@ class ControlNode(Node):
 
     # subscribe manual control inputs
     def HarryInputs_callback(self, msg):
-        self.go = True
-        self.get_logger().info("received harry's inputs:")
+        #self.go = True
+        #self.get_logger().info("received harry's inputs:")
         self.throttle_leader += msg.linear.x
         self.steering_leader += msg.angular.z
         self.get_logger().info("Throttle: %s" % self.throttle_leader)
@@ -125,15 +125,15 @@ class ControlNode(Node):
         
     # callback to run a loop and publish data this class generates
     def pub_callback(self):
-        if(not self.go):
-            return
+        #if(not self.go):
+        #    return
         state_array = self.vehicle_trajectory()
         ### for vehicle one
         msg_leader = VehicleInput()
         msg_leader.steering = np.clip(self.steering_leader, -1.0, 1.0)
         msg_leader.throttle = np.clip(self.throttle_leader, 0, 1)
         
-        self.pub_vehicle_cmd.publish(msg_leader)
+        # self.pub_vehicle_cmd.publish(msg_leader)
         # publish vehicle trajectory
         self.pub_vehicle_state.publish(state_array)
 
