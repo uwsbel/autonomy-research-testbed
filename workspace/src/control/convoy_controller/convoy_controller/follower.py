@@ -87,7 +87,7 @@ class ControlNode(Node):
         qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
         self.sub_odometry = self.create_subscription(Odometry, '/follower_vehicle/odometry/filtered', self.odometry_callback, qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '/follower_vehicle/driver_inputs', 10)
-        self.sub_vehicle_state = self.create_subscription(Odometry, '/leader_vehicle/odometry/filtered', self.trajectory_callback, qos_profile)
+        self.sub_vehicle_state = self.create_subscription(Odometry, '/leader_vehicle/vehicle_traj', self.trajectory_callback, qos_profile)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
         
         # Service to start the node
