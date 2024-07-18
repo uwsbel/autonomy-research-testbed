@@ -35,7 +35,7 @@ def generate_launch_description():
                         ('/leader_vehicle/odometry/filtered', PythonExpression(['"', '/', leader_ns, "/odometry/filtered", '"'])),
                         ('/follower_vehicle/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
                         ('/follower_vehicle/driver_inputs',  PythonExpression(['"', '/', robot_ns, "/control/vehicle_inputs", '"'])),
-                        ('/vehicle_traj', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"']))
+                        ('/leader_vehicle/vehicle_traj', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"']))
 
                     ],
                     output='screen'
