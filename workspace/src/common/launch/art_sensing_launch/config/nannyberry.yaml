@@ -8,7 +8,7 @@ nmea_serial_driver:
 
 motor_driver:
   ros__parameters:
-    serial_port: "/dev/ttyUSB1"
+    serial_port: "/dev/ttyACM1"
     PWM_FULL: 1400
     PWM_NEUTRAL: 1500
     PWM_BRAKE: 1600

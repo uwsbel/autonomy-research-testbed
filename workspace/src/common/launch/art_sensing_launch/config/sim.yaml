@@ -1,0 +1,20 @@
+/artcar_1/navsat_transform_node:
+  ros__parameters:
+    magnetic_declination_radians: 0.0
+    yaw_offset: 0.0
+    zero_altitude: True
+    use_odometry_yaw: True
+    wait_for_datum: False
+    publish_filtered_gps: True
+    broadcast_cartesian_transform: False
+
+/artcar_2/navsat_transform_node:
+  ros__parameters:
+    magnetic_declination_radians: 0.0
+    yaw_offset: 0.0
+    zero_altitude: True
+    use_odometry_yaw: True
+    wait_for_datum: False
+    publish_filtered_gps: True
+    broadcast_cartesian_transform: False
+

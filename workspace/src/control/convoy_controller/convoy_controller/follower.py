@@ -87,7 +87,7 @@ class ControlNode(Node):
         qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
         self.sub_odometry = self.create_subscription(Odometry, '/follower_vehicle/odometry/filtered', self.odometry_callback, qos_profile)
         self.pub_vehicle_cmd = self.create_publisher(VehicleInput, '/follower_vehicle/driver_inputs', 10)
-        self.sub_vehicle_state = self.create_subscription(Odometry, '/leader_vehicle/vehicle_traj', self.trajectory_callback, qos_profile)
+        self.sub_vehicle_state = self.create_subscription(Float64MultiArray, '/leader_vehicle/vehicle_traj', self.trajectory_callback, qos_profile)
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
         
         # Service to start the node
@@ -96,18 +96,17 @@ class ControlNode(Node):
     # subscribe manual control inputs
     def trajectory_callback(self, msg):
         self.go = True
-        # Extract data from the Odometry message
-        x = msg.pose.pose.position.x
-        y = msg.pose.pose.position.y
-        theta = np.arctan2(2.0 * (msg.pose.pose.orientation.w * msg.pose.pose.orientation.z + msg.pose.pose.orientation.x * msg.pose.pose.orientation.y),
-                           1.0 - 2.0 * (msg.pose.pose.orientation.y * msg.pose.pose.orientation.y + msg.pose.pose.orientation.z * msg.pose.pose.orientation.z))
-        v = np.sqrt(msg.twist.twist.linear.x ** 2 + msg.twist.twist.linear.y ** 2)
-        
-        self.ref_traj.append([x, y, theta, v])
+        # Ensure that the array is formatted correctly (must be a multiple of 4)
+        if len(msg.data) % 4 != 0:
+            self.get_logger().error('Received data length is not a multiple of 4, cannot form a proper array.')
+            return
+        # Convert the flat data array into an n x 4 numpy array
+        n = len(msg.data) // 4
+        self.ref_traj = np.array(msg.data).reshape((n, 4))
 
         # Log or process the array
-        self.get_logger().info(f'Received trajectory point: (x: {x}, y: {y}, theta: {theta}, v: {v})')
-
+        self.get_logger().info(f'Received array: in dimension {self.ref_traj.shape}')
+        
     # function to process data this class subscribes to
     def odometry_callback(self, msg):
         self.x = msg.pose.pose.position.x
@@ -174,10 +173,10 @@ class ControlNode(Node):
             return
         e = self.error_state()
         steering = sum([x * y for x, y in zip(e, [0.02176878, 0.72672704, 0.78409284, -0.0105355])])
-        self.throttle = 0.7
+        self.throttle = 1.0 
         
         position_error = np.sqrt(e[0] ** 2 + e[1] ** 2)
-        self.throttle = np.clip(0.5 * position_error, 0, 1)
+        #self.throttle = np.clip(0.5 * position_error, 0, 1)
         #velocity_error = e[3]  # The velocity error is the fourth element in the error state
         #self.throttle = np.clip(self.throttle + throttle_gain * velocity_error, 0, 1)
 

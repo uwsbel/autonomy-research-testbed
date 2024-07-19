@@ -56,7 +56,7 @@ def generate_launch_description():
 
     AddLaunchArgument(ld, "use_sim", "False")
     AddLaunchArgument(ld, "use_sim_time", "False")
-
+    AddLaunchArgument(ld, "use_filter", "False")
 
     ld.add_action(DeclareLaunchArgument('robot_ns', default_value='artcar_1'))
     robot_ns = LaunchConfiguration('robot_ns')
@@ -72,7 +72,7 @@ def generate_launch_description():
         ld,
         "disable_chrono_imu_filter",
         "True",
-        condition=UnlessCondition(GetLaunchArgument("use_sim")),
+        condition=UnlessCondition(GetLaunchArgument("use_filter")),
     )
     SetLaunchArgument(
         ld,
@@ -135,6 +135,6 @@ def generate_launch_description():
     IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")  
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
     IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle") 
-    IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld
