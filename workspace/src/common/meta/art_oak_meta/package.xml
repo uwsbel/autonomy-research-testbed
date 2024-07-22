@@ -12,6 +12,7 @@
   <exec_depend>art_vehicle_launch</exec_depend>
 
   <!-- Drivers -->
+  <exec_depend>ublox</exec_depend>
   <exec_depend>wheeltec_n100_imu</exec_depend>
   <exec_depend>nmea_navsat_driver</exec_depend>
   <exec_depend>tf_transformations</exec_depend>

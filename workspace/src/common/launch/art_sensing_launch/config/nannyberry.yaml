@@ -24,3 +24,16 @@ motor_driver:
     publish_filtered_gps: True
     broadcast_cartesian_transform: False
 
+ublox_gps_node:
+  ros__parameters:
+    debug: 0                    # Range 0-4 (0 means no debug statements will print)
+    device: /dev/ttyACM0
+    frame_id: artcar_1/gps
+    tmode3: 0
+    config_on_startup: false
+    #publish:
+    #  all: true
+    #  aid:
+    #    hui: false
+    #  nav:
+    #    posecef: false

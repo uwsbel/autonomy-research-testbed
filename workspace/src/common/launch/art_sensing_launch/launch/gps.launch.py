@@ -43,18 +43,24 @@ def generate_launch_description():
     # ---------------
     # Launch Includes
     # ---------------
+    ublox_gps_node = Node(package='ublox_gps',
+                          executable='ublox_gps_node',
+                          output='both',
+                          parameters=[veh_config_file_path],
+                          remappings=[('/ublox_gps_node/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))])
 
-    nmea_navsat_driver_node = Node(
-        package="nmea_navsat_driver",
-        executable="nmea_serial_driver",
-        name="nmea_serial_driver",
-        #output="screen",
-        parameters=[{
-                     'frame_id': PythonExpression(['"', robot_ns, "/gps", '"']),
-                    }, veh_config_file_path],
-        remappings=[('/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))]
-    )
-    ld.add_action(nmea_navsat_driver_node)
+    ld.add_action(ublox_gps_node)
+    #nmea_navsat_driver_node = Node(
+    #    package="nmea_navsat_driver",
+    #    executable="nmea_serial_driver",
+    #    name="nmea_serial_driver",
+    #    #output="screen",
+    #    parameters=[{
+    #                 'frame_id': PythonExpression(['"', robot_ns, "/gps", '"']),
+    #                }, veh_config_file_path],
+    #    remappings=[('/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))]
+    #)
+    #ld.add_action(nmea_navsat_driver_node)
 
     return ld
 

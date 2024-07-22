@@ -22,3 +22,7 @@
 [submodule "workspace/src/sensing/serial-ros2"]
 	path = workspace/src/sensing/serial-ros2
 	url = https://github.com/RoverRobotics-forks/serial-ros2
+[submodule "workspace/src/sensing/ublox"]
+	path = workspace/src/sensing/ublox
+	url = https://github.com/KumarRobotics/ublox
+	branch = ros2
