@@ -46,7 +46,7 @@ def generate_launch_description():
     ublox_gps_node = Node(package='ublox_gps',
                           executable='ublox_gps_node',
                           output='both',
-                          parameters=[veh_config_file_path],
+                          parameters=[veh_config_file_path, { 'frame_id': PythonExpression(['"', robot_ns, "/gps", '"'])}],
                           remappings=[('/ublox_gps_node/fix', PythonExpression(['"','/',robot_ns,"/gps/fix",'"']))])
 
     ld.add_action(ublox_gps_node)
