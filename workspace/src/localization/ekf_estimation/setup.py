@@ -18,6 +18,7 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["ekf_estimation = ekf_estimation.ekf_estimation:main"],
+        "console_scripts": ["ekf_estimation = ekf_estimation.ekf_estimation:main",
+                            "ned2enu = ekf_estimation.ned2enu:main"],
     },
 )

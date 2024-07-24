@@ -14,14 +14,20 @@ motor_driver:
     PWM_BRAKE: 1400
     FORWARD: 1
 
-/artcar_1/navsat_transform_node:
+/**:
+  navsat_transform_node:
+    ros__parameters:
+      magnetic_declination_radians: -0.04503
+      yaw_offset: 0.0 
+      zero_altitude: True
+      use_odometry_yaw: True 
+      wait_for_datum: False 
+      publish_filtered_gps: True
+      broadcast_cartesian_transform: False
+
+ublox_gps_node:
   ros__parameters:
-    magnetic_declination_radians: -0.0524
-    yaw_offset: -1.571 
-    zero_altitude: True
-    use_odometry_yaw: True
-    wait_for_datum: False
-    publish_filtered_gps: True
-    broadcast_cartesian_transform: False
-
-
+    debug: 0                    
+    device: /dev/ttyACM1
+    tmode3: 0    
+    config_on_startup: False

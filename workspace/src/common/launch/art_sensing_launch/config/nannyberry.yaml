@@ -21,7 +21,7 @@ motor_driver:
       yaw_offset: -0.75
       zero_altitude: True
       use_odometry_yaw: True
-      wait_for_datum: False
+      wait_for_datum: True 
       publish_filtered_gps: True
       broadcast_cartesian_transform: False
 

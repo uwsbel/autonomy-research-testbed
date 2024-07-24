@@ -4,18 +4,25 @@ import rclpy
 from rclpy.node import Node
 import curses
 from std_msgs.msg import Header
-import time
+from sensor_msgs.msg import Imu
+from nav_msgs.msg import Odometry
 from art_msgs.msg import VehicleInput
+import math
 
 
 class KeyboardTeleop(Node):
     def __init__(self):
         super().__init__('keyboard_teleop')
         self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/control/vehicle_inputs', 10)
+        #self.subscription_imu = self.create_subscription(Imu, '/imu_trueEast', self.imu_callback, 10)
+        self.subscription_imu = self.create_subscription(Imu, '/artcar_1/imu/data_raw', self.imu_callback, 10)
+        self.subscription_odom = self.create_subscription(Odometry, '/artcar_1/odometry/filtered', self.odom_callback, 10)
         self.steering = 0.0
         self.throttle = 0.0
         self.speed_increment = 0.1
         self.steer_increment = 0.1
+        self.imu_heading = 0.0
+        self.odom_heading = 0.0
 
     def run(self):
         curses.wrapper(self.curses_loop)
@@ -48,7 +55,10 @@ class KeyboardTeleop(Node):
 
             self.publish_vehicle_input()
             stdscr.addstr(6, 0, f"Throttle: {self.throttle:.2f}   Steering: {self.steering:.2f}")
+            stdscr.addstr(7, 0, f"IMU Heading: {self.imu_heading:.2f}")
+            stdscr.addstr(8, 0, f"Odometry Heading: {self.odom_heading:.2f}")
             stdscr.refresh()
+            rclpy.spin_once(self)
 
     def publish_vehicle_input(self):
         msg = VehicleInput()
@@ -57,6 +67,26 @@ class KeyboardTeleop(Node):
         msg.steering = self.steering
         msg.throttle = self.throttle
         self.publisher_.publish(msg)
+
+    def imu_callback(self, msg):
+        # Convert quaternion to yaw angle
+        orientation_q = msg.orientation
+        siny_cosp = 2 * (orientation_q.w * orientation_q.z + orientation_q.x * orientation_q.y)
+        cosy_cosp = 1 - 2 * (orientation_q.y * orientation_q.y + orientation_q.z * orientation_q.z)
+        yaw = math.atan2(siny_cosp, cosy_cosp)
+        self.imu_heading = math.degrees(yaw)
+        #if self.imu_heading < 0:
+        #    self.imu_heading += 360
+
+    def odom_callback(self, msg):
+        # Convert quaternion to yaw angle
+        orientation_q = msg.pose.pose.orientation
+        siny_cosp = 2 * (orientation_q.w * orientation_q.z + orientation_q.x * orientation_q.y)
+        cosy_cosp = 1 - 2 * (orientation_q.y * orientation_q.y + orientation_q.z * orientation_q.z)
+        yaw = math.atan2(siny_cosp, cosy_cosp)
+        self.odom_heading = math.degrees(yaw)
+        if self.odom_heading < 0:
+            self.odom_heading += 360
 
 def main(args=None):
     rclpy.init(args=args)
