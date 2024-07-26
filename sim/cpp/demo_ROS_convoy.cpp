@@ -55,7 +55,7 @@ using namespace chrono::ros;
 ChVisualSystem::Type vis_type = ChVisualSystem::Type::IRRLICHT;
 
 // Simulation step sizes
-double step_size = 2e-3;
+double step_size = 1e-3;
 using namespace chrono::sensor;
 
 // =============================================================================
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     RigidTerrain terrain(&sys);
     auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    patch_mat->SetFriction(10.0f);
+    patch_mat->SetFriction(0.7f);
     patch_mat->SetRestitution(0.01f);
     auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 200, 100);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));
@@ -99,6 +99,9 @@ int main(int argc, char* argv[]) {
         artcars[i]->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
         artcars[i]->SetWheelVisualizationType(VisualizationType::NONE);
         artcars[i]->SetTireVisualizationType(VisualizationType::PRIMITIVES);
+        artcars[i]->SetTireRollingResistance(0.05f);
+        artcars[i]->SetStallTorque(0.09f);
+        // artcars[i]->SetMaxMotorVoltageRatio(0.3f);
 
         drivers[i] = std::make_shared<ChDriver>(artcars[i]->GetVehicle());
         
@@ -119,7 +122,7 @@ int main(int argc, char* argv[]) {
     sensor_manager->scene->SetAmbientLight({0.1f, 0.1f, 0.1f});
 
     for (int i = 0; i < num_vehicles; ++i) {
-        ChVector3d gps_reference(-89.400, 43.0699685, 260.0);
+        ChVector3d gps_reference(-89.41161, 43.07203, 260.0);
 
         auto acc = chrono_types::make_shared<ChAccelerometerSensor>(artcars[i]->GetChassisBody(), 100.f, offset_pose, noise_none);
         acc->PushFilter(chrono_types::make_shared<ChFilterAccelAccess>());
@@ -133,7 +136,7 @@ int main(int argc, char* argv[]) {
         mag->PushFilter(chrono_types::make_shared<ChFilterMagnetAccess>());
         sensor_manager->AddSensor(mag);
         
-        auto gps = chrono_types::make_shared<ChGPSSensor>(artcars[i]->GetChassisBody(), 1.f, offset_pose, gps_reference, noise_none);
+        auto gps = chrono_types::make_shared<ChGPSSensor>(artcars[i]->GetChassisBody(), 80.f, offset_pose, gps_reference, noise_none);
         gps->PushFilter(chrono_types::make_shared<ChFilterGPSAccess>());
         sensor_manager->AddSensor(gps);
         sensor_manager->Update();
@@ -173,14 +176,14 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_IRRLICHT
             auto vis_irr = chrono_types::make_shared<ChWheeledVehicleVisualSystemIrrlicht>();
             vis_irr->SetWindowTitle("Multiple cars demo");
-            vis_irr->SetChaseCamera(ChVector3d(0.0, 0.0, .75), 6.0, 0.5);
-            vis_irr->SetChaseCameraState(utils::ChChaseCamera::Track);
+            vis_irr->SetChaseCamera(ChVector3d(0.0, 0.0, .75), 3.0, 0.5);
+            vis_irr->SetChaseCameraState(utils::ChChaseCamera::Follow);
             vis_irr->SetChaseCameraPosition(ChVector3d(-15, 0, 2.0));
             vis_irr->Initialize();
             vis_irr->AddSkyBox();
             vis_irr->AddLogo();
             vis_irr->AddLightDirectional();
-            vis_irr->AttachVehicle(&artcars[0]->GetVehicle());
+            vis_irr->AttachVehicle(&artcars[2]->GetVehicle());
 
             vis = vis_irr;
 #endif

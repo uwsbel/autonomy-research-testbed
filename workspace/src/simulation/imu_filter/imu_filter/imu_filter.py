@@ -109,6 +109,7 @@ class ImuFilterNode(Node):
         else:
             self.heading =  math.atan2(yGauss, xGauss) * 180 / math.pi # 
 
+        self.heading -= 16.1
         # Normalize heading to 0-360 degrees
         while self.heading > 360:
             self.heading -= 360

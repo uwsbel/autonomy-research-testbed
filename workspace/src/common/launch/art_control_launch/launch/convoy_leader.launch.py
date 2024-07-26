@@ -34,8 +34,9 @@ def generate_launch_description():
                     remappings=[
                         ('/leader_vehicle/odometry/filtered', PythonExpression(['"', '/', leader_ns, "/odometry/filtered", '"'])),
                         ('/follower_vehicle/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
-                        ('/follower_vehicle/driver_inputs',  PythonExpression(['"', '/', robot_ns, "/control/vehicle_inputs", '"'])),
-                        ('/leader_vehicle/vehicle_traj', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"']))
+                        ('/follower_vehicle/driver_inputs',  PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"'])),
+                        ('/leader_vehicle/vehicle_traj', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"'])),
+                        ('/follower_vehicle/vehicle_traj', PythonExpression(['"', '/', robot_ns, "/vehicle_traj", '"']))
 
                     ],
                     output='screen'
@@ -57,7 +58,7 @@ def generate_launch_description():
                     remappings=[
                         ('/leader_vehicle/cmd_vel', PythonExpression(['"', '/', robot_ns, "/cmd_vel", '"'])),
                         ('/leader_vehicle/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
-                        ('/leader_vehicle/control/vehicle_inputs', PythonExpression(['"', '/', robot_ns, "/control/vehicle_inputs", '"'])),
+                        ('/leader_vehicle/control/vehicle_inputs', PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"'])),
                         ('/leader_vehicle/vehicle_traj', PythonExpression(['"', '/', robot_ns, "/vehicle_traj", '"']))
                     ],
                     output='screen'
