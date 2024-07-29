@@ -6,14 +6,22 @@ import curses
 from std_msgs.msg import Header
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
-from art_msgs.msg import VehicleInput
+#from art_msgs.msg import VehicleInput
+from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
 import math
+from rclpy.qos import QoSHistoryPolicy, QoSReliabilityPolicy
+from rclpy.qos import QoSProfile
 
 
 class KeyboardTeleop(Node):
     def __init__(self):
         super().__init__('keyboard_teleop')
-        self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/control/vehicle_inputs', 10)
+
+        qos_profile = QoSProfile(depth=10)
+        qos_profile.history = QoSHistoryPolicy.KEEP_LAST
+        qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
+
+        self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/input/lateral_input', qos_profile)
         #self.subscription_imu = self.create_subscription(Imu, '/imu_trueEast', self.imu_callback, 10)
         self.subscription_imu = self.create_subscription(Imu, '/artcar_1/imu/data_raw', self.imu_callback, 10)
         self.subscription_odom = self.create_subscription(Odometry, '/artcar_1/odometry/filtered', self.odom_callback, 10)
