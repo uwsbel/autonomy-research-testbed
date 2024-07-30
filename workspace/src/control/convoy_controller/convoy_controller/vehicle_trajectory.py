@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Path, Odometry
 from geometry_msgs.msg import PoseStamped
+from std_srvs.srv import SetBool  # Import the SetBool service
 import numpy as np
 
 class VehicleTrajectoryPublisher(Node):
@@ -10,15 +11,18 @@ class VehicleTrajectoryPublisher(Node):
         self.odom_path = []
         self.path_length_limit = 30
         self.path_pub_distance_threshold = 1.0  # meters
-        self.start_publishing_path = False
+        self.start_publishing_path = False  # Initially, do not publish the path
         self.pub_odom_path = self.create_publisher(Path, '/vehicle_traj', 10)
         self.sub_odometry = self.create_subscription(
             Odometry, '/odometry/filtered', self.odometry_callback, 10)
+        self.start_service = self.create_service(
+            SetBool, 'start_publishing_path', self.start_publishing_callback)
 
     def odometry_callback(self, msg):
-        x = msg.pose.pose.position.x
-        y = msg.pose.pose.position.y
-        self.update_odom_path(x, y)
+        if self.start_publishing_path:
+            x = msg.pose.pose.position.x
+            y = msg.pose.pose.position.y
+            self.update_odom_path(x, y)
 
     def update_odom_path(self, x, y):
         if len(self.odom_path) == 0 or self.distance(self.odom_path[-1], (x, y)) >= self.path_pub_distance_threshold:
@@ -44,6 +48,12 @@ class VehicleTrajectoryPublisher(Node):
     def distance(self, point1, point2):
         return np.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
+    def start_publishing_callback(self, request, response):
+        self.start_publishing_path = request.data
+        response.success = True
+        response.message = f"Publishing path set to: {self.start_publishing_path}"
+        return response
+
 def main(args=None):
     rclpy.init(args=args)
     node = VehicleTrajectoryPublisher()
@@ -53,3 +63,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+

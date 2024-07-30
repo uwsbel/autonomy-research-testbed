@@ -59,7 +59,7 @@ class IMUConverterNode(Node):
     def add_90_degree_offset(self, q):
         q_wxyz = [q[0],q[1],q[2],q[3]]
 
-        yaw_angle = np.deg2rad(-90.)
+        yaw_angle = np.deg2rad(-140.)
         yaw_quaternion = tf_transformations.quaternion_about_axis(yaw_angle, (0, 0, 1))
         
         q_prime = tf_transformations.quaternion_multiply(yaw_quaternion, q_wxyz)

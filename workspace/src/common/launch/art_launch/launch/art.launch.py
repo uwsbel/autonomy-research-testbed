@@ -37,6 +37,7 @@ from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import PushRosNamespace
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PythonExpression
+import os
 
 # internal imports
 from launch_utils import (
@@ -53,6 +54,15 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
+    veh_config_env = os.getenv('VEH_CONFIG', 'default')
+    veh_config_file = f'{veh_config_env}.yaml'
+
+    declare_veh_config_arg = DeclareLaunchArgument(
+        'veh_config_file',
+        default_value=veh_config_file,
+        description='Name of the vehicle configuration file without path'
+    )
+    ld.add_action(declare_veh_config_arg)
 
     AddLaunchArgument(ld, "use_sim", "False")
     AddLaunchArgument(ld, "use_sim_time", "False")

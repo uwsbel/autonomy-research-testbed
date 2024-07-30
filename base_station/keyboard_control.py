@@ -6,8 +6,8 @@ import curses
 from std_msgs.msg import Header
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
-#from art_msgs.msg import VehicleInput
 from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from std_srvs.srv import SetBool
 import math
 from rclpy.qos import QoSHistoryPolicy, QoSReliabilityPolicy
 from rclpy.qos import QoSProfile
@@ -22,15 +22,17 @@ class KeyboardTeleop(Node):
         qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
 
         self.publisher_ = self.create_publisher(VehicleInput, '/artcar_1/input/lateral_input', qos_profile)
-        #self.subscription_imu = self.create_subscription(Imu, '/imu_trueEast', self.imu_callback, 10)
-        self.subscription_imu = self.create_subscription(Imu, '/artcar_1/imu/data_raw', self.imu_callback, 10)
+        self.subscription_imu = self.create_subscription(Imu, '/artcar_1/imu/data', self.imu_callback, 10)
         self.subscription_odom = self.create_subscription(Odometry, '/artcar_1/odometry/filtered', self.odom_callback, 10)
+        self.service_client = self.create_client(SetBool, '/artcar_1/start_publishing_path')  # Service client
+
         self.steering = 0.0
         self.throttle = 0.0
         self.speed_increment = 0.1
         self.steer_increment = 0.1
         self.imu_heading = 0.0
         self.odom_heading = 0.0
+        self.velocity = 0.0  # Initialize velocity variable
 
     def run(self):
         curses.wrapper(self.curses_loop)
@@ -42,7 +44,8 @@ class KeyboardTeleop(Node):
         stdscr.addstr(1, 0, "Use arrow keys to control the robot")
         stdscr.addstr(2, 0, "UP/DOWN: Throttle, LEFT/RIGHT: Steering")
         stdscr.addstr(3, 0, "X: Zero out inputs")
-        stdscr.addstr(4, 0, "Q: Quit")
+        stdscr.addstr(4, 0, "S: Start Publishing Path")
+        stdscr.addstr(5, 0, "Q: Quit")
 
         while rclpy.ok():
             key = stdscr.getch()
@@ -58,13 +61,16 @@ class KeyboardTeleop(Node):
             elif key == ord('x'):
                 self.steering = 0.0
                 self.throttle = 0.0
+            elif key == ord('s'):
+                self.call_start_publishing_service(True)  # Start publishing path
             elif key == ord('q'):
                 break
 
             self.publish_vehicle_input()
-            stdscr.addstr(6, 0, f"Throttle: {self.throttle:.2f}   Steering: {self.steering:.2f}")
-            stdscr.addstr(7, 0, f"IMU Heading: {self.imu_heading:.2f}")
-            stdscr.addstr(8, 0, f"Odometry Heading: {self.odom_heading:.2f}")
+            stdscr.addstr(7, 0, f"Throttle: {self.throttle:.2f}   Steering: {self.steering:.2f}")
+            stdscr.addstr(8, 0, f"IMU Heading: {self.imu_heading:.2f}")
+            stdscr.addstr(9, 0, f"Odometry Heading: {self.odom_heading:.2f}")
+            stdscr.addstr(10, 0, f"Velocity: {self.velocity:.2f} m/s")  # Display velocity
             stdscr.refresh()
             rclpy.spin_once(self)
 
@@ -76,6 +82,21 @@ class KeyboardTeleop(Node):
         msg.throttle = self.throttle
         self.publisher_.publish(msg)
 
+    def call_start_publishing_service(self, start):
+        while not self.service_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Service not available, waiting again...')
+        request = SetBool.Request()
+        request.data = start
+        future = self.service_client.call_async(request)
+        future.add_done_callback(self.handle_service_response)
+
+    def handle_service_response(self, future):
+        try:
+            response = future.result()
+            self.get_logger().info(f"Service call success: {response.success}, message: {response.message}")
+        except Exception as e:
+            self.get_logger().error(f"Service call failed: {e}")
+
     def imu_callback(self, msg):
         # Convert quaternion to yaw angle
         orientation_q = msg.orientation
@@ -83,8 +104,6 @@ class KeyboardTeleop(Node):
         cosy_cosp = 1 - 2 * (orientation_q.y * orientation_q.y + orientation_q.z * orientation_q.z)
         yaw = math.atan2(siny_cosp, cosy_cosp)
         self.imu_heading = math.degrees(yaw)
-        #if self.imu_heading < 0:
-        #    self.imu_heading += 360
 
     def odom_callback(self, msg):
         # Convert quaternion to yaw angle
@@ -95,6 +114,10 @@ class KeyboardTeleop(Node):
         self.odom_heading = math.degrees(yaw)
         if self.odom_heading < 0:
             self.odom_heading += 360
+
+        # Extract linear velocity
+        linear_velocity = msg.twist.twist.linear
+        self.velocity = math.sqrt(linear_velocity.x**2 + linear_velocity.y**2 + linear_velocity.z**2)  # Calculate magnitude of velocity
 
 def main(args=None):
     rclpy.init(args=args)

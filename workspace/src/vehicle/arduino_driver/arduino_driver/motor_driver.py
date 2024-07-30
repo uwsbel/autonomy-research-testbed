@@ -180,7 +180,8 @@ class MotorDriverNode(Node):
         self.KILL_TIME = (
             0.3  # time after which motors will be killed if no new commands given
         )
-        
+       
+        self.go = False
         # subscriber
     
         qos_profile = QoSProfile(depth=1,reliability=QoSReliabilityPolicy.BEST_EFFORT)
@@ -213,9 +214,15 @@ class MotorDriverNode(Node):
         self.vehicle_cmd = msg  # save the message
         #self.get_logger().info("vehicle_cmd msg='%s'" % self.vehicle_cmd)
         self.stale_timer = 0  # reset watchdog timer
+        if(msg.throttle == 0):
+            self.go = False
+        else:
+            self.go = True
 
     def update_motors(self):
         #print("Sending commands to motor and steering servo")
+        if self.go == False:
+            return
 
         self.stale_timer += 1 / self.freq
         if self.stale_timer >= self.KILL_TIME:

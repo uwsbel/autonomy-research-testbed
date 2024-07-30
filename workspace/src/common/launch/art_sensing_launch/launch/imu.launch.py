@@ -47,7 +47,7 @@ def generate_launch_description():
         parameters=[veh_config_file_path  
                       , {
                      'imu_frame': PythonExpression(['"', robot_ns, "/imu", '"']),
-                     'imu_topic': PythonExpression(['"', '/', robot_ns, "/imu/data_raw", '"'])}],
+                     'imu_topic': PythonExpression(['"', '/', robot_ns, "/imu/data", '"'])}],
         #remappings=[
         #    ('/imu_trueEast', PythonExpression(['"', '/', robot_ns, "/imu/data", '"']))
         #]
@@ -55,17 +55,17 @@ def generate_launch_description():
     ld.add_action(node)
 
 
-    ned2enu = Node(
-        package="ekf_estimation",
-        executable="ned2enu",
-        name="ned2enu",
-        output="screen",
-        remappings=[
-            ('/imu/data_raw', PythonExpression(['"', '/', robot_ns, "/imu/data_raw", '"'])),
-            ('/imu/data', PythonExpression(['"', '/', robot_ns, "/imu/data", '"']))
-        ]
-    )
-    ld.add_action(ned2enu)
+    #ned2enu = Node(
+    #    package="ekf_estimation",
+    #    executable="ned2enu",
+    #    name="ned2enu",
+    #    output="screen",
+    #    remappings=[
+    #        ('/imu/data_raw', PythonExpression(['"', '/', robot_ns, "/imu/data_raw", '"'])),
+    #        ('/imu/data', PythonExpression(['"', '/', robot_ns, "/imu/data", '"']))
+    #    ]
+    #)
+    #ld.add_action(ned2enu)
 
     return ld
 
