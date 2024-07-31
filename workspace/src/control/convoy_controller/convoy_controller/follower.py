@@ -29,8 +29,9 @@ class SteeringController:
         self.prev_cte = 0
         self.cte_sum = 0
         self.lookahead = 2.0
+        self.steering = 0.0
 
-    def compute_steering(self, x, y, theta, ref_traj, dt):
+    def compute_steering(self, x, y, theta, ref_traj, v, dt):
         # Calculate error state
         dist = np.zeros((1, len(ref_traj)))
         for i in range(len(ref_traj)):
@@ -67,8 +68,18 @@ class SteeringController:
             self.cte_sum = -self.cte_integral_limit
 
         # Calculate steering
-        steering = (self.kp * cte) + (self.ki * self.cte_sum) + (self.kd * cte_rate)
-        return np.clip(steering, -1.0, 1.0)
+        L = 0.02
+        steering = ((self.kp * cte) + (self.ki * self.cte_sum) + (self.kd * cte_rate))*(L/((v+0.01)))
+
+
+        # ensure steering can't change too much between timesteps, smooth transition
+        delta_steering = steering - self.steering
+        if abs(delta_steering) > 0.1:
+            self.steering = self.steering + 0.1 * delta_steering / abs(delta_steering)
+        else:
+            self.steering = steering
+        
+        return np.clip(steering, -1.0, 1.0), [self.kp * cte*1/((v+0.01)), self.ki*self.cte_sum*1/((v+0.01)), self.kd * cte_rate*1/((v+0.01))]
 
 
 class ControlNode(Node):
@@ -129,6 +140,14 @@ class ControlNode(Node):
         # Add parameter change callback
         self.add_on_set_parameters_callback(self.parameter_callback)
 
+        self.get_logger().info('##### Lateral Controller initialized with the following parameters:')
+        self.get_logger().info(f' - Frequency: {self.freq} Hz')
+        self.get_logger().info(f' - Predefined Path: {self.predefined_path}')
+        self.get_logger().info(f' - Steering KP: {self.steering_controller.kp}')
+        self.get_logger().info(f' - Steering KI: {self.steering_controller.ki}')
+        self.get_logger().info(f' - Steering KD: {self.steering_controller.kd}')
+        self.get_logger().info(f' - Steering CTE Integral Limit: {self.steering_controller.cte_integral_limit}')
+
     def parameter_callback(self, params):
         for param in params:
             if param.name == 'steering_kp':
@@ -176,8 +195,9 @@ class ControlNode(Node):
         
         dt = 1 / self.freq
 
-        self.steering = self.steering_controller.compute_steering(self.x, self.y, self.theta, self.ref_traj, dt)
+        self.steering, error_state = self.steering_controller.compute_steering(self.x, self.y, self.theta, self.ref_traj, self.v, dt)
         
+        self.get_logger().info(f"ERROR STATE {error_state}")
         # if not self.predefined_path:
         #     distance_to_leader = self.distance((self.x, self.y), (self.leader_x, self.leader_y))
         #     if distance_to_leader <= 3.0:

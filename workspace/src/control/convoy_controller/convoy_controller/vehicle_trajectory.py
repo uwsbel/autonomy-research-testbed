@@ -19,10 +19,10 @@ class VehicleTrajectoryPublisher(Node):
             SetBool, 'start_publishing_path', self.start_publishing_callback)
 
     def odometry_callback(self, msg):
-        if self.start_publishing_path:
-            x = msg.pose.pose.position.x
-            y = msg.pose.pose.position.y
-            self.update_odom_path(x, y)
+        #if self.start_publishing_path:
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
+        self.update_odom_path(x, y)
 
     def update_odom_path(self, x, y):
         if len(self.odom_path) == 0 or self.distance(self.odom_path[-1], (x, y)) >= self.path_pub_distance_threshold:

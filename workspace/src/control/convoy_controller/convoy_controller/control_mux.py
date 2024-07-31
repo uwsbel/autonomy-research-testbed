@@ -9,7 +9,7 @@ class CombinedInputNode(Node):
         
         self.lateral_input = 0.0
         self.long_input = 0.0
-
+        self.braking = 0.0
         qos_profile = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -43,10 +43,12 @@ class CombinedInputNode(Node):
 
     def long_input_callback(self, msg):
         self.long_input = msg.throttle
+        self.braking = msg.braking
 
     def publish_combined_input(self):
         combined_msg = VehicleInput()
         combined_msg.steering = self.lateral_input
+        combined_msg.braking = self.braking
         combined_msg.throttle = self.long_input
         self.pub_combined_input.publish(combined_msg)
         #self.get_logger().info(f'Published combined input: Steering {self.lateral_input}, Throttle {self.long_input}.')

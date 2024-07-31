@@ -63,6 +63,7 @@ class ControlNode(Node):
         
         self.timer = self.create_timer(1/self.freq, self.pub_callback)
 
+
     # subscribe manual control inputs
     def HarryInputs_callback(self, msg):
         #self.go = True

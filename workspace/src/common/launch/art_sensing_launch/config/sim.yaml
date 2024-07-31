@@ -1,20 +1,24 @@
-/artcar_1/navsat_transform_node:
-  ros__parameters:
-    magnetic_declination_radians: 0.0
-    yaw_offset: 0.0
-    zero_altitude: True
-    use_odometry_yaw: True
-    wait_for_datum: False
-    publish_filtered_gps: True
-    broadcast_cartesian_transform: False
-
-/artcar_2/navsat_transform_node:
-  ros__parameters:
-    magnetic_declination_radians: 0.0
-    yaw_offset: 0.0
-    zero_altitude: True
-    use_odometry_yaw: True
-    wait_for_datum: False
-    publish_filtered_gps: True
-    broadcast_cartesian_transform: False
-
+/**:
+  navsat_transform_node:
+    ros__parameters:
+      magnetic_declination_radians: 0.0
+      yaw_offset: 0.0
+      zero_altitude: True
+      use_odometry_yaw: True
+      wait_for_datum: False 
+      publish_filtered_gps: True
+      broadcast_cartesian_transform: False
+  velocity_controller:
+    ros__parameters:
+      velocity_kp: 2.0
+      velocity_kd: 0.0
+      velocity_ki: 0.0
+      velocity_error_integral_limit: 1.0
+      target_velocity: 0.08
+  follower_control_node:
+    ros__parameters:
+      steering_kp: 4.3
+      steering_ki: 0.1 
+      steering_kd: -0.85
+      steering_cte_integral_limit: 5.0
+      predefined_path: True
