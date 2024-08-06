@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [ "follower = convoy_controller.follower:main",
                              "leader = convoy_controller.leader:main",
+                             "mpc = convoy_controller.mpc:main",
                              "velocity = convoy_controller.velocity:main",
                              "control_mux = convoy_controller.control_mux:main",
                              "vehicle_traj = convoy_controller.vehicle_trajectory:main"],

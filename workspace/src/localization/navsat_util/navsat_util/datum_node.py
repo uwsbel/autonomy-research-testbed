@@ -9,7 +9,6 @@ class SetDatumClient(Node):
     def __init__(self):
         super().__init__('set_datum_client')
         
-        # Declare and read the 'namespace' parameter
         self.declare_parameter('namespace', 'artcar_1')
         self.namespace = self.get_parameter('namespace').get_parameter_value().string_value
         
@@ -25,7 +24,6 @@ class SetDatumClient(Node):
         )
         
         self.create_subscription(Imu, f'/{self.namespace}/imu/data', self.imu_callback, qos_profile)
-        self.create_subscription(Imu, f'/artcar_1/imu/data', self.imu_callback, qos_profile)
         
         self.timer = self.create_timer(1.0, self.timer_callback)
 

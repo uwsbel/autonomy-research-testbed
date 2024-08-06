@@ -1,7 +1,9 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+# from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from art_msgs.msg import VehicleInput
+from nav_msgs.msg import Path
 
 class CombinedInputNode(Node):
     def __init__(self):
@@ -10,6 +12,8 @@ class CombinedInputNode(Node):
         self.lateral_input = 0.0
         self.long_input = 0.0
         self.braking = 0.0
+
+
         qos_profile = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -23,6 +27,14 @@ class CombinedInputNode(Node):
             qos_profile
         )
 
+        # Blocks the node thread until path publish
+        self.path = self.create_subscription(
+            Path,
+            '/path',
+            self.path_callback,
+            qos_profile
+        )
+
         self.sub_long_input = self.create_subscription(
             VehicleInput,
             '/long_input',
@@ -32,11 +44,14 @@ class CombinedInputNode(Node):
 
         self.pub_combined_input = self.create_publisher(
             VehicleInput,
-            '/input/driver_inputs',
+            '/control/vehicle_inputs',
             10
         )
 
         self.timer = self.create_timer(0.1, self.publish_combined_input)
+
+    def path_callback(self,msg):
+        return
 
     def lateral_input_callback(self, msg):
         self.lateral_input = msg.steering

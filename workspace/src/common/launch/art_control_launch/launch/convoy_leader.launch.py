@@ -14,20 +14,34 @@ def generate_launch_description():
     veh_config_file_path = PathJoinSubstitution([package_share_directory, 'config', veh_config])
 
     common_nodes = [
-        Node(
-            package='convoy_controller',
-            executable='velocity',
-            name='velocity_controller',
-            namespace=robot_ns,
-            remappings=[
-                ('/leader/odometry/filtered', PythonExpression(['"', '/', leader_ns, "/odometry/filtered", '"'])),
-                ('/follower/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
-                ('/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
-                ('/driver_inputs', PythonExpression(['"', '/', robot_ns, "/input/long_input", '"']))
-            ],
-            parameters=[veh_config_file_path, { 'leader_ns': PythonExpression(['"', leader_ns, '"']) }],
-            output='screen'
-        ),
+        # Node(
+        #     package='convoy_controller',
+        #     executable='velocity',
+        #     name='velocity_controller',
+        #     namespace=robot_ns,
+        #     remappings=[
+        #         ('/leader/odometry/filtered', PythonExpression(['"', '/', leader_ns, "/odometry/filtered", '"'])),
+        #         ('/follower/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
+        #         ('/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
+        #         ('/driver_inputs', PythonExpression(['"', '/', robot_ns, "/input/long_input", '"']))
+        #     ],
+        #     parameters=[veh_config_file_path, { 'leader_ns': PythonExpression(['"', leader_ns, '"']) }],
+        #     output='screen'
+        # ),
+        # Node(
+        #     package='convoy_controller',
+        #     executable='control_mux',
+        #     name='combined_input_node',
+        #     namespace=robot_ns,
+        #     remappings=[
+        #         ('/lateral_input', PythonExpression(['"', '/', robot_ns, "/input/lateral_input", '"'])),
+        #         ('/long_input', PythonExpression(['"', '/', robot_ns, "/input/long_input", '"'])),
+        #         ('/control/vehicle_inputs', PythonExpression(['"', '/', robot_ns, "/control/vehicle_inputs", '"']))
+        #     ],
+        #     parameters=[veh_config_file_path],
+        #     output='screen'
+        # ),
+
         Node(
             package='convoy_controller',
             executable='vehicle_traj',
@@ -40,32 +54,22 @@ def generate_launch_description():
             parameters=[veh_config_file_path],
             output='screen'
         ),
+        
         Node(
             package='convoy_controller',
-            executable='control_mux',
-            name='combined_input_node',
+            executable='mpc',
+            name='mpc_node',
             namespace=robot_ns,
             remappings=[
-                ('/lateral_input', PythonExpression(['"', '/', robot_ns, "/input/lateral_input", '"'])),
-                ('/long_input', PythonExpression(['"', '/', robot_ns, "/input/long_input", '"'])),
-                ('/input/driver_inputs', PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"']))
+                # ('/leader_vehicle/odometry/filtered', PythonExpression(['"', '/', leader_ns, "/odometry/filtered", '"'])),
+                ('/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
+                ('/input/driver_inputs', PythonExpression(['"', '/', robot_ns, "/control/vehicle_inputs", '"'])),
+                ('/local_mpc', PythonExpression(['"', '/', robot_ns, "/local_mpc", '"'])),
+                #('/path', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"'])),
+                # ('/leader_vehicle/vehicle_traj', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"'])),
+                # ('/follower_vehicle/vehicle_traj', PythonExpression(['"', '/', robot_ns, "/vehicle_traj", '"']))
             ],
-            parameters=[veh_config_file_path],
-            output='screen'
-        ),
-        Node(
-            package='convoy_controller',
-            executable='follower',
-            name='follower_control_node',
-            namespace=robot_ns,
-            remappings=[
-                ('/leader_vehicle/odometry/filtered', PythonExpression(['"', '/', leader_ns, "/odometry/filtered", '"'])),
-                ('/follower_vehicle/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
-                ('/follower_vehicle/driver_inputs', PythonExpression(['"', '/', robot_ns, "/input/lateral_input", '"'])),
-                ('/leader_vehicle/vehicle_traj', PythonExpression(['"', '/', leader_ns, "/vehicle_traj", '"'])),
-                ('/follower_vehicle/vehicle_traj', PythonExpression(['"', '/', robot_ns, "/vehicle_traj", '"']))
-            ],
-            parameters=[veh_config_file_path],
+            parameters=[veh_config_file_path,{ 'leader_ns': PythonExpression(['"', leader_ns, '"']) }],
             output='screen'
         )
 

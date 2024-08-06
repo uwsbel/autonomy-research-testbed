@@ -1,9 +1,10 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+# from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
 import numpy as np
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from art_msgs.msg import VehicleInput
 
 class VelocityController(Node):
     def __init__(self):

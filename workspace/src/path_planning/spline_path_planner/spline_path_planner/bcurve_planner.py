@@ -30,7 +30,7 @@ class PathGeneratorNode(Node):
     def odom_callback(self, msg):
         self.initial_pose = msg.pose.pose
         self.initial_pose_received = True
-        self.get_logger().info('Initial pose received')
+        # self.get_logger().info('Initial pose received')
 
     def goal_pose_callback(self, msg):
         if not self.initial_pose_received:
@@ -76,12 +76,14 @@ class PathGeneratorNode(Node):
         p2 = np.array([goal_x, goal_y]) - np.array([cos(goal_angle), sin(goal_angle)]) * goal_magnitude
         p3 = np.array([goal_x, goal_y])
 
-        t_values = np.linspace(0, 1, num=50)
+        t_values = np.linspace(0, 1, num=20)
         trajectory = []
 
         for t in t_values:
             point = (1 - t)**3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
-            theta = atan2(point[1] - p0[1], point[0] - p0[0])
+            # Calculate the derivative of the Bezier curve at t
+            tangent = 3 * (1 - t)**2 * (p1 - p0) + 6 * (1 - t) * t * (p2 - p1) + 3 * t**2 * (p3 - p2)
+            theta = atan2(tangent[1], tangent[0])
             pose = Pose()
             pose.position.x = point[0]
             pose.position.y = point[1]
@@ -101,6 +103,8 @@ class PathGeneratorNode(Node):
         quat = Pose().orientation
         quat.w = cos(yaw / 2.0)
         quat.z = sin(yaw / 2.0)
+        quat.x = 0.0
+        quat.y = 0.0
         return quat
 
 def main(args=None):

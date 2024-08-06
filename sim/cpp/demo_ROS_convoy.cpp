@@ -55,7 +55,10 @@ using namespace chrono::ros;
 ChVisualSystem::Type vis_type = ChVisualSystem::Type::IRRLICHT;
 
 // Simulation step sizes
-double step_size = 1e-3;
+double step_size = 2e-3;
+double vis_update_rate = 15.0; // 25Hz
+double vis_update_time = 1.0 / vis_update_rate;
+
 using namespace chrono::sensor;
 
 // =============================================================================
@@ -76,19 +79,20 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     RigidTerrain terrain(&sys);
     auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    patch_mat->SetFriction(0.7f);
+    patch_mat->SetFriction(0.8f);
     patch_mat->SetRestitution(0.01f);
-    auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 200, 100);
+    auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 50, 50);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));
     patch->SetTexture(vehicle::GetDataFile("terrain/textures/cubetexture_pinkwhite.png"), 200, 200);
     terrain.Initialize();
 
     // Number of vehicles
-    int num_vehicles = 4;
+    int num_vehicles = 5;
     std::vector<std::shared_ptr<ARTcar>> artcars(num_vehicles);
     std::vector<std::shared_ptr<ChDriver>> drivers(num_vehicles);
     std::vector<std::shared_ptr<ChROSManager>> ros_managers(num_vehicles);
-
+    TireModelType tire_model = TireModelType::TMEASY;
+    
     // Initialize vehicles
     for (int i = 0; i < num_vehicles; ++i) {
         artcars[i] = chrono_types::make_shared<ARTcar>(&sys);
@@ -98,9 +102,10 @@ int main(int argc, char* argv[]) {
         artcars[i]->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);
         artcars[i]->SetSteeringVisualizationType(VisualizationType::PRIMITIVES);
         artcars[i]->SetWheelVisualizationType(VisualizationType::NONE);
-        artcars[i]->SetTireVisualizationType(VisualizationType::PRIMITIVES);
-        artcars[i]->SetTireRollingResistance(0.05f);
-        artcars[i]->SetStallTorque(0.09f);
+        artcars[i]->SetTireVisualizationType(VisualizationType::PRIMITIVES); 
+        artcars[i]->SetTireRollingResistance(0.8f);  
+        artcars[i]->SetTireType(tire_model);
+         // artcars[i]->SetStallTorque(0.09f);
         // artcars[i]->SetMaxMotorVoltageRatio(0.3f);
 
         drivers[i] = std::make_shared<ChDriver>(artcars[i]->GetVehicle());
@@ -114,6 +119,10 @@ int main(int argc, char* argv[]) {
         
         ros_managers[i]->Initialize();
     }
+
+    // Add the clock handler to the first ROS manager
+    auto clock_handler = chrono_types::make_shared<ChROSClockHandler>(150, "/clock");
+    ros_managers[0]->RegisterHandler(clock_handler);
 
     auto noise_none = chrono_types::make_shared<ChNoiseNone>();
     chrono::ChFrame<double> offset_pose({0, 0, 2}, QuatFromAngleAxis(0, {0, 0, 1}));
@@ -220,12 +229,12 @@ int main(int argc, char* argv[]) {
         artcar->GetVehicle().EnableRealtime(true);
     }
 
-    while (vis->Run()) {
-        double time = sys.GetChTime();
+    auto last_vis_update_time = std::chrono::steady_clock::now();
 
-        // Render scene
-        vis->BeginScene();
-        vis->Render();
+    while (vis->Run()) {
+        auto start_time = std::chrono::steady_clock::now();
+
+        double time = sys.GetChTime();
 
         // Driver inputs
         for (int i = 0; i < num_vehicles; ++i) {
@@ -235,7 +244,6 @@ int main(int argc, char* argv[]) {
         }
 
         terrain.Synchronize(time);
-        vis->Synchronize(time, drivers[0]->GetInputs());
 
         // Advance simulation for one timestep for all modules.
         for (int i = 0; i < num_vehicles; ++i) {
@@ -244,7 +252,6 @@ int main(int argc, char* argv[]) {
         }
 
         terrain.Advance(step_size);
-        vis->Advance(step_size);
 
         // Advance state of entire system
         sys.DoStepDynamics(step_size);
@@ -258,7 +265,25 @@ int main(int argc, char* argv[]) {
         if (!ros_update_success)
             break;
 
-        vis->EndScene();
+        // Update visualization at 25Hz
+        auto current_time = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = current_time - last_vis_update_time;
+        if (elapsed.count() >= vis_update_time) {
+            vis->BeginScene();
+            vis->Render();
+            // vis->Synchronize(time, drivers[0]->GetInputs());
+            vis->Advance(step_size);
+            vis->EndScene();
+            last_vis_update_time = current_time;
+        }
+
+        // Control loop timing for the simulation step
+        auto end_time = std::chrono::steady_clock::now();
+        std::chrono::duration<double> simulation_time = end_time - start_time;
+
+        if (simulation_time.count() < step_size) {
+            std::this_thread::sleep_for(std::chrono::duration<double>(step_size - simulation_time.count()));
+        }
     }
 
     return 0;

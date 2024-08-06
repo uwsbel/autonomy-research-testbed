@@ -36,16 +36,23 @@ def generate_launch_description():
     AddLaunchArgument(
         ld, "output/gps/fix", PythonExpression(['"', '/', robot_ns, "/gps/fix", '"']))  
 
-    
+    AddLaunchArgument(
+        ld, "output/vehicle/driver_inputs", PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"']))  
+
+
+    AddLaunchArgument(
+        ld, "input/control/vehicle_inputs", PythonExpression(['"', '/', robot_ns, "/control/vehicle_inputs", '"']))  
+
+
 
     # AddLaunchArgument(
     #     ld, "output/magnetometer/data", PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data/filtered", '"']))  
 
 
     node = Node(
-        package="imu_filter",
-        executable="imu_filter",
-        name="imu_filter",
+        package="chrono_sensor_filters",
+        executable="chrono_sensor_filters",
+        name="chrono_sensor_filters",
         namespace=robot_ns,
         remappings=[
             (
@@ -71,6 +78,14 @@ def generate_launch_description():
             (
                 "/output/gps/fix",
                 GetLaunchArgument("output/gps/fix"),
+            ),             
+            (
+                "/input/control/vehicle_inputs",
+                GetLaunchArgument("input/control/vehicle_inputs"),
+            ),              
+            (
+                "/output/vehicle/driver_inputs",
+                GetLaunchArgument("output/vehicle/driver_inputs"),
             ), 
         ],
         parameters=[{'tf_prefix': robot_ns }],

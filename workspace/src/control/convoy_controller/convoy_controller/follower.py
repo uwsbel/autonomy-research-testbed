@@ -2,7 +2,9 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import TwistStamped, PoseStamped, Twist
-from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+# from chrono_ros_interfaces.msg import DriverInputs as VehicleInput
+from art_msgs.msg import VehicleInput
+
 from chrono_ros_interfaces.msg import Body
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import Float64MultiArray, MultiArrayDimension
@@ -140,7 +142,7 @@ class ControlNode(Node):
         # Add parameter change callback
         self.add_on_set_parameters_callback(self.parameter_callback)
 
-        self.get_logger().info('##### Lateral Controller initialized with the following parameters:')
+        self.get_logger().info('##### 1 Controller initialized with the following parameters:')
         self.get_logger().info(f' - Frequency: {self.freq} Hz')
         self.get_logger().info(f' - Predefined Path: {self.predefined_path}')
         self.get_logger().info(f' - Steering KP: {self.steering_controller.kp}')

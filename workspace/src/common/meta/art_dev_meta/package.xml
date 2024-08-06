@@ -9,7 +9,7 @@
 
   <exec_depend>art_common_meta</exec_depend>
 
-  <exec_depend>imu_filter</exec_depend>
+  <exec_depend>chrono_sensor_filters</exec_depend>
   <exec_depend>art_simulation_launch</exec_depend>
 
   

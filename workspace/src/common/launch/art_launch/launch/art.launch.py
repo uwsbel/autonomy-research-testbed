@@ -65,15 +65,15 @@ def generate_launch_description():
     ld.add_action(declare_veh_config_arg)
 
     AddLaunchArgument(ld, "use_sim", "False")
-    AddLaunchArgument(ld, "use_sim_time", "False")
+    AddLaunchArgument(ld, "use_sim_time", "True")
     AddLaunchArgument(ld, "use_filter", "False")
 
     ld.add_action(DeclareLaunchArgument('robot_ns', default_value='artcar_1'))
     robot_ns = LaunchConfiguration('robot_ns')
 
-    SetLaunchArgument(
-        ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
-    )
+    # SetLaunchArgument(
+    #     ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
+    # )
 
     AddLaunchArgument(ld, "container", "")
     container_name = AddLaunchArgument(ld, "container_name", "art_container")
