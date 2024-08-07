@@ -144,22 +144,12 @@ class NonLinearMPCNode(Node):
             # Ensure follower's velocity does not exceed leader's velocity if within 2 meters
             if self.leader_pose is not None:
                 distance_to_leader = np.linalg.norm(state[:2] - self.leader_pose[:2])
-                # if distance_to_leader > 6.0:
-                    # cost += 1000 * (distance_to_leader - 6.0)**2
                 if distance_to_leader < 2.0:
                     cost += 10000 * (state[3] - self.leader_speed)**2  # Heavy penalty for exceeding leader's speed
-                # if distance_to_leader < 1.0:
-                # cost += 2500 * distance_to_leader**2  # Heavy penalty for being within 2 meters
 
             # Penalize rapid changes in control inputs for smoothness
             if i > 0:
                 cost += 500 * np.sum((control - control_sequence[i-1])**2)
-            
-            # Penalize if follower is too close to the leader
-            # if self.leader_pose is not None:
-            #     distance_to_leader = np.linalg.norm(state[:2] - self.leader_pose[:2])
-            #     if distance_to_leader < 1.0:  # 3 meter safety distance
-            #         cost += 10000 * (1.0 - distance_to_leader)**2
 
         return cost    
         
@@ -248,3 +238,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
