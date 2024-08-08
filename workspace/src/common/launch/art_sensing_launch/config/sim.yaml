@@ -28,12 +28,14 @@
       max_speed: 1.0
       min_speed: 0.2
       horizon: 5
-      dt: 0.4
+      dt: 0.6
       max_acceleration: 5.0
       wheelbase: 0.3
       max_steering_angle: 0.52
       control_smoothing: 0.25
       collision_distance: 3.0
+      timer_frequency: 0.05
+
 /**:
     ros__parameters:
       use_sim_time: true

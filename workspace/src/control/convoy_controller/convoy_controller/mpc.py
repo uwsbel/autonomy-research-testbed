@@ -7,6 +7,8 @@ from art_msgs.msg import VehicleInput  # Replace with the actual import path for
 from geometry_msgs.msg import PoseStamped, Quaternion
 from std_msgs.msg import Header
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+import time
+from scipy.spatial import KDTree
 
 class NonLinearMPCNode(Node):
     def __init__(self):
@@ -16,6 +18,7 @@ class NonLinearMPCNode(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=10
         )
+        self.kd_tree = None  # Initialize the kd-tree to None
 
         self.declare_parameter('leader_ns', "none")
         self.declare_parameter('max_speed', 1.0)
@@ -27,6 +30,7 @@ class NonLinearMPCNode(Node):
         self.declare_parameter('max_steering_angle', 0.52)
         self.declare_parameter('control_smoothing', 0.25)
         self.declare_parameter('collision_distance', 3.0)
+        self.declare_parameter('timer_frequency', 0.05)
 
         self.leader_ns = self.get_parameter('leader_ns').get_parameter_value().string_value
         path_topic = f'/{self.leader_ns}/vehicle_traj' if self.leader_ns != 'none' else '/path'
@@ -36,6 +40,7 @@ class NonLinearMPCNode(Node):
         self.path_sub = self.create_subscription(Path, "/path", self.go_callback, 10)
         self.traj_sub = self.create_subscription(Path, path_topic, self.path_callback, 10)
         self.leader_odom_sub = self.create_subscription(Odometry, leader_odom_topic, self.leader_odom_callback, qos_profile) if self.leader_ns != 'none' else None
+        self.last_closest_index = 0  # Initialize in the constructor
 
         self.cmd_pub = self.create_publisher(VehicleInput, '/input/driver_inputs', 10)  # Update topic if necessary
         self.trajectory_pub = self.create_publisher(Path, '/local_mpc', 30)  # Publisher for the local MPC path
@@ -56,7 +61,9 @@ class NonLinearMPCNode(Node):
         self.previous_control_sequence = np.zeros((self.horizon, 2))  # Initialize previous control sequence
         
         self.path_received = False
-        self.timer = self.create_timer(0.1, self.timer_callback)
+
+        self.timer_frequency = self.get_parameter('timer_frequency').get_parameter_value().double_value
+        self.timer = self.create_timer(self.timer_frequency, self.timer_callback)
 
         self.go = False
         
@@ -77,20 +84,31 @@ class NonLinearMPCNode(Node):
         self.leader_speed = np.sqrt(msg.twist.twist.linear.x**2 + msg.twist.twist.linear.y**2)
         self.get_logger().info(f"Leader speed: {self.leader_speed}")
             
+
     def path_callback(self, msg):
         self.reference_path = [np.array([pose.pose.position.x, pose.pose.position.y, self.get_yaw_from_quaternion(pose.pose.orientation)]) for pose in msg.poses]
+        self.kd_tree = KDTree([point[:2] for point in self.reference_path])  # Create the kd-tree using the 2D positions of the reference path
         self.path_received = True
-    
+
     def timer_callback(self):
         if not self.go:
             self.get_logger().info("Waiting for /path to be published...")
             return
 
         if self.current_pose is not None and self.reference_path:
-            closest_index = self.find_closest_point(self.current_pose, self.reference_path)
+            closest_index = self.find_closest_point(self.current_pose, self.kd_tree)
             local_reference_path = self.reference_path[closest_index:]
             current_state = np.append(self.current_pose, self.current_speed)  # Add speed to the current state
+            
+            start_time = time.time()  # Start timer
             optimal_trajectory, control = self.solve_mpc(current_state, local_reference_path)
+            end_time = time.time()  # End timer
+            
+            # Check if optimization took longer than the timer frequency
+            duration = end_time - start_time
+            if duration > self.timer_frequency:
+                self.get_logger().warn(f"Optimization took longer ({duration:.3f} seconds) than the timer frequency ({self.timer_frequency} seconds)")
+
             self.publish_control(control)
             self.publish_trajectory(optimal_trajectory)
     
@@ -116,21 +134,23 @@ class NonLinearMPCNode(Node):
         return np.array([x_next, y_next, theta_next, v_next])
 
     def cost_function(self, control_sequence, *args):
-        state, reference_path = args
+        state, reference_path, tree = args
         cost = 0.0
         
         control_sequence = control_sequence.reshape(-1, 2)
         
+
+
         for i, control in enumerate(control_sequence):
             state = self.vehicle_dynamics(state, control)
-            closest_ref_index = self.find_closest_point(state, reference_path)
+            closest_ref_index = self.find_closest_point(state, tree)
             
             if closest_ref_index < len(reference_path):
                 # Compare only position and orientation
                 ref_state = reference_path[closest_ref_index]
                 cross_track_error = np.linalg.norm(np.cross(ref_state[:2] - state[:2], ref_state[:2] - reference_path[min(closest_ref_index+1, len(reference_path)-1)][:2]) / np.linalg.norm(ref_state[:2] - reference_path[min(closest_ref_index+1, len(reference_path)-1)][:2]))
                 heading_error = np.arctan2(np.sin(ref_state[2] - state[2]), np.cos(ref_state[2] - state[2]))  # Calculate heading error
-                cost += 100 * cross_track_error**2  # Adjust the weight as necessary
+                cost += 200 * cross_track_error**2  # Adjust the weight as necessary
                 cost += 30 * heading_error**2  # Adjust the weight as necessary
             else:
                 cost += np.sum((state[:3] - reference_path[-1][:3])**2)
@@ -157,8 +177,11 @@ class NonLinearMPCNode(Node):
         control_sequence_init = self.previous_control_sequence.flatten()  # Use the previous control sequence as the initial guess
         
         bounds = [(0.0, 1.0), (-0.5, 0.5)] * self.horizon
+
+        tree = KDTree([point[:2] for point in reference_path])  # Create the kd-tree using the 2D positions of the reference path
+
         
-        result = minimize(self.cost_function, control_sequence_init, args=(current_state, reference_path),
+        result = minimize(self.cost_function, control_sequence_init, args=(current_state, reference_path, tree),
                           bounds=bounds, method='SLSQP')
         
         optimal_control_sequence = result.x.reshape(-1, 2)
@@ -198,7 +221,7 @@ class NonLinearMPCNode(Node):
         if self.leader_pose is not None:
             distance_to_leader = np.linalg.norm(self.current_pose[:2] - self.leader_pose[:2])
             if distance_to_leader < collision_distance:
-                msg_follower.braking = 1/distance_to_leader
+                msg_follower.braking = 1 / distance_to_leader
             else:
                 msg_follower.braking = 0.0
         
@@ -226,9 +249,17 @@ class NonLinearMPCNode(Node):
         q.w = np.cos(yaw / 2)
         return q
     
-    def find_closest_point(self, current_pose, path):
-        dists = [np.linalg.norm(current_pose[:2] - point[:2]) for point in path]
-        return np.argmin(dists)
+    # def find_closest_point(self, current_pose, path):
+    #     dists = [np.linalg.norm(current_pose[:2] - point[:2]) for point in path]
+    #     return np.argmin(dists)
+
+    def find_closest_point(self, current_pose, tree):
+        if tree is not None:
+            _, index = tree.query(current_pose[:2])
+            return index
+        else:
+            return 0
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -238,4 +269,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

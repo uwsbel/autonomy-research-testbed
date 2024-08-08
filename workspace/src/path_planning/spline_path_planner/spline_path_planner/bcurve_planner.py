@@ -76,7 +76,7 @@ class PathGeneratorNode(Node):
         p2 = np.array([goal_x, goal_y]) - np.array([cos(goal_angle), sin(goal_angle)]) * goal_magnitude
         p3 = np.array([goal_x, goal_y])
 
-        t_values = np.linspace(0, 1, num=20)
+        t_values = np.linspace(0, 1, num=100)
         trajectory = []
 
         for t in t_values:
