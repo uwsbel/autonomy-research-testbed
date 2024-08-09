@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
     terrain.Initialize();
 
     // Number of vehicles
-    int num_vehicles = 5;
+    int num_vehicles = 3;
     std::vector<std::shared_ptr<ARTcar>> artcars(num_vehicles);
     std::vector<std::shared_ptr<ChDriver>> drivers(num_vehicles);
     std::vector<std::shared_ptr<ChROSManager>> ros_managers(num_vehicles);

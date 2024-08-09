@@ -25,16 +25,16 @@
 
   mpc_node:
     ros__parameters:
-      max_speed: 1.0
-      min_speed: 0.2
-      horizon: 5
-      dt: 0.6
+      max_speed: 2.0
+      min_speed: 1.0
+      horizon: 10
+      dt: 0.25
       max_acceleration: 5.0
       wheelbase: 0.3
       max_steering_angle: 0.52
       control_smoothing: 0.25
       collision_distance: 3.0
-      timer_frequency: 0.05
+      timer_frequency: 0.035
 
 /**:
     ros__parameters:
