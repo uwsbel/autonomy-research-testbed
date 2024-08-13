@@ -8,20 +8,6 @@
       wait_for_datum: False 
       publish_filtered_gps: True
       broadcast_cartesian_transform: False
-  velocity_controller:
-    ros__parameters:
-      velocity_kp: 2.0
-      velocity_kd: 0.0
-      velocity_ki: 0.0
-      velocity_error_integral_limit: 1.0
-      target_velocity: 0.08
-  follower_control_node:
-    ros__parameters:
-      steering_kp: 4.3
-      steering_ki: 0.1 
-      steering_kd: -0.85
-      steering_cte_integral_limit: 5.0
-      predefined_path: True
 
   mpc_node:
     ros__parameters:
@@ -35,7 +21,14 @@
       control_smoothing: 0.25
       collision_distance: 3.0
       timer_frequency: 0.035
-
+      
+  velocity_pid_node:
+    ros__parameters:
+      kp: 0.00000005            # Proportional gain for the PID controller
+      ki: 0.0            # Integral gain for the PID controller
+      kd: 0.0            # Derivative gain for the PID controller
+      timer_frequency: 10.0  # Frequency for the PID update loop (Hz)
+      
 /**:
     ros__parameters:
       use_sim_time: true

@@ -4,7 +4,7 @@ configure_fastdds() {
     local mode=$1
     local profile_file="dds_profile_${mode}.xml"
     echo "Configuring FastDDS for ROS2 CLI introspection (${mode^} Mode)"
-    export FASTRTPS_DEFAULT_PROFILES_FILE=/home/art/art/fastdds/$profile_file
+    export FASTRTPS_DEFAULT_PROFILES_FILE=/home/art/art/tools/$profile_file
     ros2 daemon stop
     ros2 daemon start
     echo "Complete."

@@ -166,24 +166,27 @@ class NonLinearMPCNode(Node):
             # Compute cross-track and heading errors
             cross_track_error = self.compute_cross_track_error(state, ref_state, next_ref_state)
             heading_error = ca.arctan2(ca.sin(ref_state[2] - state[2]), ca.cos(ref_state[2] - state[2]))
-
+            #heading_error = ref_state[2] - state[2]
+            
             # Cost function penalizes cross-track and heading errors
-            J += 1000 * ca.power(cross_track_error, 2)
-            J += 200 * ca.power(heading_error, 2)
+            J += 1500 * ca.power(cross_track_error, 2)
+            J += 1500 * ca.power(heading_error, 2)
 
             J += ca.if_else(state[3] < self.min_speed, 250 * ca.power(self.min_speed - state[3], 2), 0.0)
             J += ca.if_else(state[3] > self.max_speed, 250 * ca.power(state[3] - self.max_speed, 2), 0.0)
 
             # Penalize control input changes
             if i > 0:
-                p = ca.power(control - u[i-1, :].T, 2)
-                J += 50 * (p[0] + p[1])
-             
+                control_change = u[i, :] - u[i-1, :]
+                J += 500 * ca.power(control_change[0], 2)  # Penalize throttle changes
+                J += 500 * ca.power(control_change[1], 2)  # Penalize steering changes       
+                      
         opti.minimize(J)
         opti.subject_to(opti.bounded(0.0, u[:, 0], 1.0))  # Throttle constraints
         opti.subject_to(opti.bounded(-0.5, u[:, 1], 0.5))  # Steering constraints
 
-        opts = {'ipopt.print_level': 0, 'print_time': 0}
+        # opts = {'ipopt.print_level': 0, 'print_time': 0, 'ipopt.max_cpu_time': 0.05, 'ipopt.acceptable_tol': 1.5e-3}        
+        opts = {'ipopt.print_level': 0, 'print_time': 0 }        
         opti.solver('ipopt', opts)
 
         # Set the initial guess for the control sequence to the last optimal sequence
@@ -248,8 +251,11 @@ class NonLinearMPCNode(Node):
 
         # Cross product in 2D to find the area of the parallelogram
         cross_product = v1[0] * v2[1] - (v1[1] * v2[0])
-        eps = 1e-10
-        error = cross_product / (np.linalg.norm(v1)+eps)
+        eps = 1e-1
+        if np.linalg.norm(v1) < eps:  # Handle case where v1 is almost zero
+            return 0.0
+
+        error = cross_product / np.linalg.norm(v1)
 
         return error
 
@@ -275,26 +281,28 @@ class NonLinearMPCNode(Node):
 
     def vehicle_dynamics(self, state, control):
         x, y, theta, v = state[0], state[1], state[2], state[3]
-        throttle, delta = control[0], control[1]
+        acceleration, delta = control[0], control[1]
         L = self.get_parameter('wheelbase').get_parameter_value().double_value  # Wheelbase
-        max_acceleration = self.get_parameter('max_acceleration').get_parameter_value().double_value  # Maximum acceleration in m/s^2
         
         # Update speed with throttle input
-        a = throttle * max_acceleration
+        a = acceleration
 
-        v_next = v + a * self.dt - (0.1)
+        v_next = (v + a * self.dt) - (0.1)
         
         x_next = x + v * ca.cos(theta) * self.dt
         y_next = y + v * ca.sin(theta) * self.dt
-        theta_next = theta + ((v / L) * ca.tan(delta) * self.dt)
+        # theta_next = theta + ((v / L) * ca.tan(delta) * self.dt)
         
+        theta_next = theta + ((v / L) * delta * self.dt) # SAA for faster convergence... hopefully
+
         return ca.vertcat(x_next, y_next, theta_next, v_next)
 
     def publish_control(self, control):
         steering_angle = control[1]
         max_steering_angle = self.get_parameter('max_steering_angle').get_parameter_value().double_value  # Corresponds to a steering input of 1
         steering_input = steering_angle / max_steering_angle
-        
+        max_acceleration = self.get_parameter('max_acceleration').get_parameter_value().double_value  # Maximum acceleration in m/s^2
+
         # Smooth steering input
         control_smoothing = self.get_parameter('control_smoothing').get_parameter_value().double_value
         if abs(steering_input - self.previous_steering) > control_smoothing:
@@ -304,7 +312,7 @@ class NonLinearMPCNode(Node):
         
         msg_follower = VehicleInput()
         msg_follower.steering = steering_input  # Scale the steering angle to steering input
-        msg_follower.throttle = control[0]  # Assuming control[0] is throttle
+        msg_follower.throttle = control[0] / max_acceleration  # Assuming control[0] is throttle
         
         # Add braking if the distance to leader is less than the specified distance
         collision_distance = self.get_parameter('collision_distance').get_parameter_value().double_value
