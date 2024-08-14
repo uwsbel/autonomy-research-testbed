@@ -1,7 +1,7 @@
 # Install ACADOS
 
 # Set environment variables for ACADOS
-ENV ACADOS_INSTALL_DIR /opt/acados
+ENV ACADOS_INSTALL_DIR /home/art/acados
 ENV BLASFEO_TARGET GENERIC
 
 RUN apt-get update && apt-get install -y \
@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     && rm -rf /var/lib/apt/lists/*
-    
+
 # Clone the ACADOS repository
 RUN git clone https://github.com/acados/acados.git $ACADOS_INSTALL_DIR
 
@@ -34,7 +34,7 @@ WORKDIR $ACADOS_INSTALL_DIR
 RUN git submodule update --init --recursive \
     && mkdir -p build \
     && cd build \
-    && cmake .. \
+    && cmake .. -DACADOS_WITH_QPOASES=ON \
     && make -j$(nproc) \
     && make install
 
@@ -44,3 +44,11 @@ RUN pip3 install --no-cache-dir -e .
 
 # Set environment variables for using ACADOS Python interface
 ENV PYTHONPATH $ACADOS_INSTALL_DIR/interfaces/acados_template:$PYTHONPATH
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib
+ENV ACADOS_SOURCE_DIR=$ACADOS_INSTALL_DIR
+
+# Download and install Tera executable
+WORKDIR /home/art/acados/bin/
+RUN wget https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux -O t_renderer \
+     && chmod +x /home/art/acados/bin/t_renderer
+
