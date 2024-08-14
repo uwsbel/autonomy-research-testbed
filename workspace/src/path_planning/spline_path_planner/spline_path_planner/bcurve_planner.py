@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped, Pose, PoseArray
 from nav_msgs.msg import Path, Odometry
 import numpy as np
-from math import atan2, cos, sin
+from math import atan2, cos, sin, sqrt
 
 class PathGeneratorNode(Node):
     def __init__(self):
@@ -27,10 +27,12 @@ class PathGeneratorNode(Node):
 
         self.path_publisher = self.create_publisher(Path, '/path', 10)
 
+        # Set the spacing between points
+        self.spacing = 0.2  # Adjust this value to change the spacing between points in meters
+
     def odom_callback(self, msg):
         self.initial_pose = msg.pose.pose
         self.initial_pose_received = True
-        # self.get_logger().info('Initial pose received')
 
     def goal_pose_callback(self, msg):
         if not self.initial_pose_received:
@@ -76,12 +78,26 @@ class PathGeneratorNode(Node):
         p2 = np.array([goal_x, goal_y]) - np.array([cos(goal_angle), sin(goal_angle)]) * goal_magnitude
         p3 = np.array([goal_x, goal_y])
 
-        t_values = np.linspace(0, 1, num=25)
         trajectory = []
+        t = 0.0
+        prev_point = p0
 
-        for t in t_values:
-            point = (1 - t)**3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
-            # Calculate the derivative of the Bezier curve at t
+        while t < 1.0:
+            # Increase t incrementally until the desired spacing is achieved
+            t_next = t
+            while t_next < 1.0:
+                t_next += 0.001  # Small step to increment t
+                point = (1 - t_next)**3 * p0 + 3 * (1 - t_next)**2 * t_next * p1 + 3 * (1 - t_next) * t_next**2 * p2 + t_next**3 * p3
+                distance = sqrt((point[0] - prev_point[0])**2 + (point[1] - prev_point[1])**2)
+                if distance >= self.spacing:
+                    break
+
+            if t_next >= 1.0:
+                break
+
+            t = t_next
+            prev_point = point
+
             tangent = 3 * (1 - t)**2 * (p1 - p0) + 6 * (1 - t) * t * (p2 - p1) + 3 * t**2 * (p3 - p2)
             theta = atan2(tangent[1], tangent[0])
             pose = Pose()
@@ -89,6 +105,13 @@ class PathGeneratorNode(Node):
             pose.position.y = point[1]
             pose.orientation = self.get_quaternion_from_yaw(theta)
             trajectory.append(pose)
+
+        # Ensure the last point is exactly the goal pose
+        pose = Pose()
+        pose.position.x = p3[0]
+        pose.position.y = p3[1]
+        pose.orientation = goal_pose.orientation
+        trajectory.append(pose)
 
         return trajectory
 

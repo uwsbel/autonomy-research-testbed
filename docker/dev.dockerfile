@@ -8,6 +8,7 @@ INCLUDE ./docker/common/base.dockerfile
 # Snippets
 INCLUDE ./docker/snippets/ros.dockerfile
 INCLUDE ./docker/snippets/rosdep.dockerfile
+INCLUDE ./docker/snippets/acados.dockerfile
 
 # Will copy in other common configurations for this build
 INCLUDE ./docker/common/common.dockerfile

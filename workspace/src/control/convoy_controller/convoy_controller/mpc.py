@@ -2,24 +2,27 @@ import rclpy
 from rclpy.node import Node
 import numpy as np
 from nav_msgs.msg import Odometry, Path
-from art_msgs.msg import VehicleInput  # Replace with the actual import path for VehicleInput
 from geometry_msgs.msg import PoseStamped, Quaternion
 from std_msgs.msg import Header
 from rclpy.qos import QoSProfile, QoSHistoryPolicy
-import time
 from scipy.spatial import KDTree
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 import casadi as ca
+import time
+from art_msgs.msg import VehicleInput
+
 
 class NonLinearMPCNode(Node):
     def __init__(self):
         super().__init__('non_linear_mpc_node')
-        
+
         qos_profile = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=10
         )
         self.kd_tree = None  # Initialize the kd-tree to None
 
+        # Declare and cache parameters
         self.declare_parameter('leader_ns', "none")
         self.declare_parameter('max_speed', 1.0)
         self.declare_parameter('min_speed', 0.2)
@@ -32,7 +35,19 @@ class NonLinearMPCNode(Node):
         self.declare_parameter('collision_distance', 3.0)
         self.declare_parameter('timer_frequency', 0.05)
 
+        # Cache parameters
         self.leader_ns = self.get_parameter('leader_ns').get_parameter_value().string_value
+        self.max_speed = self.get_parameter('max_speed').get_parameter_value().double_value
+        self.min_speed = self.get_parameter('min_speed').get_parameter_value().double_value
+        self.horizon = self.get_parameter('horizon').get_parameter_value().integer_value
+        self.dt = self.get_parameter('dt').get_parameter_value().double_value
+        self.max_acceleration = self.get_parameter('max_acceleration').get_parameter_value().double_value
+        self.wheelbase = self.get_parameter('wheelbase').get_parameter_value().double_value
+        self.max_steering_angle = self.get_parameter('max_steering_angle').get_parameter_value().double_value
+        self.control_smoothing = self.get_parameter('control_smoothing').get_parameter_value().double_value
+        self.collision_distance = self.get_parameter('collision_distance').get_parameter_value().double_value
+        self.timer_frequency = self.get_parameter('timer_frequency').get_parameter_value().double_value
+
         path_topic = f'/{self.leader_ns}/vehicle_traj' if self.leader_ns != 'none' else '/path'
         leader_odom_topic = f'/{self.leader_ns}/odometry/filtered' if self.leader_ns != 'none' else None
 
@@ -40,6 +55,7 @@ class NonLinearMPCNode(Node):
         self.path_sub = self.create_subscription(Path, "/path", self.go_callback, 10)
         self.traj_sub = self.create_subscription(Path, path_topic, self.path_callback, 10)
         self.leader_odom_sub = self.create_subscription(Odometry, leader_odom_topic, self.leader_odom_callback, qos_profile) if self.leader_ns != 'none' else None
+
         self.last_closest_index = 0  # Initialize in the constructor
 
         self.cmd_pub = self.create_publisher(VehicleInput, '/input/driver_inputs', 10)  # Update topic if necessary
@@ -50,41 +66,168 @@ class NonLinearMPCNode(Node):
         self.leader_pose = None
         self.reference_path = []
         self.current_speed = 0.0
-        
+
         self.previous_steering = 0.0  # Initialize previous steering angle
 
-        self.max_speed = self.get_parameter('max_speed').get_parameter_value().double_value
-        self.min_speed = self.get_parameter('min_speed').get_parameter_value().double_value
-
-        self.horizon = self.get_parameter('horizon').get_parameter_value().integer_value
-        self.dt = self.get_parameter('dt').get_parameter_value().double_value
-
         self.previous_control_sequence = np.zeros((self.horizon, 2))  # Initialize previous control sequence
-        
+        self.previous_control = np.zeros(2)  # Initialize the previous control input with zeros [a, delta]
+
         self.path_received = False
 
-        self.timer_frequency = self.get_parameter('timer_frequency').get_parameter_value().double_value
+        # ACADOS Setup
+        self.solver = self.setup_acados_solver()
+
         self.timer = self.create_timer(self.timer_frequency, self.timer_callback)
 
         self.go = False
-        
+
+    def normalize_angle(self, angle):
+        """Normalize the angle to be within the range [-pi, pi]."""
+        return np.arctan2(np.sin(angle), np.cos(angle))
+
+    def setup_acados_solver(self):
+        ocp = AcadosOcp()
+        model = self.define_acados_model()
+        ocp.model = model
+
+        # Set prediction horizon
+        ocp.dims.N = self.horizon
+        nx = 7  # Number of states: [x, y, theta, v, delta_x, delta_y, delta_heading]
+        nu = 2  # Number of controls: [a, delta]
+        ny = nx + nu
+        ny_e = nx
+
+        # Set cost with higher weights for dx and dy
+        Q = np.diag([0, 0, 0, 0, 300, 300, 1000])  # Adjusted weights for dx, dy
+        R = np.diag([0, 2000])  # Control cost
+        Qe = Q  # Terminal cost matrix
+
+        # Add soft constraint penalty on velocity
+        Q[3, 3] = 1000  # Penalty on velocity to enforce it as a soft constraint
+
+        ocp.cost.cost_type = "LINEAR_LS"
+        ocp.cost.cost_type_e = "LINEAR_LS"
+        W = np.zeros((ny, ny))
+        W[:nx, :nx] = Q
+        W[nx:, nx:] = R
+        ocp.cost.W = W
+        ocp.cost.W_e = Qe
+
+        Vx = np.zeros((ny, nx))
+        Vx[:nx, :nx] = np.eye(nx)
+        ocp.cost.Vx = Vx
+
+        Vu = np.zeros((ny, nu))
+        Vu[nx:, :] = np.eye(nu)
+        ocp.cost.Vu = Vu
+
+        Vx_e = np.zeros((ny_e, nx))
+        Vx_e[:nx, :nx] = np.eye(nx)
+        ocp.cost.Vx_e = Vx_e
+
+        ocp.cost.yref = np.zeros(ny)
+        ocp.cost.yref_e = np.zeros(ny_e)
+
+        ocp.constraints.lbu = np.array([0, -self.max_steering_angle])
+        ocp.constraints.ubu = np.array([self.max_acceleration, self.max_steering_angle])
+        ocp.constraints.idxbu = np.array([0, 1])
+        ocp.constraints.x0 = np.zeros(nx)
+        ocp.parameter_values = np.zeros(3)
+
+        ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+        ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+        ocp.solver_options.integrator_type = 'IRK'  # Use Implicit Runge-Kutta method
+        ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+        ocp.solver_options.tf = self.dt * self.horizon
+        ocp.solver_options.generate_hessian = True
+        ocp.solver_options.qp_solver_iter_max = 300
+        ocp.solver_options.regularization_method = 'CONVEXIFY'
+        ocp.solver_options.nlp_solver_warm_start = True
+
+        # Adjust IRK specific options if necessary
+        ocp.solver_options.sim_method_num_stages = 4  # Number of stages in IRK
+        ocp.solver_options.sim_method_num_steps = 4   # Number of steps in the integrator
+
+        return AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+
+    def define_acados_model(self):
+        model = AcadosModel()
+        model.name = 'mpc_model'
+
+        # Define the states
+        x = ca.SX.sym('x')
+        y = ca.SX.sym('y')
+        theta = ca.SX.sym('theta')
+        v = ca.SX.sym('v')
+        delta_x = ca.SX.sym('delta_x')  # Difference in x between current state and reference
+        delta_y = ca.SX.sym('delta_y')  # Difference in y between current state and reference
+        delta_heading = ca.SX.sym('delta_heading')  # Difference in heading between current state and reference
+        states = ca.vertcat(x, y, theta, v, delta_x, delta_y, delta_heading)
+
+        # Define the state derivatives
+        x_dot = ca.SX.sym('x_dot')
+        y_dot = ca.SX.sym('y_dot')
+        theta_dot = ca.SX.sym('theta_dot')
+        v_dot = ca.SX.sym('v_dot')
+        delta_x_dot = ca.SX.sym('delta_x_dot')
+        delta_y_dot = ca.SX.sym('delta_y_dot')
+        delta_heading_dot = ca.SX.sym('delta_heading_dot')
+        xdot = ca.vertcat(x_dot, y_dot, theta_dot, v_dot, delta_x_dot, delta_y_dot, delta_heading_dot)
+
+        # Define the control inputs
+        a = ca.SX.sym('a')
+        delta = ca.SX.sym('delta')
+        controls = ca.vertcat(a, delta)
+
+        # Define the reference parameters (x_ref, y_ref, theta_ref)
+        x_ref = ca.SX.sym('x_ref')
+        y_ref = ca.SX.sym('y_ref')
+        theta_ref = ca.SX.sym('theta_ref')
+        parameters = ca.vertcat(x_ref, y_ref, theta_ref)
+
+        # Normalize angle using CasADi's symbolic operations
+        theta_diff = theta - theta_ref
+        normalized_theta_diff = ca.fabs(ca.atan2(ca.sin(theta_diff), ca.cos(theta_diff)))
+
+        # Define the explicit dynamics
+        f_expl = ca.vertcat(
+            v * ca.cos(theta),
+            v * ca.sin(theta),
+            (v / self.wheelbase) * ca.tan(delta),
+            a,
+            ca.fabs(x_ref - x),  # Difference in x
+            ca.fabs(y_ref - y),  # Difference in y
+            normalized_theta_diff  # Difference in heading, normalized
+        )
+
+        # Define the implicit dynamics F(xdot, x, u) = 0
+        f_impl = xdot - f_expl
+
+        # Set model equations
+        model.f_impl_expr = f_impl  # Use implicit dynamics
+        model.x = states
+        model.xdot = xdot
+        model.u = controls
+        model.p = parameters  # Parameters for reference trajectory points
+
+        return model
+
     def go_callback(self, msg):
         self.go = True
 
     def odom_callback(self, msg):
         self.current_pose = np.array([msg.pose.pose.position.x,
-                                    msg.pose.pose.position.y,
-                                    self.get_yaw_from_quaternion(msg.pose.pose.orientation)])
+                                      msg.pose.pose.position.y,
+                                      self.get_yaw_from_quaternion(msg.pose.pose.orientation)])
         self.current_speed = np.sqrt(msg.twist.twist.linear.x**2 + msg.twist.twist.linear.y**2)
         self.get_logger().info(f"Current speed: {self.current_speed}")
-    
+
     def leader_odom_callback(self, msg):
         self.leader_pose = np.array([msg.pose.pose.position.x,
-                                    msg.pose.pose.position.y,
-                                    self.get_yaw_from_quaternion(msg.pose.pose.orientation)])
+                                     msg.pose.pose.position.y,
+                                     self.get_yaw_from_quaternion(msg.pose.pose.orientation)])
         self.leader_speed = np.sqrt(msg.twist.twist.linear.x**2 + msg.twist.twist.linear.y**2)
         self.get_logger().info(f"Leader speed: {self.leader_speed}")
-            
 
     def path_callback(self, msg):
         self.reference_path = [np.array([pose.pose.position.x, pose.pose.position.y, self.get_yaw_from_quaternion(pose.pose.orientation)]) for pose in msg.poses]
@@ -98,250 +241,178 @@ class NonLinearMPCNode(Node):
 
         if self.current_pose is not None and self.reference_path:
             current_state = np.append(self.current_pose, self.current_speed)  # Add speed to the current state
-            
+
             start_time = time.time()  # Start timer
             optimal_trajectory, control = self.solve_mpc(current_state, self.reference_path)
             end_time = time.time()  # End timer
-            
+
             # Check if optimization took longer than the timer frequency
             duration = end_time - start_time
             if duration > self.timer_frequency:
-                self.get_logger().warn(f"Optimization took longer ({duration:.3f} seconds) than the timer frequency ({self.timer_frequency} seconds)")
+                self.get_logger().warn(f"Optimization took longer ({duration:.5f} seconds) than the timer frequency ({self.timer_frequency} seconds)")
 
             self.publish_control(control)
             self.publish_trajectory(optimal_trajectory)
-    
+
     def get_yaw_from_quaternion(self, q):
         siny_cosp = 2 * (q.w * q.z + q.x * q.y)
         cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
-        return np.arctan2(siny_cosp, cosy_cosp)
-        
-
+        yaw = np.arctan2(siny_cosp, cosy_cosp)
+        normalized_yaw = self.normalize_angle(yaw)
+        self.get_logger().info(f"Quaternion to Yaw: Raw = {yaw}, Normalized = {normalized_yaw}")
+        return normalized_yaw
 
     def solve_mpc(self, current_state, reference_path):
         if not reference_path:
             self.get_logger().warn("Reference path is empty!")
             return None, np.zeros(2)
-            
-        horizon = self.horizon
-        dt = self.dt
 
-        # Find the closest point on the path to the current position
-        closest_index = self.find_closest_point(current_state, self.kd_tree)
+        x, y, theta, v = current_state[:4]
+        _, closest_index = self.kd_tree.query(current_state[:2])
 
-        # Shift the reference path to start from the closest point
-        reference_path_horizon = reference_path[closest_index:closest_index+horizon]
+        remaining_path_length = len(reference_path) - closest_index
 
-        if len(reference_path_horizon) < horizon:
-            reference_path_horizon = reference_path_horizon + [reference_path[-1]] * (horizon - len(reference_path_horizon))
+        # Adjust the horizon length if the remaining path is shorter
+        adjusted_horizon = min(self.horizon, remaining_path_length)
 
-        # Publish the reference path for debug purposes
-        self.publish_reference_path(reference_path_horizon)
+        path_segment = []
+        for pose in reference_path[closest_index:closest_index + adjusted_horizon]:
+            x_ref, y_ref, theta_ref = pose
+            theta_ref = self.normalize_angle(theta_ref)
+            path_segment.append([x_ref, y_ref, theta_ref])
 
-        opti = ca.Opti()
+        self.publish_reference_path(path_segment)
 
-        u = opti.variable(horizon, 2)  # Control inputs: throttle and steering angle
-        x = opti.variable(horizon+1, 4) # State variables: x, y, theta, v
+        while len(path_segment) < adjusted_horizon:
+            path_segment.append(reference_path[-1])
 
-        current_state = current_state.reshape((1, -1))
-
-        opti.subject_to(x[0, :] == current_state)
-
-        J = 0
-        for i in range(horizon):
-            state = x[i, :].T
-            control = u[i, :].T
-            next_state = self.vehicle_dynamics(state, control).T
-
-            opti.subject_to(x[i+1, :] == next_state)
-
-            # Reference state
-            if i < len(reference_path_horizon) - 1:
-                ref_state = reference_path_horizon[i]
-                next_ref_state = reference_path_horizon[i + 1]
+        for i in range(adjusted_horizon):
+            if i < len(self.previous_control_sequence):
+                self.solver.set(i, "u", self.previous_control_sequence[i])
             else:
-                ref_state = reference_path_horizon[-1]
-                next_ref_state = reference_path_horizon[-1]
+                self.solver.set(i, "u", np.zeros(2))
 
-            # Compute cross-track and heading errors
-            cross_track_error = self.compute_cross_track_error(state, ref_state, next_ref_state)
-            heading_error = ca.arctan2(ca.sin(ref_state[2] - state[2]), ca.cos(ref_state[2] - state[2]))
-            #heading_error = ref_state[2] - state[2]
-            
-            # Cost function penalizes cross-track and heading errors
-            J += 1500 * ca.power(cross_track_error, 2)
-            J += 1500 * ca.power(heading_error, 2)
+        for i in range(adjusted_horizon):
+            if i < len(path_segment):
+                x_ref, y_ref, theta_ref = path_segment[i]
+                ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0])  # Include all 7 state dimensions
+            else:
+                x_ref, y_ref, theta_ref = reference_path[-1][:3]
+                ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0])  # Include all 7 state dimensions
 
-            J += ca.if_else(state[3] < self.min_speed, 250 * ca.power(self.min_speed - state[3], 2), 0.0)
-            J += ca.if_else(state[3] > self.max_speed, 250 * ca.power(state[3] - self.max_speed, 2), 0.0)
+            if i < len(self.previous_control_sequence):
+                ref_control = self.previous_control_sequence[i]
+            else:
+                ref_control = np.zeros(2)
 
-            # Penalize control input changes
-            if i > 0:
-                control_change = u[i, :] - u[i-1, :]
-                J += 500 * ca.power(control_change[0], 2)  # Penalize throttle changes
-                J += 500 * ca.power(control_change[1], 2)  # Penalize steering changes       
-                      
-        opti.minimize(J)
-        opti.subject_to(opti.bounded(0.0, u[:, 0], 1.0))  # Throttle constraints
-        opti.subject_to(opti.bounded(-0.5, u[:, 1], 0.5))  # Steering constraints
+            yref_i = np.concatenate([ref_state, ref_control])  # yref should be of dimension 9 now
+            self.solver.set(i, "p", np.array([x_ref, y_ref, theta_ref]))
+            self.solver.set(i, "yref", yref_i)
 
-        # opts = {'ipopt.print_level': 0, 'print_time': 0, 'ipopt.max_cpu_time': 0.05, 'ipopt.acceptable_tol': 1.5e-3}        
-        opts = {'ipopt.print_level': 0, 'print_time': 0 }        
-        opti.solver('ipopt', opts)
+        current_state_with_diff = np.append(current_state, [0.0, 0.0, 0.0])  # No initial delta_x, delta_y, delta_heading
+        self.solver.set(0, "lbx", current_state_with_diff)
+        self.solver.set(0, "ubx", current_state_with_diff)
 
-        # Set the initial guess for the control sequence to the last optimal sequence
-        opti.set_initial(u, self.previous_control_sequence)
-        opti.set_initial(x, self.generate_trajectory(current_state.flatten(), self.previous_control_sequence))
+        status = self.solver.solve()
 
-        try:
-            sol = opti.solve()
-            optimal_control_sequence = sol.value(u)
-            self.previous_control_sequence = optimal_control_sequence
-            optimal_trajectory = self.generate_trajectory(current_state.flatten(), optimal_control_sequence)
-        except RuntimeError as e:
-            self.get_logger().warn(f"MPC solver failed to find a solution: {e}")
+        if status != 0:
+            self.get_logger().warn(f"ACADOS solver failed with status {status}")
+            return None, np.zeros(2)
 
-            x_values = opti.debug.value(x)
-            u_values = opti.debug.value(u)
-            self.get_logger().info(f"x_values: {x_values}")
-            self.get_logger().info(f"u_values: {u_values}")
+        u_opt = self.solver.get(0, "u")
+        self.previous_control_sequence = [self.solver.get(i, "u") for i in range(adjusted_horizon)]
+        trajectory = [self.solver.get(i, "x") for i in range(adjusted_horizon + 1)]
 
-            optimal_control_sequence = self.previous_control_sequence
-            optimal_trajectory = self.generate_trajectory(current_state.flatten(), optimal_control_sequence)
+        # Perform line search on the control sequence
+        best_control = u_opt
+        # best_cost = self.evaluate_cost(trajectory)
 
-        return optimal_trajectory, optimal_control_sequence[0]
+        # for alpha in np.linspace(0.5, 1.5, 5):
+        #     scaled_control = alpha * u_opt
+        #     scaled_control_sequence = [alpha * self.solver.get(i, "u") for i in range(adjusted_horizon)]
+
+        #     for i in range(adjusted_horizon):
+        #         self.solver.set(i, "u", scaled_control_sequence[i])
+
+        #     status = self.solver.solve()
+
+        #     if status == 0:
+        #         new_trajectory = [self.solver.get(i, "x") for i in range(adjusted_horizon + 1)]
+        #         new_cost = self.evaluate_cost(new_trajectory)
+
+        #         if new_cost < best_cost:
+        #             best_cost = new_cost
+        #             best_control = scaled_control
+                    # self.previous_control_sequence = scaled_control_sequence
+
+        return trajectory, best_control
+
+    def evaluate_cost(self, trajectory):
+        # Define a simple cost function based on trajectory deviation and control effort
+        cost = 0
+        for state in trajectory:
+            cost += np.linalg.norm(state[4:6])  # Penalize deviation from reference (delta_x, delta_y)
+            cost += np.linalg.norm(state[3])  # Penalize speed deviation (v)
+        return cost
 
     def publish_reference_path(self, reference_path):
         path_msg = Path()
         path_msg.header = Header()
         path_msg.header.stamp = self.get_clock().now().to_msg()
         path_msg.header.frame_id = 'map'  # Adjust frame_id as necessary
-        
+
         for state in reference_path:
             pose = PoseStamped()
             pose.pose.position.x = state[0]
             pose.pose.position.y = state[1]
             pose.pose.orientation = self.get_quaternion_from_yaw(state[2])
             path_msg.poses.append(pose)
-        
+
         self.reference_path_pub.publish(path_msg)
-
-    # def compute_cross_track_error(self, state, ref_state, next_ref_state):
-    #     ref_point = ref_state[:2]
-    #     next_ref_point = next_ref_state[:2]
-    #     state_point = state[:2]
-
-    #     v1 = ca.reshape(next_ref_point - ref_point, (1, -1)).T  
-
-    #     v2 = state_point.T - ref_point
-
-        
-    #     # Manually compute the 2D cross product
-    #     cross_track_error = ca.fabs(v1[0] * v2[1] - v1[1] * v2[0]) / ca.norm_2(v1)
-
-    #     return cross_track_error
-
-    def compute_cross_track_error(self, state, ref_state, next_ref_state):
-        ref_point = ref_state[:2]
-        next_ref_point = next_ref_state[:2]
-        state_point = state[:2]
-
-        v1 = next_ref_point - ref_point  # Reference direction vector
-        v2 = state_point - ref_point  # State to reference start vector
-
-        # Cross product in 2D to find the area of the parallelogram
-        cross_product = v1[0] * v2[1] - (v1[1] * v2[0])
-        eps = 1e-1
-        if np.linalg.norm(v1) < eps:  # Handle case where v1 is almost zero
-            return 0.0
-
-        error = cross_product / np.linalg.norm(v1)
-
-        return error
-
-    def find_closest_point(self, current_pose, tree):
-        if tree is not None:
-            # Ensure current_pose is numeric
-            current_pose_numeric = np.array([current_pose[0], current_pose[1]])
-            _, index = tree.query(current_pose_numeric)
-            return index
-        else:
-            return 0
-
-    def generate_trajectory(self, initial_state, control_sequence):
-        trajectory = [ca.DM(initial_state)]  # Start with a DM type
-        state = initial_state
-
-        for control in control_sequence:
-            state = self.vehicle_dynamics(state, control).full().flatten()
-            trajectory.append(ca.DM(state))  # Convert each state to a DM type
-
-        return ca.horzcat(*trajectory).T  # Return as a DM matrix with the correct shape
-
-
-    def vehicle_dynamics(self, state, control):
-        x, y, theta, v = state[0], state[1], state[2], state[3]
-        acceleration, delta = control[0], control[1]
-        L = self.get_parameter('wheelbase').get_parameter_value().double_value  # Wheelbase
-        
-        # Update speed with throttle input
-        a = acceleration
-
-        v_next = (v + a * self.dt) - (0.1)
-        
-        x_next = x + v * ca.cos(theta) * self.dt
-        y_next = y + v * ca.sin(theta) * self.dt
-        # theta_next = theta + ((v / L) * ca.tan(delta) * self.dt)
-        
-        theta_next = theta + ((v / L) * delta * self.dt) # SAA for faster convergence... hopefully
-
-        return ca.vertcat(x_next, y_next, theta_next, v_next)
 
     def publish_control(self, control):
         steering_angle = control[1]
-        max_steering_angle = self.get_parameter('max_steering_angle').get_parameter_value().double_value  # Corresponds to a steering input of 1
-        steering_input = steering_angle / max_steering_angle
-        max_acceleration = self.get_parameter('max_acceleration').get_parameter_value().double_value  # Maximum acceleration in m/s^2
+        steering_input = steering_angle / self.max_steering_angle
 
         # Smooth steering input
-        control_smoothing = self.get_parameter('control_smoothing').get_parameter_value().double_value
-        if abs(steering_input - self.previous_steering) > control_smoothing:
-            steering_input = self.previous_steering + np.sign(steering_input - self.previous_steering) * control_smoothing
-        
+        if abs(steering_input - self.previous_steering) > self.control_smoothing:
+            steering_input = self.previous_steering + np.sign(steering_input - self.previous_steering) * self.control_smoothing
+
         self.previous_steering = steering_input
-        
+
         msg_follower = VehicleInput()
-        msg_follower.steering = steering_input  # Scale the steering angle to steering input
-        msg_follower.throttle = control[0] / max_acceleration  # Assuming control[0] is throttle
-        
-        # Add braking if the distance to leader is less than the specified distance
-        collision_distance = self.get_parameter('collision_distance').get_parameter_value().double_value
+        msg_follower.steering = steering_input / self.max_steering_angle # Scale the steering angle to steering input
+        msg_follower.throttle = control[0] / self.max_acceleration  # Assuming control[0] is throttle
+
+        # Print target acceleration and throttle output
+        self.get_logger().info(f"Target Acceleration: {control[0]} Throttle Output: {msg_follower.throttle}")
+
+        # Add braking if the distance to the leader is less than the specified distance
         if self.leader_pose is not None:
             distance_to_leader = np.linalg.norm(self.current_pose[:2] - self.leader_pose[:2])
-            if distance_to_leader < collision_distance:
+            if distance_to_leader < self.collision_distance:
                 msg_follower.braking = 1 / distance_to_leader
             else:
                 msg_follower.braking = 0.0
-        
+
         self.cmd_pub.publish(msg_follower)
-        
 
     def publish_trajectory(self, trajectory):
         path_msg = Path()
         path_msg.header = Header()
         path_msg.header.stamp = self.get_clock().now().to_msg()
         path_msg.header.frame_id = 'map'  # Adjust frame_id as necessary
-        
-        # Convert CasADi matrix to a list of NumPy arrays for iteration
-        trajectory_list = np.array(trajectory.full())
 
-        for state in trajectory_list:
+        if trajectory is None:
+            return
+
+        for state in trajectory:
             pose = PoseStamped()
             pose.pose.position.x = state[0]
             pose.pose.position.y = state[1]
-            pose.pose.orientation = self.get_quaternion_from_yaw(state[2])
+            pose.pose.orientation = self.get_quaternion_from_yaw(self.normalize_angle(state[2]))
             path_msg.poses.append(pose)
-        
+
         self.trajectory_pub.publish(path_msg)
 
     def get_quaternion_from_yaw(self, yaw):
@@ -349,13 +420,14 @@ class NonLinearMPCNode(Node):
         q.z = np.sin(yaw / 2)
         q.w = np.cos(yaw / 2)
         return q
-    
+
 
 def main(args=None):
     rclpy.init(args=args)
     node = NonLinearMPCNode()
     rclpy.spin(node)
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
