@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     wget \
     curl \
+    cargo \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone the ACADOS repository
@@ -46,6 +47,13 @@ RUN pip3 install --no-cache-dir -e .
 ENV PYTHONPATH $ACADOS_INSTALL_DIR/interfaces/acados_template:$PYTHONPATH
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib
 ENV ACADOS_SOURCE_DIR=$ACADOS_INSTALL_DIR
+
+WORKDIR /home/art
+RUN git clone https://github.com/acados/tera_renderer.git \
+    && cd tera_renderer \
+    && cargo build --release \
+    && mv target/release/t_renderer $ACADOS_INSTALL_DIR/bin/ \
+    && chmod +x $ACADOS_INSTALL_DIR/bin/t_renderer
 
 # Download and install Tera executable
 WORKDIR /home/art/acados/bin/
