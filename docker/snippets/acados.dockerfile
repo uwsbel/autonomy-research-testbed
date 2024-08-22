@@ -44,19 +44,15 @@ WORKDIR $ACADOS_INSTALL_DIR/interfaces/acados_template
 RUN pip3 install --no-cache-dir -e .
 
 # Set environment variables for using ACADOS Python interface
+ENV ACADOS_SOURCE_DIR=$ACADOS_INSTALL_DIR
 ENV PYTHONPATH $ACADOS_INSTALL_DIR/interfaces/acados_template:$PYTHONPATH
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib
-ENV ACADOS_SOURCE_DIR=$ACADOS_INSTALL_DIR
 
 WORKDIR /home/art
 RUN git clone https://github.com/acados/tera_renderer.git \
     && cd tera_renderer \
-    && cargo build --release \
+    && cargo build --release \ 
     && mv target/release/t_renderer $ACADOS_INSTALL_DIR/bin/ \
     && chmod +x $ACADOS_INSTALL_DIR/bin/t_renderer
 
-# Download and install Tera executable
-WORKDIR /home/art/acados/bin/
-RUN wget https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux -O t_renderer \
-     && chmod +x /home/art/acados/bin/t_renderer
 
