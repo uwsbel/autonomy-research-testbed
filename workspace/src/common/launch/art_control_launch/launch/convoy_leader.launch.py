@@ -15,18 +15,18 @@ def generate_launch_description():
 
     common_nodes = [
 
-        # Node(
-        #     package='convoy_controller',
-        #     executable='vehicle_traj',
-        #     name='vehicle_trajectory_publisher',
-        #     namespace=robot_ns,
-        #     remappings=[
-        #         ('/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
-        #         ('/vehicle_traj', PythonExpression(['"', '/', robot_ns, "/vehicle_traj", '"']))
-        #     ],
-        #     parameters=[veh_config_file_path],
-        #     output='screen'
-        # ),
+        Node(
+            package='convoy_controller',
+            executable='vehicle_traj',
+            name='vehicle_trajectory_publisher',
+            namespace=robot_ns,
+            remappings=[
+                ('/odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
+                ('/vehicle_traj', PythonExpression(['"', '/', robot_ns, "/vehicle_traj", '"']))
+            ],
+            parameters=[veh_config_file_path],
+            output='screen'
+        ),
         
         Node(
             package='convoy_controller',

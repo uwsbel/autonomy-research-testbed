@@ -75,6 +75,7 @@ int main(int argc, char* argv[]) {
     sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
     sys.GetSolver()->AsIterative()->SetMaxIterations(150);
     sys.SetMaxPenetrationRecoverySpeed(4.0);
+    sys.SetNumThreads(std::min(8, ChOMP::GetNumProcs()));
 
     // Create the terrain
     RigidTerrain terrain(&sys);
@@ -97,7 +98,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < num_vehicles; ++i) {
         artcars[i] = chrono_types::make_shared<ARTcar>(&sys);
         artcars[i]->SetInitPosition(ChCoordsys<>(ChVector3d(-3.5 * i, 0, 0.2), QUNIT));
-        artcars[i]->SetTireRollingResistance(0.0015f);  
+        artcars[i]->SetTireRollingResistance(0.0015f);
         artcars[i]->SetTireType(tire_model);
         artcars[i]->SetStallTorque(0.09f);
         artcars[i]->SetMaxMotorVoltageRatio(0.3f);
@@ -169,6 +170,7 @@ int main(int argc, char* argv[]) {
 
         ros_managers[i]->Initialize();
     }
+    
 
 #ifndef CHRONO_IRRLICHT
     if (vis_type == ChVisualSystem::Type::IRRLICHT)

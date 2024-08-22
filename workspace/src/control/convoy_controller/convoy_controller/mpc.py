@@ -99,7 +99,7 @@ class NonLinearMPCNode(Node):
 
         # Set cost with higher weights for dx and dy
         Q = np.diag([0, 0, 0, 0, 300, 300, 1000])  # Adjusted weights for dx, dy
-        R = np.diag([0, 2000])  # Control cost
+        R = np.diag([0, 4000])  # Control cost
         Qe = Q  # Terminal cost matrix
 
         # Add soft constraint penalty on velocity
@@ -194,7 +194,7 @@ class NonLinearMPCNode(Node):
             v * ca.cos(theta),
             v * ca.sin(theta),
             (v / self.wheelbase) * ca.tan(delta),
-            a,
+            a - 0.25,
             ca.fabs(x_ref - x),  # Difference in x
             ca.fabs(y_ref - y),  # Difference in y
             normalized_theta_diff  # Difference in heading, normalized

@@ -9,6 +9,8 @@ set(DEMOS
 	#demo_ROS_sensor
     # demo_ROS_dART
     demo_ROS_convoy
+    demo_ROS_slip
+    demo_ROS_rpm
 )
 
 #--------------------------------------------------------------
