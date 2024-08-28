@@ -100,8 +100,9 @@ int main(int argc, char* argv[]) {
         artcars[i]->SetInitPosition(ChCoordsys<>(ChVector3d(-3.5 * i, 0, 0.2), QUNIT));
         artcars[i]->SetTireRollingResistance(0.0015f);
         artcars[i]->SetTireType(tire_model);
-        artcars[i]->SetStallTorque(0.09f);
-        artcars[i]->SetMaxMotorVoltageRatio(0.3f);
+        artcars[i]->SetStallTorque(0.026f);
+        artcars[i]->SetMaxMotorVoltageRatio(0.6f);
+
         artcars[i]->Initialize();
         artcars[i]->SetChassisVisualizationType(VisualizationType::PRIMITIVES);
         artcars[i]->SetSuspensionVisualizationType(VisualizationType::PRIMITIVES);

@@ -96,6 +96,7 @@ def generate_launch_description():
         # namespace=robot_ns,
         parameters=[
             ekf_config,
+            veh_config_file_path,
             {
                 'map_frame': "map",
                 'odom_frame': PythonExpression(['"', robot_ns, "/odom", '"']),

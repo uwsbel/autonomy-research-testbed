@@ -370,7 +370,40 @@ class NonLinearMPCNode(Node):
 
         self.reference_path_pub.publish(path_msg)
 
+    def convert_acceleration_to_throttle(self, acceleration, max_acceleration, min_throttle=0.0, max_throttle=1.0):
+        """
+        Converts acceleration value to a throttle command.
+
+        Parameters:
+        - acceleration: The target acceleration (in m/s^2)
+        - max_acceleration: The maximum achievable acceleration at full throttle (in m/s^2)
+        - min_throttle: The minimum throttle value (default is 0.0)
+        - max_throttle: The maximum throttle value (default is 1.0)
+
+        Returns:
+        - throttle: The throttle value corresponding to the requested acceleration
+        """
+        
+        # Ensure acceleration is within the bounds of max_acceleration
+        if acceleration > max_acceleration:
+            acceleration = max_acceleration
+        elif acceleration < 0:
+            acceleration = 0  # Assuming throttle doesn't handle braking, set minimum acceleration to 0
+
+        # Map acceleration to throttle (throttle is a fraction of max_acceleration)
+        throttle = (acceleration / max_acceleration) * (max_throttle - min_throttle) + min_throttle
+
+        return throttle
+
+
     def publish_control(self, control):
+        # Convert the control input (acceleration) to throttle using the new function
+
+        if not self.go:
+            return
+            
+        throttle = self.convert_acceleration_to_throttle(control[0], self.max_acceleration)
+
         steering_angle = control[1]
         steering_input = steering_angle / self.max_steering_angle
 
@@ -381,13 +414,12 @@ class NonLinearMPCNode(Node):
         self.previous_steering = steering_input
 
         msg_follower = VehicleInput()
-        msg_follower.steering = steering_input / self.max_steering_angle # Scale the steering angle to steering input
-        msg_follower.throttle = control[0] / self.max_acceleration  # Assuming control[0] is throttle
+        msg_follower.steering = steering_input  # Already scaled
+        msg_follower.throttle = throttle  # Now using the converted throttle value
 
-        # Print target acceleration and throttle output
-        self.get_logger().info(f"Target Acceleration: {control[0]} Throttle Output: {msg_follower.throttle}")
+        self.get_logger().info(f"Target Acceleration: {control[0]}, Throttle Output: {msg_follower.throttle}")
 
-        # Add braking if the distance to the leader is less than the specified distance
+        # Braking logic remains the same
         if self.leader_pose is not None:
             distance_to_leader = np.linalg.norm(self.current_pose[:2] - self.leader_pose[:2])
             if distance_to_leader < self.collision_distance:

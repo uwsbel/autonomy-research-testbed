@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
     // Create a single ARTcar and suspend it in midair
     auto artcar = chrono_types::make_shared<ARTcar>(&sys);
     artcar->SetInitPosition(ChCoordsys<>(ChVector3d(0, 0, 5), QUNIT));  // Suspend in midair at 5 meters height
-    artcar->SetStallTorque(0.001f);
-    artcar->SetMaxMotorVoltageRatio(0.3f);
+    artcar->SetStallTorque(0.026f);
+    artcar->SetMaxMotorVoltageRatio(0.6f);
     artcar->Initialize();
 
     // Disable visualizations for simplicity
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
     // Simulation parameters
     double step_size = 2e-3;
-    double simulation_time = 120.0;  // 30 seconds of simulation
+    double simulation_time = 10.0;  // 30 seconds of simulation
     double time = 0.0;
 
     // Prepare the control inputs for different scenarios

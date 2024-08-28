@@ -20,7 +20,7 @@
       max_steering_angle: 0.6
       control_smoothing: 0.05
       collision_distance: 3.0
-      timer_frequency: 0.0025
+      timer_frequency: 0.006
       
   velocity_pid_node:
     ros__parameters:
