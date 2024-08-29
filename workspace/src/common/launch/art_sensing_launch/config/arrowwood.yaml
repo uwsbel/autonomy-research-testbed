@@ -1,7 +1,8 @@
 wheeltec_imu_node:
   ros__parameters:
     serial_port: "/dev/ttyUSB0"
-    
+    yaw_offset: -1.9363 
+
 nmea_serial_driver:
   ros__parameters:
     port: "/dev/ttyACM1"
@@ -9,9 +10,9 @@ nmea_serial_driver:
 motor_driver:
   ros__parameters:
     serial_port: "/dev/ttyACM0"
-    PWM_FULL: 1550
-    PWM_NEUTRAL: 1400
-    PWM_BRAKE: 1400
+    PWM_FULL: 1600
+    PWM_NEUTRAL: 1580
+    PWM_BRAKE: 1500
     FORWARD: 1
 
 /**:
@@ -24,6 +25,19 @@ motor_driver:
       wait_for_datum: False 
       publish_filtered_gps: True
       broadcast_cartesian_transform: False
+  mpc_node:
+    ros__parameters:
+      max_speed: 1.0
+      min_speed: 0.5
+      horizon: 8
+      dt: 0.3
+      max_acceleration: 5.0
+      wheelbase: 0.25
+      max_steering_angle: 0.2
+      control_smoothing: 0.9
+      collision_distance: 3.0
+      timer_frequency: 0.006
+
 
 ublox_gps_node:
   ros__parameters:
@@ -31,3 +45,5 @@ ublox_gps_node:
     device: /dev/ttyACM1
     tmode3: 0    
     config_on_startup: False
+
+

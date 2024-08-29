@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         "console_scripts": ["datum_service = navsat_util.datum_node:main",
-                            "heading_calib = navsat_util.heading_calibration:main"
+                            "heading_calib = navsat_util.heading_calibration:main",
                             "imu_offset = navsat_util.imu_offset:main"],
     },
 )

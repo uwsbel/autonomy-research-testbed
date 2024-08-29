@@ -16,12 +16,17 @@ class YawOffsetNode(Node):
         self.get_logger().info('IMU Offset Node has been started.')
         self.get_logger().info('##### ROVER MUST FACE EAST FOR CORRECT CALIBRATION #######.')
         self.get_logger().info('##### ####### ####### ####### ####### ####### ####### #######')
+        self.go = False
+        self.yaw_offset_deg = 0.0
 
     def imu_callback(self, msg):
-        current_yaw_deg = self.get_yaw_from_quaternion(msg.orientation)
-        # Compute the offset to make the heading point East (0 degrees)
-        yaw_offset_deg = -current_yaw_deg  # Offset needed to make the heading 0 degrees (East)
-        converted_msg = self.add_offset(msg, yaw_offset_deg)
+        if not self.go:
+            current_yaw_deg = self.get_yaw_from_quaternion(msg.orientation)
+            self.yaw_offset_deg = -current_yaw_deg  # Offset needed to make the heading 0 degrees (East)
+            self.go = True
+            self.get_logger().info(f"OFFSET {self.yaw_offset_deg}")
+
+        converted_msg = self.add_offset(msg, self.yaw_offset_deg)
         self.publisher.publish(converted_msg)
 
     def get_yaw_from_quaternion(self, orientation):
@@ -41,10 +46,10 @@ class YawOffsetNode(Node):
         
         q_prime = tf_transformations.quaternion_multiply(yaw_quaternion, q_wxyz)
 
-        msg.orientation.x = q_prime[1]
-        msg.orientation.y = q_prime[2]
-        msg.orientation.z = q_prime[3]
-        msg.orientation.w = q_prime[0]
+        msg.orientation.x = q_prime[0]
+        msg.orientation.y = q_prime[1]
+        msg.orientation.z = q_prime[2]
+        msg.orientation.w = q_prime[3]
         return msg
 
 def main(args=None):
