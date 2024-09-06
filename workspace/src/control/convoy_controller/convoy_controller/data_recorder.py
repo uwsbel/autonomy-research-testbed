@@ -1,92 +1,66 @@
+import os
+import subprocess
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
-from art_msgs.msg import VehicleInput  # Replace with the actual message type for your topic
-import csv
-from datetime import datetime
+from std_msgs.msg import String
 
-class DataRecorder(Node):
+class RosbagRecordPlaybackNode(Node):
     def __init__(self):
-        super().__init__('data_recorder')
-        
-        # Create subscriptions
-        self.odom_subscription = self.create_subscription(
-            Odometry,
-            '/artcar_1/odometry/filtered',
-            self.odom_callback,
-            10
-        )
-        
-        self.throttle_subscription = self.create_subscription(
-            VehicleInput,
+        super().__init__('rosbag_record_playback_node')
+        self.mode = None
+        self.declare_parameter('mode', 'record')
+        self.mode = self.get_parameter('mode').get_parameter_value().string_value
+        self.bag_prefix = self.mode
+
+        if self.mode == 'record':
+            self.get_logger().info('Mode: Record')
+            self.start_recording()
+        elif self.mode == 'playback':
+            self.get_logger().info('Mode: Playback')
+            self.start_playback()
+        else:
+            self.get_logger().error('Unknown mode. Please use "record" or "playback".')
+
+    def start_recording(self):
+        # Start recording the topics in a rosbag
+        bag_name = f'{self.bag_prefix}_rosbag'
+        command = [
+            'ros2', 'bag', 'record',
             '/artcar_1/control/vehicle_inputs',
-            self.throttle_callback,
-            10
-        )
-        
-        # Initialize storage for data
-        self.data = []
+            '/artcar_1/odometry/filtered',
+            '-o', bag_name
+        ]
+        self.get_logger().info(f'Starting rosbag recording: {bag_name}')
+        subprocess.Popen(command)
 
-        # Set up CSV file name with timestamp
-        self.csv_file = f'data_record_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-        
-        # Ensure that the CSV has the headers initially
-        self.create_csv()
-        
-    def create_csv(self):
-        # Create a CSV file with headers
-        with open(self.csv_file, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['timestamp', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'throttle'])
-    
-    def odom_callback(self, msg: Odometry):
-        # Extract acceleration from the odometry message
-        acceleration_x = msg.twist.twist.linear.x
-        acceleration_y = msg.twist.twist.linear.y
-        acceleration_z = msg.twist.twist.linear.z
-        
-        # Add data with timestamp to storage
-        self.data.append({
-            'timestamp': self.get_clock().now().to_msg().sec,
-            'acceleration_x': acceleration_x,
-            'acceleration_y': acceleration_y,
-            'acceleration_z': acceleration_z,
-            'throttle': None  # Placeholder, will be updated when throttle data arrives
-        })
+    def start_playback(self):
+        # Start playback of /artcar_1/control/vehicle_inputs and record /artcar_1/odometry/filtered
+        bag_name = f'{self.bag_prefix}_rosbag'
+        playback_command = [
+            'ros2', 'bag', 'play', f'{self.bag_prefix}_rosbag'
+        ]
+        record_command = [
+            'ros2', 'bag', 'record',
+            '/artcar_1/odometry/filtered',
+            '-o', f'{self.bag_prefix}_rosbag'
+        ]
 
-    def throttle_callback(self, msg: VehicleInput):
-        # Extract throttle value from the message
-        throttle = msg.throttle
-        
-        # Find the latest entry in self.data that has no throttle value and update it
-        for entry in reversed(self.data):
-            if entry['throttle'] is None:
-                entry['throttle'] = throttle
-                break
-        
-        # Periodically save the data to CSV
-        if len(self.data) >= 10:  # Save every 10 data points for example
-            self.save_to_csv()
+        self.get_logger().info(f'Starting playback from rosbag: {bag_name}')
+        subprocess.Popen(playback_command)
 
-    def save_to_csv(self):
-        # Write data to CSV
-        with open(self.csv_file, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            for entry in self.data:
-                writer.writerow([entry['timestamp'], entry['acceleration_x'], entry['acceleration_y'], entry['acceleration_z'], entry['throttle']])
-        
-        # Clear the saved data from memory
-        self.data.clear()
+        self.get_logger().info(f'Starting recording: {bag_name}')
+        subprocess.Popen(record_command)
 
 def main(args=None):
     rclpy.init(args=args)
-    
-    data_recorder = DataRecorder()
-    
-    rclpy.spin(data_recorder)
-    
-    data_recorder.destroy_node()
-    rclpy.shutdown()
+    node = RosbagRecordPlaybackNode()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

@@ -24,6 +24,7 @@ class NonLinearMPCNode(Node):
 
         # Declare and cache parameters
         self.declare_parameter('leader_ns', "none")
+        self.declare_parameter('robot_ns', "none")
         self.declare_parameter('max_speed', 1.0)
         self.declare_parameter('min_speed', 0.2)
         self.declare_parameter('horizon', 5)
@@ -37,6 +38,7 @@ class NonLinearMPCNode(Node):
 
         # Cache parameters
         self.leader_ns = self.get_parameter('leader_ns').get_parameter_value().string_value
+        self.robot_ns = self.get_parameter('robot_ns').get_parameter_value().string_value
         self.max_speed = self.get_parameter('max_speed').get_parameter_value().double_value
         self.min_speed = self.get_parameter('min_speed').get_parameter_value().double_value
         self.horizon = self.get_parameter('horizon').get_parameter_value().integer_value
@@ -60,7 +62,7 @@ class NonLinearMPCNode(Node):
 
         self.cmd_pub = self.create_publisher(VehicleInput, '/input/driver_inputs', 10)  # Update topic if necessary
         self.trajectory_pub = self.create_publisher(Path, '/local_mpc', 30)  # Publisher for the local MPC path
-        self.reference_path_pub = self.create_publisher(Path, '/reference_path', 10)
+        self.reference_path_pub = self.create_publisher(Path, f'{self.robot_ns}/reference_path', 10)
 
         self.current_pose = None
         self.leader_pose = None
@@ -98,12 +100,14 @@ class NonLinearMPCNode(Node):
         ny_e = nx
 
         # Set cost with higher weights for dx and dy
-        Q = np.diag([0, 0, 0, 0, 300, 300, 1000])  # Adjusted weights for dx, dy
-        R = np.diag([0, 4000])  # Control cost
-        Qe = Q  # Terminal cost matrix
+        Q = np.diag([0, 0, 0, 0, 300, 300, 250])  # Adjusted weights for dx, dy
+        R = np.diag([400, 4000])  # Control cost
+        # Qe = np.diag([0, 0, 0, 0, 500, 500, 250])  # Terminal cost matrix
+        Qe = Q
 
         # Add soft constraint penalty on velocity
-        Q[3, 3] = 1000  # Penalty on velocity to enforce it as a soft constraint
+        if self.leader_ns != "none":
+            Q[3, 3] = 500  # Penalty on velocity to enforce it as a soft constraint
 
         ocp.cost.cost_type = "LINEAR_LS"
         ocp.cost.cost_type_e = "LINEAR_LS"
@@ -132,7 +136,18 @@ class NonLinearMPCNode(Node):
         ocp.constraints.ubu = np.array([self.max_acceleration, self.max_steering_angle])
         ocp.constraints.idxbu = np.array([0, 1])
         ocp.constraints.x0 = np.zeros(nx)
-        ocp.parameter_values = np.zeros(3)
+
+
+        # Define the distance constraint (distance to leader >= collision_distance)
+
+        if self.leader_ns != 'none' and False:
+            collision_lb = 0.0
+            collision_ub = 10000.0
+            ocp.constraints.lh = np.array([collision_lb])  # Lower bound on distance
+            ocp.constraints.uh = np.array([collision_ub])  # No upper bound on distance
+            ocp.parameter_values = np.zeros(5)
+        else:
+            ocp.parameter_values = np.zeros(3)
 
         ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
         ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
@@ -148,11 +163,11 @@ class NonLinearMPCNode(Node):
         ocp.solver_options.sim_method_num_stages = 4  # Number of stages in IRK
         ocp.solver_options.sim_method_num_steps = 4   # Number of steps in the integrator
 
-        return AcadosOcpSolver(ocp, json_file="acados_ocp.json")
+        return AcadosOcpSolver(ocp, json_file=f"acados_ocp_{self.leader_ns=='none'}.json")
 
     def define_acados_model(self):
         model = AcadosModel()
-        model.name = 'mpc_model'
+        model.name = f"mpc_model_{self.leader_ns=='none'}"
 
         # Define the states
         x = ca.SX.sym('x')
@@ -183,7 +198,22 @@ class NonLinearMPCNode(Node):
         x_ref = ca.SX.sym('x_ref')
         y_ref = ca.SX.sym('y_ref')
         theta_ref = ca.SX.sym('theta_ref')
-        parameters = ca.vertcat(x_ref, y_ref, theta_ref)
+
+
+
+        if self.leader_ns != 'none' and False:
+            leader_x = ca.SX.sym('leader_x')
+            leader_y = ca.SX.sym('leader_y')
+            parameters = ca.vertcat(x_ref, y_ref, theta_ref, leader_x, leader_y)
+            distance_to_leader = ca.sqrt((x - leader_x)**2 + ((y - leader_y)**2))
+
+            # Enforce minimum distance to avoid collision
+            cons_expr = distance_to_leader
+            
+            model.con_h_expr = cons_expr
+
+        else:
+            parameters = ca.vertcat(x_ref,y_ref,theta_ref)
 
         # Normalize angle using CasADi's symbolic operations
         theta_diff = theta - theta_ref
@@ -194,10 +224,10 @@ class NonLinearMPCNode(Node):
             v * ca.cos(theta),
             v * ca.sin(theta),
             (v / self.wheelbase) * ca.tan(delta),
-            a - 0.25,
+            a - (0.01*ca.fabs(v*v)) - (0.5*ca.fabs(v)),
             ca.fabs(x_ref - x),  # Difference in x
             ca.fabs(y_ref - y),  # Difference in y
-            normalized_theta_diff  # Difference in heading, normalized
+            normalized_theta_diff # Difference in heading, normalized
         )
 
         # Define the implicit dynamics F(xdot, x, u) = 0
@@ -209,6 +239,9 @@ class NonLinearMPCNode(Node):
         model.xdot = xdot
         model.u = controls
         model.p = parameters  # Parameters for reference trajectory points
+
+
+        
 
         return model
 
@@ -262,6 +295,16 @@ class NonLinearMPCNode(Node):
         self.get_logger().info(f"Quaternion to Yaw: Raw = {yaw}, Normalized = {normalized_yaw}")
         return normalized_yaw
 
+    def predict_leader_position(self, leader_pose, leader_speed, delta_time, horizon):
+        """Predict leader positions over the horizon."""
+        leader_positions = []
+        for i in range(horizon):
+            future_leader_x = leader_pose[0] + (leader_speed * delta_time * i * np.cos(leader_pose[2]))
+            future_leader_y = leader_pose[1] + (leader_speed * delta_time * i * np.sin(leader_pose[2]))
+            leader_positions.append([future_leader_x, future_leader_y])
+        return leader_positions
+
+
     def solve_mpc(self, current_state, reference_path):
         if not reference_path:
             self.get_logger().warn("Reference path is empty!")
@@ -292,60 +335,59 @@ class NonLinearMPCNode(Node):
             else:
                 self.solver.set(i, "u", np.zeros(2))
 
+        # Predict leader's future positions based on current speed and direction
+        # if self.leader_pose is not None:
+        #     leader_positions = self.predict_leader_position(
+        #         self.leader_pose, self.leader_speed, self.dt, adjusted_horizon)
+
         for i in range(adjusted_horizon):
             if i < len(path_segment):
-                x_ref, y_ref, theta_ref = path_segment[i]
-                ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0])  # Include all 7 state dimensions
+                path_seg = path_segment[i]
             else:
-                x_ref, y_ref, theta_ref = reference_path[-1][:3]
-                ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0])  # Include all 7 state dimensions
+                path_seg = reference_path[-1][:3]
+
+            x_ref, y_ref, theta_ref = path_seg
+            ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0])  # Include all 7 state dimensions
+
+            # Set leader's predicted positions over the horizon
+            if self.leader_ns != 'none' and False:
+                # leader_x_val, leader_y_val = leader_positions[i]
+                leader_x_val = self.leader_pose[0]
+                leader_y_val = self.leader_pose[1]
+                self.solver.set(i, "p", np.array([x_ref, y_ref, theta_ref, leader_x_val, leader_y_val]))
+                # self.get_logger().warn(f"x {self.leader_pose[0]} y {self.leader_pose[1]} theta {self.leader_pose[2]} v {self.leader_speed}")
+
+            else:
+                self.solver.set(i, "p", np.array([x_ref, y_ref, theta_ref]))
 
             if i < len(self.previous_control_sequence):
                 ref_control = self.previous_control_sequence[i]
             else:
                 ref_control = np.zeros(2)
 
-            yref_i = np.concatenate([ref_state, ref_control])  # yref should be of dimension 9 now
-            self.solver.set(i, "p", np.array([x_ref, y_ref, theta_ref]))
+            yref_i = np.concatenate([ref_state, ref_control])
             self.solver.set(i, "yref", yref_i)
 
         current_state_with_diff = np.append(current_state, [0.0, 0.0, 0.0])  # No initial delta_x, delta_y, delta_heading
         self.solver.set(0, "lbx", current_state_with_diff)
         self.solver.set(0, "ubx", current_state_with_diff)
 
+        # Solve the MPC problem
         status = self.solver.solve()
 
         if status != 0:
-            self.get_logger().warn(f"ACADOS solver failed with status {status}")
+            # If solver fails, reset control sequence to zero
+            self.get_logger().warn(f"ACADOS solver failed with status {status}. Resetting control inputs to zero.")
+            self.previous_control_sequence = [np.zeros(2) for _ in range(adjusted_horizon)]
             return None, np.zeros(2)
 
+        # If solver succeeds, extract the optimal control and trajectory
         u_opt = self.solver.get(0, "u")
         self.previous_control_sequence = [self.solver.get(i, "u") for i in range(adjusted_horizon)]
         trajectory = [self.solver.get(i, "x") for i in range(adjusted_horizon + 1)]
 
-        # Perform line search on the control sequence
-        best_control = u_opt
-        # best_cost = self.evaluate_cost(trajectory)
+        return trajectory, u_opt
 
-        # for alpha in np.linspace(0.5, 1.5, 5):
-        #     scaled_control = alpha * u_opt
-        #     scaled_control_sequence = [alpha * self.solver.get(i, "u") for i in range(adjusted_horizon)]
-
-        #     for i in range(adjusted_horizon):
-        #         self.solver.set(i, "u", scaled_control_sequence[i])
-
-        #     status = self.solver.solve()
-
-        #     if status == 0:
-        #         new_trajectory = [self.solver.get(i, "x") for i in range(adjusted_horizon + 1)]
-        #         new_cost = self.evaluate_cost(new_trajectory)
-
-        #         if new_cost < best_cost:
-        #             best_cost = new_cost
-        #             best_control = scaled_control
-                    # self.previous_control_sequence = scaled_control_sequence
-
-        return trajectory, best_control
 
     def evaluate_cost(self, trajectory):
         # Define a simple cost function based on trajectory deviation and control effort
@@ -420,12 +462,12 @@ class NonLinearMPCNode(Node):
         self.get_logger().info(f"Target Acceleration: {control[0]}, Throttle Output: {msg_follower.throttle}")
 
         # Braking logic remains the same
-        if self.leader_pose is not None:
-            distance_to_leader = np.linalg.norm(self.current_pose[:2] - self.leader_pose[:2])
-            if distance_to_leader < self.collision_distance:
-                msg_follower.braking = 1 / distance_to_leader
-            else:
-                msg_follower.braking = 0.0
+        # if self.leader_pose is not None:
+        #     distance_to_leader = np.linalg.norm(self.current_pose[:2] - self.leader_pose[:2])
+        #     if distance_to_leader < self.collision_distance:
+        #         msg_follower.braking = 1 / distance_to_leader
+        #     else:
+        #         msg_follower.braking = 0.0
 
         self.cmd_pub.publish(msg_follower)
 

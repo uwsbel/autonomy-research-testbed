@@ -55,6 +55,7 @@ def generate_launch_description():
     ld.add_action(node)
 
 
+    #### Auto calibrates IMU to assume the vehicle initializes facing east
     imu_yaw_offset = Node(
        package="navsat_util",
        executable="imu_offset",
