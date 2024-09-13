@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
     // Create a single ARTcar and suspend it in midair
     auto artcar = chrono_types::make_shared<ARTcar>(&sys);
     artcar->SetInitPosition(ChCoordsys<>(ChVector3d(0, 0, 5), QUNIT));  // Suspend in midair at 5 meters height
-    artcar->SetStallTorque(0.026f);
-    artcar->SetMaxMotorVoltageRatio(0.6f);
+    artcar->SetStallTorque(0.0195);
+    artcar->SetMaxMotorVoltageRatio(0.245f);
     artcar->Initialize();
 
     // Disable visualizations for simplicity
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
     // Simulation parameters
     double step_size = 2e-3;
-    double simulation_time = 10.0;  // 30 seconds of simulation
+    double simulation_time = 20.0;  // 30 seconds of simulation
     double time = 0.0;
 
     // Prepare the control inputs for different scenarios
@@ -91,8 +91,19 @@ int main(int argc, char* argv[]) {
         driver->SetSteering(input.steering);
 
         std::cout << "Simulating with Throttle: " << input.throttle 
-                  << ", Brake: " << input.brake 
-                  << ", Steering: " << input.steering << std::endl;
+                << ", Brake: " << input.brake 
+                << ", Steering: " << input.steering << std::endl;
+
+        // Variables for equilibrium detection
+        const int equilibrium_steps = 100;  // Number of consecutive steps to check for equilibrium
+        const double rpm_threshold = 1.0;   // Threshold for change in RPM to consider equilibrium
+        int stable_step_count = 0;          // Count of consecutive steps where RPM is stable
+        const double min_time_before_equilibrium_check = 30.0;  // Minimum time to run before checking for equilibrium
+
+        double prev_rpm_left_front = 0.0;
+        double prev_rpm_right_front = 0.0;
+        double prev_rpm_left_rear = 0.0;
+        double prev_rpm_right_rear = 0.0;
 
         // Acceleration phase
         while (time < simulation_time) {
@@ -106,11 +117,11 @@ int main(int argc, char* argv[]) {
             artcar->Advance(step_size);
             sys.DoStepDynamics(step_size);
 
-            // Calculate the RPM for each wheel and store the data
-            double rpm_left_front = -artcar->GetVehicle().GetSpindleOmega(0, LEFT) * 9.5493;  // Convert rad/s to RPM
-            double rpm_right_front = -artcar->GetVehicle().GetSpindleOmega(0, RIGHT) * 9.5493;  // Convert rad/s to RPM
-            double rpm_left_rear = -artcar->GetVehicle().GetSpindleOmega(1, LEFT) * 9.5493;  // Convert rad/s to RPM
-            double rpm_right_rear = -artcar->GetVehicle().GetSpindleOmega(1, RIGHT) * 9.5493;  // Convert rad/s to RPM
+            // Calculate the RPM for each wheel
+            double rpm_left_front = -artcar->GetVehicle().GetSpindleOmega(0, LEFT) * 9.5493;
+            double rpm_right_front = -artcar->GetVehicle().GetSpindleOmega(0, RIGHT) * 9.5493;
+            double rpm_left_rear = -artcar->GetVehicle().GetSpindleOmega(1, LEFT) * 9.5493;
+            double rpm_right_rear = -artcar->GetVehicle().GetSpindleOmega(1, RIGHT) * 9.5493;
 
             // Store the throttle and RPM data
             throttle_data.push_back(driver_inputs.m_throttle);
@@ -118,6 +129,33 @@ int main(int argc, char* argv[]) {
             rpm_data_right_front.push_back(rpm_right_front);
             rpm_data_left_rear.push_back(rpm_left_rear);
             rpm_data_right_rear.push_back(rpm_right_rear);
+
+            // Only start checking for equilibrium after 30 seconds
+            if (time > min_time_before_equilibrium_check) {
+                // Check if RPM change is below threshold
+                if (std::abs(rpm_left_front - prev_rpm_left_front) < rpm_threshold &&
+                    std::abs(rpm_right_front - prev_rpm_right_front) < rpm_threshold &&
+                    std::abs(rpm_left_rear - prev_rpm_left_rear) < rpm_threshold &&
+                    std::abs(rpm_right_rear - prev_rpm_right_rear) < rpm_threshold) {
+                    // Increment stable step count if RPM changes are small
+                    stable_step_count++;
+                } else {
+                    // Reset stable step count if RPM changes are significant
+                    stable_step_count = 0;
+                }
+
+                // Break if equilibrium is reached
+                if (stable_step_count >= equilibrium_steps) {
+                    std::cout << "Equilibrium reached for throttle: " << input.throttle << std::endl;
+                    break;  // Exit acceleration phase
+                }
+            }
+
+            // Update previous RPM values
+            prev_rpm_left_front = rpm_left_front;
+            prev_rpm_right_front = rpm_right_front;
+            prev_rpm_left_rear = rpm_left_rear;
+            prev_rpm_right_rear = rpm_right_rear;
 
             // Advance time
             time += step_size;
@@ -143,10 +181,10 @@ int main(int argc, char* argv[]) {
             sys.DoStepDynamics(braking_step_size);
 
             // Calculate the RPM for each wheel
-            double rpm_left_front = -artcar->GetVehicle().GetSpindleOmega(0, LEFT) * 9.5493;  // Convert rad/s to RPM
-            double rpm_right_front = -artcar->GetVehicle().GetSpindleOmega(0, RIGHT) * 9.5493;  // Convert rad/s to RPM
-            double rpm_left_rear = -artcar->GetVehicle().GetSpindleOmega(1, LEFT) * 9.5493;  // Convert rad/s to RPM
-            double rpm_right_rear = -artcar->GetVehicle().GetSpindleOmega(1, RIGHT) * 9.5493;  // Convert rad/s to RPM
+            double rpm_left_front = -artcar->GetVehicle().GetSpindleOmega(0, LEFT) * 9.5493;
+            double rpm_right_front = -artcar->GetVehicle().GetSpindleOmega(0, RIGHT) * 9.5493;
+            double rpm_left_rear = -artcar->GetVehicle().GetSpindleOmega(1, LEFT) * 9.5493;
+            double rpm_right_rear = -artcar->GetVehicle().GetSpindleOmega(1, RIGHT) * 9.5493;
 
             // Check if all wheels have stopped (RPM is close to zero)
             if (std::abs(rpm_left_front) < 5e-2 && std::abs(rpm_right_front) < 5e-2 &&
@@ -159,6 +197,8 @@ int main(int argc, char* argv[]) {
             brake_time += braking_step_size;
         }
     }
+
+
 
     // Write the data to a CSV file
     std::ofstream csv_file("wheel_rpm_vs_throttle.csv");

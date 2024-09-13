@@ -13,7 +13,7 @@
     ros__parameters:
       max_speed: 1.0
       min_speed: 0.5
-      horizon: 20
+      horizon: 10
       dt: 0.1
       max_acceleration: 5.0
       wheelbase: 0.3

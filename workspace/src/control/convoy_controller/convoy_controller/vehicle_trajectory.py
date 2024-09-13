@@ -10,7 +10,7 @@ class VehicleTrajectoryPublisher(Node):
         super().__init__('vehicle_trajectory_publisher')
         self.odom_path = []
         self.path_length_limit = 50
-        self.path_pub_distance_threshold = 0.20  # meters
+        self.path_pub_distance_threshold = 0.10  # meters
         self.start_publishing_path = False  # Initially, do not publish the path
         self.pub_odom_path = self.create_publisher(Path, '/vehicle_traj', 10)
         self.sub_odometry = self.create_subscription(

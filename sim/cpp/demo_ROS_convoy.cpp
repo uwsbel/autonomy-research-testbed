@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     // Create the terrain
     RigidTerrain terrain(&sys);
     auto patch_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    patch_mat->SetFriction(0.8f);
+    patch_mat->SetFriction(0.9f);
     patch_mat->SetRestitution(0.01f);
     auto patch = terrain.AddPatch(patch_mat, CSYSNORM, 50, 50);
     patch->SetColor(ChColor(0.8f, 0.8f, 0.5f));
@@ -97,11 +97,13 @@ int main(int argc, char* argv[]) {
     // Initialize vehicles
     for (int i = 0; i < num_vehicles; ++i) {
         artcars[i] = chrono_types::make_shared<ARTcar>(&sys);
-        artcars[i]->SetInitPosition(ChCoordsys<>(ChVector3d(-3.5 * i, 0, 0.2), QUNIT));
+        artcars[i]->SetInitPosition(ChCoordsys<>(ChVector3d(-3.0 * i, 0, 0.2), QUNIT));
         artcars[i]->SetTireRollingResistance(0.0015f);
         artcars[i]->SetTireType(tire_model);
-        artcars[i]->SetStallTorque(0.026f);
-        artcars[i]->SetMaxMotorVoltageRatio(0.6f);
+        // artcars[i]->SetStallTorque(0.026f);
+        // artcars[i]->SetMaxMotorVoltageRatio(0.6f);
+        artcars[i]->SetStallTorque(0.0195);
+        artcars[i]->SetMaxMotorVoltageRatio(0.245f);
 
         artcars[i]->Initialize();
         artcars[i]->SetChassisVisualizationType(VisualizationType::PRIMITIVES);
