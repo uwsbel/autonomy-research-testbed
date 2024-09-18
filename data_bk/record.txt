@@ -1,2 +1,0 @@
-Trial 1: Test in sim
-Trial 2: Straight line in real life. Playback in sim until convergence.

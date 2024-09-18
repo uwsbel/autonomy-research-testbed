@@ -1,6 +1,0 @@
-Record Trial: 90 degree left-hand curve
-
-0-2: Same simulation parameters
-3: Coeff = 0.1
-
-

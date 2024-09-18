@@ -35,6 +35,7 @@ class NonLinearMPCNode(Node):
         self.declare_parameter('control_smoothing', 0.25)
         self.declare_parameter('collision_distance', 3.0)
         self.declare_parameter('timer_frequency', 0.05)
+        self.declare_parameter('throttle_range', 5.0)
 
         # Cache parameters
         self.leader_ns = self.get_parameter('leader_ns').get_parameter_value().string_value
@@ -44,6 +45,7 @@ class NonLinearMPCNode(Node):
         self.horizon = self.get_parameter('horizon').get_parameter_value().integer_value
         self.dt = self.get_parameter('dt').get_parameter_value().double_value
         self.max_acceleration = self.get_parameter('max_acceleration').get_parameter_value().double_value
+        self.throttle_range = self.get_parameter('throttle_range').get_parameter_value().double_value
         self.wheelbase = self.get_parameter('wheelbase').get_parameter_value().double_value
         self.max_steering_angle = self.get_parameter('max_steering_angle').get_parameter_value().double_value
         self.control_smoothing = self.get_parameter('control_smoothing').get_parameter_value().double_value
@@ -91,13 +93,15 @@ class NonLinearMPCNode(Node):
 
         # Set prediction horizon
         ocp.dims.N = self.horizon
-        nx = 8  # Numb. of state variables in Obj func
+        nx = 10  # Numb. of state variables in Obj func
         nu = 2 # Numb. of control variables in Obj func
         ny = nx + nu
         ny_e = nx
 
         # Define cost matrices
-        Q = np.diag([0, 0, 0, 0, 1500, 1500, 800, 25])  # Adding penalty for distance_to_leader
+        # states = ca.vertcat(x, y, theta, v, delta_x, delta_y, delta_heading, delta_steering, distance_to_leader,v_err)
+
+        Q = np.diag([0, 0, 0, 0, 1800, 1800, 800, 300, 25, 1000])  # Adding penalty for distance_to_leader
         R = np.diag([400, 3000])  # a, delta
         Qe = Q
 
@@ -162,7 +166,9 @@ class NonLinearMPCNode(Node):
         delta_y = ca.SX.sym('delta_y')
         delta_heading = ca.SX.sym('delta_heading')
         distance_to_leader = ca.SX.sym('distance_to_leader')
-        states = ca.vertcat(x, y, theta, v, delta_x, delta_y, delta_heading, distance_to_leader)
+        delta_steering = ca.SX.sym('delta_steering')
+        v_err = ca.SX.sym('v_err')
+        states = ca.vertcat(x, y, theta, v, delta_x, delta_y, delta_heading, delta_steering, distance_to_leader,v_err)
 
         # Define the state derivatives
         x_dot = ca.SX.sym('x_dot')
@@ -173,7 +179,9 @@ class NonLinearMPCNode(Node):
         delta_y_dot = ca.SX.sym('delta_y_dot')
         delta_heading_dot = ca.SX.sym('delta_heading_dot')
         distance_to_leader_dot = ca.SX.sym('distance_to_leader_dot')
-        xdot = ca.vertcat(x_dot, y_dot, theta_dot, v_dot, delta_x_dot, delta_y_dot, delta_heading_dot, distance_to_leader_dot)
+        delta_steering_dot = ca.SX.sym('delta_steering_dot')
+        v_err_dot = ca.SX.sym('v_err_dot')
+        xdot = ca.vertcat(x_dot, y_dot, theta_dot, v_dot, delta_x_dot, delta_y_dot, delta_heading_dot, delta_steering_dot, distance_to_leader_dot,v_err_dot)
 
         # Define the control inputs
         a = ca.SX.sym('a')
@@ -207,10 +215,13 @@ class NonLinearMPCNode(Node):
             v * ca.sin(theta),
             (v / self.wheelbase) * ca.tan(delta),
             a - (0.01 * ca.fabs(v * v)) - (0.5 * ca.fabs(v)),
+            # # # # # # # # # #
+            delta_steering,
             ca.fabs(x_ref - x),
             ca.fabs(y_ref - y),
             normalized_theta_diff,
-            distance_to_leader_diff - 1.0  # Add trailing dist
+            distance_to_leader_diff - self.collision_distance, # Add trailing dist
+            ca.fmax(v - self.max_speed,0)
         )
 
         # Define the implicit dynamics F(xdot, x, u) = 0
@@ -256,6 +267,9 @@ class NonLinearMPCNode(Node):
                 path_seg = reference_path[-1][:3]
 
             x_ref, y_ref, theta_ref = path_seg
+            if i < len(self.previous_control_sequence) - 1:
+                d_control = self.previous_control_sequence[i+1] - self.previous_control_sequence[i]
+
             if self.leader_pose is not None:
                 leader_x, leader_y = self.leader_pose[:2]
                 yaw = self.leader_pose[2]
@@ -266,11 +280,12 @@ class NonLinearMPCNode(Node):
 
                 leader_x = leader_x + (leader_vx * self.dt * i)
                 leader_y = leader_y + (leader_vy * self.dt * i)
+
                 parameters = np.array([x_ref, y_ref, theta_ref, leader_x, leader_y])
             else:
                 parameters = np.array([x_ref, y_ref, theta_ref])
 
-            ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0, 0.0])
+            ref_state = np.array([x_ref, y_ref, theta_ref, self.max_speed, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
             self.solver.set(i, "p", parameters)
 
@@ -282,7 +297,11 @@ class NonLinearMPCNode(Node):
             yref_i = np.concatenate([ref_state, ref_control])
             self.solver.set(i, "yref", yref_i)
 
-        current_state_with_diff = np.append(current_state, [0.0, 0.0, 0.0, 0.0])
+        if(i < len(self.previous_control_sequence)-1):
+            d_steering = self.previous_control_sequence[i][1] - self.previous_control_sequence[i-1][1]
+        else:
+            d_steering = 0.0
+        current_state_with_diff = np.append(current_state, [d_steering, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.solver.set(0, "lbx", current_state_with_diff)
         self.solver.set(0, "ubx", current_state_with_diff)
 
@@ -366,7 +385,7 @@ class NonLinearMPCNode(Node):
         if not self.go:
             return
 
-        throttle = self.convert_acceleration_to_throttle(control[0], self.max_acceleration)
+        throttle = self.convert_acceleration_to_throttle(control[0], self.throttle_range)
 
         steering_angle = control[1]
         steering_input = steering_angle / self.max_steering_angle
