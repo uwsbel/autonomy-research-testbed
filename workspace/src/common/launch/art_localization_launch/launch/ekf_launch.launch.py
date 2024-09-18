@@ -1,4 +1,3 @@
-#
 # BSD 3-Clause License
 #
 # Copyright (c) 2022 University of Wisconsin - Madison
@@ -32,52 +31,61 @@
 # ros imports
 from launch import LaunchDescription
 from launch_ros.actions import Node
-
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.actions import DeclareLaunchArgument
+from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import PathJoinSubstitution
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
 from enum import Enum
-
+import os
 
 def generate_launch_description():
+
+    robot_ns = LaunchConfiguration('robot_ns')
+
     ekf_config = GetPackageSharePath(
         "art_localization_launch", "config", "ekf_config.yaml"
     )
-    # Transforms
-    gps_transform = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="gps_transform",
-        arguments=["0", "0", "0", "0", "0", "0", "base_link", "gps"],
-    )
-    imu_transform = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="imu_transform",
-        arguments=["0", "0", "0", "3.1416", "-1.5708", "0", "base_link", "imu"],
-    )
+    
+    # Grab ${VEH_CONFIG}.yaml
+    veh_config_env = os.getenv('VEH_CONFIG', 'default')
+    veh_config_file = f'{veh_config_env}.yaml'
+
+    package_share_directory = get_package_share_directory('art_sensing_launch')
+    veh_config_file_path = PathJoinSubstitution([package_share_directory, 'config', veh_config_file])
+
+
 
     # Navsat Transform
     navsat_transform_node = Node(
         package="robot_localization",
         executable="navsat_transform_node",
         name="navsat_transform_node",
+        namespace=robot_ns,
         respawn=True,
         parameters=[
-            {
-                "magnetic_declination_radians": 0.0,
-                "yaw_offset": 0.0,
-                "zero_altitude": True,
-                "use_odometry_yaw": True,
-                "wait_for_datum": False,
-                "publish_filtered_gps": True,
-                "broadcast_cartesian_transform": False,
-            }
+           veh_config_file_path 
         ],
         remappings=[
-            ("/imu/data", "/imu"),
-            ("/gps/fix", "/fix"),
+            (PythonExpression(['"', '/', robot_ns, "/imu", '"']), PythonExpression(['"', '/', robot_ns, "/imu/data", '"'])),
+            #(PythonExpression(['"', '/', robot_ns, "/gps/fix", '"']), PythonExpression(['"', '/', robot_ns, "/gps/fix", '"'])),
+            ('odometry/filtered', PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
+            ('odometry/gps', PythonExpression(['"', '/', robot_ns, "/odometry/gps", '"'])),
+            ('gps/filtered', PythonExpression(['"', '/', robot_ns, "/gps/filtered", '"'])),
             # ('/odometry/filtered', '/odometry/gps')
         ],
+    )
+
+    # Set Datum Node
+    set_datum_client = Node(
+        package='navsat_util',
+        executable='datum_service',
+        name="set_datum_node",
+        namespace=robot_ns,
+        parameters =[ {
+            "namespace": robot_ns
+        }]
     )
 
     ekf_filter_node = Node(
@@ -85,11 +93,29 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_filter_node",
         output="screen",
+        # namespace=robot_ns,
         parameters=[
             ekf_config,
+            veh_config_file_path,
+            {
+                'map_frame': "map",
+                'odom_frame': PythonExpression(['"', robot_ns, "/odom", '"']),
+                'base_link_frame': PythonExpression(['"', robot_ns, "/base_link", '"']),
+                'world_frame': 'map'
+            }
+        ],
+        remappings=[
+            ("/odometry/filtered", PythonExpression(['"', '/', robot_ns, "/odometry/filtered", '"'])),
+            ("/imu/data", PythonExpression(['"', '/', robot_ns, "/imu/data", '"'])),
+            ("/odometry/gps", PythonExpression(['"', '/', robot_ns, "/odometry/gps", '"'])),
+            ("/gps/filtered", PythonExpression(['"', '/', robot_ns, "/gps/filtered", '"'])),
         ],
     )
 
     return LaunchDescription(
-        [gps_transform, imu_transform, navsat_transform_node, ekf_filter_node]
+        [
+            set_datum_client,
+            navsat_transform_node,
+            ekf_filter_node,
+        ]
     )

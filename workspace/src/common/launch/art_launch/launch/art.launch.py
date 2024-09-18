@@ -34,6 +34,10 @@ from launch import LaunchDescription
 from launch.actions import SetLaunchConfiguration
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import ComposableNodeContainer
+from launch_ros.actions import PushRosNamespace
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PythonExpression
+import os
 
 # internal imports
 from launch_utils import (
@@ -50,22 +54,43 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
+    veh_config_env = os.getenv('VEH_CONFIG', 'default')
+    veh_config_file = f'{veh_config_env}.yaml'
+
+    declare_veh_config_arg = DeclareLaunchArgument(
+        'veh_config_file',
+        default_value=veh_config_file,
+        description='Name of the vehicle configuration file without path'
+    )
+    ld.add_action(declare_veh_config_arg)
 
     AddLaunchArgument(ld, "use_sim", "False")
-    AddLaunchArgument(ld, "use_sim_time", "False")
-    SetLaunchArgument(
-        ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
-    )
+    AddLaunchArgument(ld, "use_sim_time", "True")
+    AddLaunchArgument(ld, "use_filter", "False")
+
+    ld.add_action(DeclareLaunchArgument('robot_ns', default_value='artcar_1'))
+    robot_ns = LaunchConfiguration('robot_ns')
+
+    # SetLaunchArgument(
+    #     ld, "use_sim_time", "True", condition=IfCondition(GetLaunchArgument("use_sim"))
+    # )
 
     AddLaunchArgument(ld, "container", "")
     container_name = AddLaunchArgument(ld, "container_name", "art_container")
 
     SetLaunchArgument(
         ld,
+        "disable_chrono_imu_filter",
+        "True",
+        condition=UnlessCondition(GetLaunchArgument("use_filter")),
+    )
+    SetLaunchArgument(
+        ld,
         "disable_art_sensing",
         "True",
         condition=IfCondition(GetLaunchArgument("use_sim")),
     )
+    
     SetLaunchArgument(
         ld,
         "disable_art_vehicle",
@@ -77,18 +102,6 @@ def generate_launch_description():
         "disable_art_simulation",
         "True",
         condition=UnlessCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_ekf_estimation",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
-    )
-    SetLaunchArgument(
-        ld,
-        "disable_particle_filter_estimation",
-        "True",
-        condition=IfCondition(GetLaunchArgument("use_sim")),
     )
 
     # -------------
@@ -120,15 +133,18 @@ def generate_launch_description():
     # ---------------
     # Launch Includes
     # ---------------
+    IncludeLaunchDescriptionWithCondition(
+        ld, "art_description_launch", "art_description"
+    )
 
-    IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
+    #IncludeLaunchDescriptionWithCondition(ld, "art_perception_launch", "art_perception")
     IncludeLaunchDescriptionWithCondition(
         ld, "art_localization_launch", "art_localization"
     )
     IncludeLaunchDescriptionWithCondition(ld, "art_planning_launch", "art_planning")
-    IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")
+    IncludeLaunchDescriptionWithCondition(ld, "art_control_launch", "art_control")  
     IncludeLaunchDescriptionWithCondition(ld, "art_sensing_launch", "art_sensing")
-    IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle")
-    # IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
+    IncludeLaunchDescriptionWithCondition(ld, "art_vehicle_launch", "art_vehicle") 
+    #IncludeLaunchDescriptionWithCondition(ld, "art_simulation_launch", "art_simulation")
 
     return ld

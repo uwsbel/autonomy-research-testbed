@@ -1,0 +1,35 @@
+/**:
+  navsat_transform_node:
+    ros__parameters:
+      magnetic_declination_radians: 0.0
+      yaw_offset: 0.0
+      zero_altitude: True
+      use_odometry_yaw: True
+      wait_for_datum: False 
+      publish_filtered_gps: True
+      broadcast_cartesian_transform: False
+
+  mpc_node:
+    ros__parameters:
+      max_speed: 0.1
+      min_speed: 0.05
+      horizon: 10
+      dt: 0.2
+      max_acceleration: 2.0
+      wheelbase: 0.3
+      max_steering_angle: 0.6
+      control_smoothing: 0.05
+      collision_distance: 0.5
+      timer_frequency: 0.006
+      throttle_range: 10.0
+      
+  velocity_pid_node:
+    ros__parameters:
+      kp: 0.00000005            # Proportional gain for the PID controller
+      ki: 0.0            # Integral gain for the PID controller
+      kd: 0.0            # Derivative gain for the PID controller
+      timer_frequency: 10.0  # Frequency for the PID update loop (Hz)
+      
+/**:
+    ros__parameters:
+      use_sim_time: true

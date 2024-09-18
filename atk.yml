@@ -11,9 +11,10 @@ x-optionals:
       NVIDIA_DRIVER_CAPABILITIES: all
   devices:
     devices:
-      - "/dev/video0"
-      - "/dev/ttyACM0"
-      - "/dev/ttyUSB0"
+            #- "/dev/video0"
+        - "/dev/ttyACM0"
+        - "/dev/ttyUSB0"
+        - "/dev/ttyACM1"
   network_mode_host:
     network_mode: "host"
   x11:
@@ -42,6 +43,7 @@ services:
     volumes:
       - "./:/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}"
     tty: true
+  
   dev:
     extends: common
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:dev"
@@ -52,9 +54,9 @@ services:
       args:
         IMAGE_BASE: "ubuntu"
         IMAGE_TAG: "22.04"
+        USER_SHELL_ADD_ONS: ". /opt/ros/humble/setup.sh; . /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
         USER_GROUPS: "dialout video"
-        USER_SHELL_ADD_ONS: ". /home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace/install/setup.bash"
-        PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS} tensorrt"
+        PIP_REQUIREMENTS: "${DEFAULT_PIP_REQUIREMENTS:-}"
         ROSDEP_METAPACKAGE: "art_dev_meta"
       x-bake:
         platforms:
@@ -66,6 +68,7 @@ services:
           - windows/arm64
         no-cache: true
     working_dir: "/home/${COMPOSE_PROJECT_NAME}/${COMPOSE_PROJECT_NAME}/workspace"
+ 
   agx:
     extends: dev
     build:
@@ -86,6 +89,7 @@ services:
       args:
         ROSDEP_METAPACKAGE: "art_art5_meta"
   oak:
+    ipc: host
     extends: agx
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:oak"
     hostname: "${COMPOSE_PROJECT_NAME}-oak"
@@ -94,6 +98,13 @@ services:
       dockerfile: "./docker/oak.dockerfile"
       args:
         ROSDEP_METAPACKAGE: "art_oak_meta"
+  
+  discovery: 
+     ipc: host
+     extends: oak 
+     command: /bin/bash -c "source /opt/ros/humble/setup.sh && fastdds discovery -i 0"  
+     container_name: "${COMPOSE_PROJECT_NAME}-discovery"
+   
   chrono:
     extends: common
     image: "${DOCKERHUB_USERNAME}/${COMPOSE_PROJECT_NAME}:chrono"

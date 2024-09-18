@@ -36,6 +36,7 @@ from launch_ros.actions import Node
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument, GetPackageSharePath
 from enum import Enum
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
@@ -44,20 +45,22 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
+    robot_ns = LaunchConfiguration('robot_ns')
 
-    AddLaunchArgument(ld, "art_localization/input/gps", "/sensing/gps/data")
+    AddLaunchArgument(ld, "art_localization/input/gps", PythonExpression(['"', '/', robot_ns, "/output/gps/data", '"'])) 
     AddLaunchArgument(
-        ld, "art_localization/input/magnetometer", "/sensing/magnetometer/data"
+        ld, "art_localization/input/magnetometer",  PythonExpression(['"', '/', robot_ns, "/output/magnetometer/data", '"'])  
     )
-    AddLaunchArgument(ld, "art_localization/input/gyroscope", "/sensing/gyroscope/data")
+    AddLaunchArgument(ld, "art_localization/input/gyroscope",  PythonExpression(['"', '/', robot_ns, "/output/gyroscope/data", '"']))
+
     AddLaunchArgument(
-        ld, "art_localization/input/accelerometer", "/sensing/accelerometer/data"
-    )
-    AddLaunchArgument(
-        ld, "art_localization/input/vehicle_inputs", "/control/vehicle_inputs"
+        ld, "art_localization/input/accelerometer", PythonExpression(['"', '/', robot_ns, "/output/accelerometer/data", '"'])  
     )
     AddLaunchArgument(
-        ld, "art_localization/output/filtered_state", "/vehicle/filtered_state"
+        ld, "art_localization/input/vehicle_inputs", PythonExpression(['"', '/', robot_ns, "/input/driver_inputs", '"'])   
+    )
+    AddLaunchArgument(
+        ld, "art_localization/output/filtered_state",  PythonExpression(['"', '/', robot_ns, "/vehicle/filtered_state", '"'])  
     )
     AddLaunchArgument(ld, "ekf_vel_only", "False")
 

@@ -35,6 +35,7 @@ from launch_ros.actions import Node
 
 # internal imports
 from launch_utils import AddLaunchArgument, GetLaunchArgument
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
@@ -43,18 +44,23 @@ def generate_launch_description():
     # ----------------
     # Launch Arguments
     # ----------------
+    robot_ns = LaunchConfiguration('robot_ns')
 
-    AddLaunchArgument(ld, "art_control/input/path", "/path_planning/path")
-    AddLaunchArgument(ld, "art_control/input/vehicle_state", "/vehicle/state")
+
+    AddLaunchArgument(ld, "art_control/input/path", PythonExpression(['"', '/', robot_ns, '/path_planning/path', '"']))
+    AddLaunchArgument(ld, "art_control/input/vehicle_state", PythonExpression(['"', '/', robot_ns, '/vehicle/state', '"']))
     AddLaunchArgument(
-        ld, "art_control/output/vehicle_inputs", "/control/vehicle_inputs"
-    )
-
+        ld, "art_control/output/vehicle_inputs", PythonExpression(['"', '/', robot_ns, '/input/driver_inputs', '"']))
+    # AddLaunchArgument(
+    #     ld, "art_control/output/vehicle_inputs", "~/control/vehicle_inputs"
+    # )    
     AddLaunchArgument(ld, "control_mode", "PID")
     AddLaunchArgument(ld, "control_file", "data/smallest_radius_right.csv")
     AddLaunchArgument(ld, "steering_gain", "1.6")
     AddLaunchArgument(ld, "throttle_gain", "0.08")
     AddLaunchArgument(ld, "use_sim_time", "False")
+
+    robot_ns = LaunchConfiguration('robot_ns')
 
     # -----
     # Nodes
@@ -64,14 +70,15 @@ def generate_launch_description():
         package="pid_lateral_controller",
         executable="pid",
         name="pid",
+        namespace=robot_ns,
         remappings=[
             ("~/input/path", GetLaunchArgument("art_control/input/path")),
             (
-                "~/input/vehicle_state",
+                "/input/vehicle_state",
                 GetLaunchArgument("art_control/input/vehicle_state"),
             ),
             (
-                "~/output/vehicle_inputs",
+                "/output/vehicle_inputs",
                 GetLaunchArgument("art_control/output/vehicle_inputs"),
             ),
         ],

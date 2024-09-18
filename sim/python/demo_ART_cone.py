@@ -19,14 +19,17 @@ def main(args):
     # sens.SetSensorShaderDir("/home/art/chrono/build/lib/sensor_ptx")
 
     # Create the vehicle
-    init_loc = chrono.ChVectorD(-2.2, 0.5, 0.2)
-    init_rot = chrono.Q_from_AngZ(chrono.CH_C_PI / 2)
+    init_loc = chrono.ChVector3d(-2.2, 0.5, 0.2)
+    init_rot = chrono.ChQuaterniond() #chrono.Q_from_AngZ(chrono.CH_C_PI / 2)
+    init_rot.SetFromAngleZ(3.14159/2)
+
     vehicle = ART1(init_loc, init_rot)
 
     # Create the terrain
     terrain = veh.RigidTerrain(vehicle.GetSystem())
 
-    patch_mat = chrono.ChMaterialSurfaceNSC()
+
+    patch_mat = chrono.ChContactMaterialNSC()
     patch_mat.SetFriction(0.9)
     patch_mat.SetRestitution(0.01)
     patch = terrain.AddPatch(
@@ -49,35 +52,41 @@ def main(args):
     # Create the sensor manager
     sensor_manager = sens.ChSensorManager(vehicle.GetSystem())
     sensor_manager.scene.AddPointLight(
-        chrono.ChVectorF(0, 0, 100), chrono.ChColor(1, 1, 1), 5000
+        chrono.ChVector3f(0, 0, 100), chrono.ChColor(1, 1, 1), 5000
     )
 
     b = sens.Background()
-    b.color_horizon = chrono.ChVectorF(0.6, 0.7, 0.8)
-    b.color_zenith = chrono.ChVectorF(0.4, 0.5, 0.6)
+    b.color_horizon = chrono.ChVector3f(0.6, 0.7, 0.8)
+    b.color_zenith = chrono.ChVector3f(0.4, 0.5, 0.6)
     b.mode = sens.BackgroundMode_GRADIENT
     sensor_manager.scene.SetBackground(b)
 
     # Initialize the vehicle
     vehicle.Initialize(sensor_manager)
+    
+
 
     # Add an irrlicht visualization, if desired
     if args.irrlicht:
         vis = veh.ChWheeledVehicleVisualSystemIrrlicht()
         vis.SetWindowTitle("ART1")
         vis.SetWindowSize(1280, 720)
-        vis.SetChaseCamera(chrono.ChVectorD(0.0, 0.0, 0.0), 1.0, 0.1)
+        vis.SetChaseCamera(chrono.ChVector3d(0.0, 0.0, 0.0), 1.0, 0.1)
         vis.Initialize()
         vis.AddLogo(chrono.GetChronoDataFile("logo_pychrono_alpha.png"))
         vis.AddLightDirectional()
         vis.AddSkyBox()
         vis.AttachVehicle(vehicle.GetVehicle())
+   
 
     # Add a vehicle camera follower, if desired
     if args.track:
-        offset_pose = chrono.ChFrameD(
-            chrono.ChVectorD(-3.09, -2.89, 1.28),
-            chrono.Q_from_Euler123(chrono.ChVectorD(0.0, 0.45, chrono.CH_C_PI_4 + 0.1)),
+        q = chrono.ChQuaterniond()
+        q.SetFromEuler(chrono.ChVector3d(0.0,0.45, (3.14159/4) + 0.1))
+        offset_pose = chrono.ChFramed(
+            chrono.ChVector3d(-3.09, -2.89, 1.28),
+            #chrono.Q_from_Euler123(chrono.ChVector3d(0.0, 0.45, chrono.CH_C_PI_4 + 0.1)),
+            q
         )
         tracking_cam = sens.ChCameraSensor(
             vehicle.GetChassisBody(),
@@ -85,9 +94,10 @@ def main(args):
             offset_pose,
             1280,
             720,
-            chrono.CH_C_PI / 3,
+            3.14159 / 3,
             2,
         )
+
         tracking_cam.PushFilter(sens.ChFilterVisualize(1280, 720, "Tracking Camera"))
         sensor_manager.AddSensor(tracking_cam)
 
@@ -127,6 +137,12 @@ def main(args):
             vehicle.mag.GetUpdateRate(), vehicle.mag, "/sensing/magnetometer/data"
         )
     )
+    # ros_manager.RegisterHandler(
+    #     ros.ChROSLidarHandler(
+    #         vehicle.lidar.GetUpdateRate(), vehicle.lidar, "/sensing/lidar/data"
+    #     )
+    # )
+
     ros_manager.Initialize()
 
     # Simulation Loop

@@ -1,0 +1,66 @@
+wheeltec_imu_node:
+  ros__parameters:
+    serial_port: "/dev/ttyUSB0"
+    yaw_offset: -2.9 # RAD 
+
+nmea_serial_driver:
+  ros__parameters:
+    port: "/dev/ttyACM0"
+
+motor_driver:
+  ros__parameters:
+    serial_port: "/dev/ttyACM1"
+    PWM_FULL: 1600
+    PWM_NEUTRAL: 1580
+    PWM_BRAKE: 1500
+    FORWARD: 1
+
+/**:
+  navsat_transform_node:
+    ros__parameters:
+      magnetic_declination_radians: -0.04503
+      yaw_offset: 0.0
+      zero_altitude: True
+      use_odometry_yaw: True
+      wait_for_datum: False 
+      publish_filtered_gps: True
+      broadcast_cartesian_transform: False
+  velocity_controller:
+    ros__parameters:
+      velocity_kp: 1.0
+      velocity_kd: 1.0
+      velocity_ki: 1.0
+      velocity_error_integral_limit: 1.0
+      target_velocity: 1.0
+  follower_control_node:
+    ros__parameters:
+      steering_kp: 1.0
+      steering_ki: 0.0 
+      steering_kd: -0.02
+      steering_cte_integral_limit: 1.0
+      predefined_path: False
+  mpc_node:
+    ros__parameters:
+      max_speed: 1.0
+      min_speed: 0.5
+      horizon: 5
+      dt: 0.2
+      max_acceleration: 5.0 
+      wheelbase: 0.25
+      max_steering_angle: 0.2
+      control_smoothing: 0.9
+      collision_distance: 3.0
+      timer_frequency: 0.006
+
+ublox_gps_node:
+  ros__parameters:
+    debug: 0                    # Range 0-4 (0 means no debug statements will print)
+    device: /dev/ttyACM0
+    tmode3: 0
+    config_on_startup: false
+    #publish:
+    #  all: true
+    #  aid:
+    #    hui: false
+    #  nav:
+    #    posecef: false

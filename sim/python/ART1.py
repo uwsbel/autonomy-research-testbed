@@ -14,13 +14,13 @@ import pychrono.sensor as sens
 
 
 class ART1(veh.ARTcar):
-    def __init__(self, init_loc: chrono.ChVectorD, init_rot: chrono.ChQuaternionD):
+    def __init__(self, init_loc: chrono.ChVector3d, init_rot: chrono.ChQuaterniond):
         super().__init__()
         self.SetContactMethod(chrono.ChContactMethod_NSC)
         self.SetChassisCollisionType(veh.CollisionType_NONE)
         self.SetChassisFixed(False)
         self.SetTireType(veh.TireModelType_TMEASY)
-        self.SetInitPosition(chrono.ChCoordsysD(init_loc, init_rot))
+        self.SetInitPosition(chrono.ChCoordsysd(init_loc, init_rot))
         self.SetTireStepSize(1e-3)
         super().Initialize()
 
@@ -31,16 +31,23 @@ class ART1(veh.ARTcar):
         self._sensors = []
         sensor_path = Path(__file__).parent.parent / "data" / "art-1" / "sensors"
 
-        camera_pos = chrono.ChVectorD(0.204, 0, 0.10018)
-        camera_rot = chrono.Q_from_AngAxis(0.1, chrono.ChVectorD(0, 1, 0))
-        camera_pose = chrono.ChFrameD(camera_pos, camera_rot)
+        camera_pos = chrono.ChVector3d(0.204, 0, 0.10018)
+        camera_rot = chrono.ChQuaterniond()
+        camera_rot.SetFromAngleAxis(0.1, chrono.ChVector3d(0.,1.,0.))
+        camera_pose = chrono.ChFramed(camera_pos, camera_rot)        
+        
+        lidar_pos = chrono.ChVector3d(0.0, 0, 0.3)
+        lidar_rot = chrono.ChQuaterniond()
+        lidar_pose = chrono.ChFramed(camera_pos, camera_rot)
+
+
         self.cam = sens.CastToChCameraSensor(
             sens.Sensor.CreateFromJSON(
                 str(sensor_path / "camera.json"), chassis_body, camera_pose
             )
         )
 
-        offset_pose = chrono.ChFrameD()
+        offset_pose = chrono.ChFramed()
         self.acc = sens.CastToChAccelerometerSensor(
             sens.Sensor.CreateFromJSON(
                 str(sensor_path / "accelerometer.json"), chassis_body, offset_pose
@@ -61,12 +68,18 @@ class ART1(veh.ARTcar):
                 str(sensor_path / "gps.json"), chassis_body, offset_pose
             )
         )
+        self.lidar = sens.CastToChLidarSensor(
+            sens.Sensor.CreateFromJSON(
+                str(sensor_path / "lidar.json"), chassis_body, lidar_pose
+            )
+        )
 
         self._sensors.append(self.cam)
         self._sensors.append(self.acc)
         self._sensors.append(self.gyro)
         self._sensors.append(self.mag)
         self._sensors.append(self.gps)
+        self._sensors.append(self.lidar)
 
     def Initialize(self, sensor_manager: sens.ChSensorManager):
         self.SetChassisVisualizationType(veh.VisualizationType_PRIMITIVES)
